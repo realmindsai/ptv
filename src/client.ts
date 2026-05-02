@@ -16,6 +16,7 @@ function getCredentials(): { devId: string; apiKey: string } {
 }
 
 export function buildQueryString(params: Record<string, string | number | number[]>): string {
+  // Callers must not pass boolean/undefined values — encodeURIComponent would coerce them to strings
   const parts: string[] = [];
   for (const [key, value] of Object.entries(params)) {
     if (Array.isArray(value)) {
@@ -50,7 +51,7 @@ export async function ptv(
 
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(JSON.stringify({ error: `${response.status} ${url}` }));
+    throw new Error(JSON.stringify({ error: `${response.status} ${pathWithParams}` }));
   }
   return response.json();
 }

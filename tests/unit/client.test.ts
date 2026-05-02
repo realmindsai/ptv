@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sign, buildQueryString, MissingCredentialsError } from '../../src/client';
+import { sign, buildQueryString, MissingCredentialsError, ptv } from '../../src/client';
 
 // Test vector derived from PTV API documentation key/input pair.
 // https://stevage.github.io/PTV-API-doc/8-6-examples.html
@@ -47,12 +47,17 @@ describe('buildQueryString()', () => {
 
 describe('MissingCredentialsError', () => {
   it('is thrown when env vars are absent', async () => {
-    const saved = { id: process.env.PTV_DEV_ID, key: process.env.PTV_API_KEY };
-    delete process.env.PTV_DEV_ID;
-    delete process.env.PTV_API_KEY;
-    const { ptv } = await import('../../src/client');
-    await expect(ptv('/v3/route_types')).rejects.toThrow(MissingCredentialsError);
-    process.env.PTV_DEV_ID = saved.id;
-    process.env.PTV_API_KEY = saved.key;
+    const savedId = process.env.PTV_DEV_ID;
+    const savedKey = process.env.PTV_API_KEY;
+    try {
+      delete process.env.PTV_DEV_ID;
+      delete process.env.PTV_API_KEY;
+      await expect(ptv('/v3/route_types')).rejects.toThrow(MissingCredentialsError);
+    } finally {
+      if (savedId !== undefined) process.env.PTV_DEV_ID = savedId;
+      else delete process.env.PTV_DEV_ID;
+      if (savedKey !== undefined) process.env.PTV_API_KEY = savedKey;
+      else delete process.env.PTV_API_KEY;
+    }
   });
 });
