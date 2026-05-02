@@ -6,6 +6,7 @@ import { routesCommand } from './commands/routes';
 import { departuresCommand } from './commands/departures';
 import { stopsCommand } from './commands/stops';
 import { disruptionsCommand } from './commands/disruptions';
+import { searchCommand } from './commands/search';
 
 const program = new Command()
   .name('ptv')
@@ -17,6 +18,7 @@ program.addCommand(routesCommand());
 program.addCommand(departuresCommand());
 program.addCommand(stopsCommand());
 program.addCommand(disruptionsCommand());
+program.addCommand(searchCommand());
 
 program.parseAsync(process.argv).catch((err: Error) => {
   if (err instanceof MissingCredentialsError) {
