@@ -13,8 +13,7 @@ export function disruptionsCommand(): Command {
       if (opts.routeType !== undefined) params.route_type = opts.routeType;
       if (opts.disruptionStatus) {
         if (!['current', 'planned'].includes(opts.disruptionStatus)) {
-          process.stderr.write('Error: --disruption-status must be "current" or "planned"\n');
-          process.exit(1);
+          throw new Error('--disruption-status must be "current" or "planned"');
         }
         params.disruption_status = opts.disruptionStatus;
       }
