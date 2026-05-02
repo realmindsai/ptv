@@ -2,6 +2,7 @@
 import { Command } from 'commander';
 import { MissingCredentialsError } from './client';
 import { routeTypesCommand } from './commands/route-types';
+import { routesCommand } from './commands/routes';
 
 const program = new Command()
   .name('ptv')
@@ -9,6 +10,7 @@ const program = new Command()
   .version('1.0.0');
 
 program.addCommand(routeTypesCommand());
+program.addCommand(routesCommand());
 
 program.parseAsync(process.argv).catch((err: Error) => {
   if (err instanceof MissingCredentialsError) {
