@@ -8,6 +8,7 @@ import { stopsCommand } from './commands/stops';
 import { disruptionsCommand } from './commands/disruptions';
 import { searchCommand } from './commands/search';
 import { nearbyCommand } from './commands/nearby';
+import { stopDetailsCommand } from './commands/stop-details';
 
 const program = new Command()
   .name('ptv')
@@ -21,6 +22,7 @@ program.addCommand(stopsCommand());
 program.addCommand(disruptionsCommand());
 program.addCommand(searchCommand());
 program.addCommand(nearbyCommand());
+program.addCommand(stopDetailsCommand());
 
 program.parseAsync(process.argv).catch((err: Error) => {
   if (err instanceof MissingCredentialsError) {
