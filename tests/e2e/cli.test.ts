@@ -32,8 +32,7 @@ describe.skipIf(SKIP)('e2e: compiled CLI binary', () => {
   });
 
   it('exits 0 and prints valid JSON for nearby', () => {
-    // Use '--' separator so Commander.js does not interpret the negative lat as an option flag
-    const { stdout, stderr, code } = run(['nearby', '--', '-37.8183', '144.9671', '--max-results', '3']);
+    const { stdout, stderr, code } = run(['nearby', '-37.8183', '144.9671', '--max-results', '3']);
     expect(code).toBe(0);
     expect(stderr).toBe('');
     expect(() => JSON.parse(stdout)).not.toThrow();
