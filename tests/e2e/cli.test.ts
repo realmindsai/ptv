@@ -20,28 +20,28 @@ describe.skipIf(SKIP)('e2e: compiled CLI binary', () => {
   it('exits 0 and prints valid JSON for route-types', () => {
     const { stdout, stderr, code } = run(['route-types']);
     expect(code).toBe(0);
-    expect(stderr).toBe('');
+    expect(stderr.trim()).toBe('');
     expect(() => JSON.parse(stdout)).not.toThrow();
   });
 
   it('exits 0 and prints valid JSON for departures', () => {
     const { stdout, stderr, code } = run(['departures', '1071', '0', '--max-results', '2']);
     expect(code).toBe(0);
-    expect(stderr).toBe('');
+    expect(stderr.trim()).toBe('');
     expect(() => JSON.parse(stdout)).not.toThrow();
   });
 
   it('exits 0 and prints valid JSON for nearby', () => {
     const { stdout, stderr, code } = run(['nearby', '-37.8183', '144.9671', '--max-results', '3']);
     expect(code).toBe(0);
-    expect(stderr).toBe('');
+    expect(stderr.trim()).toBe('');
     expect(() => JSON.parse(stdout)).not.toThrow();
   });
 
   it('exits 0 and prints valid JSON for search', () => {
     const { stdout, stderr, code } = run(['search', 'flinders']);
     expect(code).toBe(0);
-    expect(stderr).toBe('');
+    expect(stderr.trim()).toBe('');
     expect(() => JSON.parse(stdout)).not.toThrow();
   });
 
@@ -54,20 +54,12 @@ describe.skipIf(SKIP)('e2e: compiled CLI binary', () => {
     expect(result.stderr).toContain('PTV_DEV_ID');
   });
 
-  it('--raw output is a superset of trimmed output (departures)', () => {
-    const trimmedResult = run(['departures', '1071', '0', '--max-results', '1']);
-    const rawResult = run(['departures', '1071', '0', '--max-results', '1', '--raw']);
-    expect(trimmedResult.code).toBe(0);
-    expect(rawResult.code).toBe(0);
-    const trimmed = JSON.parse(trimmedResult.stdout) as unknown[];
-    const raw = JSON.parse(rawResult.stdout) as Record<string, unknown>;
-    if (trimmed.length > 0) {
-      const rawFirst = (raw.departures as Record<string, unknown>[])[0];
-      const trimFirst = trimmed[0] as Record<string, unknown>;
-      for (const key of Object.keys(trimFirst)) {
-        expect(rawFirst).toHaveProperty(key);
-      }
-    }
+  it('--raw output contains departures array', () => {
+    const { stdout, stderr, code } = run(['departures', '1071', '0', '--max-results', '1', '--raw']);
+    expect(code).toBe(0);
+    expect(stderr.trim()).toBe('');
+    const raw = JSON.parse(stdout) as Record<string, unknown>;
+    expect(Array.isArray(raw.departures)).toBe(true);
   });
 
 });

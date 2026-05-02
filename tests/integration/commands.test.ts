@@ -36,23 +36,20 @@ describe.skipIf(SKIP)('integration: all commands', () => {
       const data = await ptv('/v3/departures/route_type/0/stop/1071', { max_results: 3 }) as Record<string, unknown>;
       const trimmed = trimDepartures(data);
       expect(Array.isArray(trimmed)).toBe(true);
-      // Structural check only — exact times change
-      if (trimmed.length > 0) {
-        expect(trimmed[0]).toHaveProperty('scheduled_departure_utc');
-        expect(trimmed[0]).toHaveProperty('route_id');
-        expect(trimmed[0]).toHaveProperty('stop_id');
-      }
+      expect(trimmed.length).toBeGreaterThan(0);
+      expect(trimmed[0]).toHaveProperty('scheduled_departure_utc');
+      expect(trimmed[0]).toHaveProperty('route_id');
+      expect(trimmed[0]).toHaveProperty('stop_id');
     });
 
     it('--raw returns a superset of trimmed fields', async () => {
       const raw = await ptv('/v3/departures/route_type/0/stop/1071', { max_results: 1 }) as Record<string, unknown>;
       const trimmed = trimDepartures(raw);
-      if ((trimmed as unknown[]).length > 0) {
-        const rawFirst = (raw.departures as Record<string, unknown>[])[0];
-        const trimFirst = (trimmed as Record<string, unknown>[])[0];
-        for (const key of Object.keys(trimFirst)) {
-          expect(rawFirst).toHaveProperty(key);
-        }
+      expect((trimmed as unknown[]).length).toBeGreaterThan(0);
+      const rawFirst = (raw.departures as Record<string, unknown>[])[0];
+      const trimFirst = (trimmed as Record<string, unknown>[])[0];
+      for (const key of Object.keys(trimFirst)) {
+        expect(rawFirst).toHaveProperty(key);
       }
     });
   });
