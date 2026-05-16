@@ -30,13 +30,17 @@ export async function departuresFrom(
     {
       date_utc: notBefore.toISOString(),
       max_results: 10,
-      expand: ['Run', 'Stop'],
+      expand: ['Run', 'Stop', 'Route'],
     },
-  )) as { departures?: DepartureRaw[] };
+  )) as {
+    departures?: DepartureRaw[];
+    routes?: Record<string, { route_id: number; route_name?: string }>;
+  };
 
   const notBeforeMs = notBefore.getTime();
   const cutoffMs = notBeforeMs + lookaheadMin * 60_000;
 
+  const routesMap = raw.routes ?? {};
   const out: DepartureWithPattern[] = [];
   for (const d of raw.departures ?? []) {
     const t = d.estimated_departure_utc ?? d.scheduled_departure_utc;
@@ -45,6 +49,7 @@ export async function departuresFrom(
     out.push({
       routeId: d.route_id,
       routeType,
+      routeName: routesMap[String(d.route_id)]?.route_name ?? '',
       runRef: d.run_ref,
       departUtc: t,
       pattern: [], // populated by orchestrator via runPattern() when needed

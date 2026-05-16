@@ -42,6 +42,7 @@ function fakePtvFactory(): {
           scheduled_departure_utc: '2026-05-16T22:20:00Z',
           estimated_departure_utc: null,
         }],
+        routes: { 6: { route_id: 6, route_name: 'Frankston' } },
       };
     }
     if (path.startsWith('/v3/pattern/run/R1/route_type/0')) {
@@ -77,6 +78,10 @@ describe('plan() — happy path', () => {
     expect(it.legs[1].mode).toBe('train');
     expect(it.legs[2].mode).toBe('bike');
     expect(it.labels).toContain('fastest');
+    const trainLeg = it.legs[1];
+    if (trainLeg.mode === 'train') {
+      expect(trainLeg.routeName).toBe('Frankston');
+    }
   });
 
   it('rejects --max-transfers > 0 in v1', async () => {

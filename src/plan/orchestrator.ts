@@ -56,7 +56,7 @@ export async function plan(req: PlanRequest, deps?: Partial<Deps>): Promise<Plan
   const runPatternCache = new Map<string, { stopId: number; arriveUtc: string }[]>();
 
   type Tuple = { access: AccessCandidate; egress: AccessCandidate;
-                 routeId: number; runRef: string;
+                 routeId: number; runRef: string; routeName: string;
                  departUtc: string; arriveUtc: string };
   const tuples: Tuple[] = [];
 
@@ -78,7 +78,7 @@ export async function plan(req: PlanRequest, deps?: Partial<Deps>): Promise<Plan
         if (!eg) continue;
         tuples.push({
           access: a, egress: eg,
-          routeId: d.routeId, runRef: d.runRef,
+          routeId: d.routeId, runRef: d.runRef, routeName: d.routeName,
           departUtc: d.departUtc, arriveUtc: pattern[i].arriveUtc,
         });
       }
@@ -160,7 +160,7 @@ export async function plan(req: PlanRequest, deps?: Partial<Deps>): Promise<Plan
       { mode: 'bike', from: req.from, to: t.access.coord,
         km: bikeOut.km, min: bikeOut.min, geometry: bikeOut.geometry },
       { mode: 'train', routeId: t.routeId, routeType: t.access.routeType,
-        routeName: '',
+        routeName: t.routeName,
         fromStopId: t.access.stopId, toStopId: t.egress.stopId,
         fromStopName: t.access.stopName, toStopName: t.egress.stopName,
         departUtc: t.departUtc, arriveUtc: t.arriveUtc, runRef: t.runRef },

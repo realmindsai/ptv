@@ -78,6 +78,7 @@ export type AccessCandidate = {
 export type DepartureWithPattern = {
   routeId: number;
   routeType: RouteTypeBikeable;
+  routeName: string;
   runRef: string;
   departUtc: string;
   pattern: { stopId: number; arriveUtc: string }[];
