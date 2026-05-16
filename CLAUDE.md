@@ -18,10 +18,28 @@ ptv stop-details <stop-id> <route-type>
 ptv plan <from-lat,lon> <to-lat,lon>
   [--depart <iso|HH:MM> | --arrive-by <iso|HH:MM>]
   [--min-bike-km <n>] [--max-bike-km <n>]
-  [--max-transfers <n>] [--no-enrich]
+  [--max-transfers <n>]                          # default 1 (allows hub fallback)
+  [--mode <bike-only|bike-train>]                # default bike-train
+  [--goal <commute|day-ride>]                    # default commute
+  [--prefer-bike-path]                           # bias toward higher bikeKmOnPath
+  [--hill-weight <n>]                            # signed bias: <0 flat, 0 neutral, >0 hills
+  [--min-on-path-fraction <f>]                   # hard filter, f ∈ [0,1]
+  [--no-enrich]                                  # skip gh-route bikeKmOnPath enrichment
+  [--html <path>]                                # also write a Leaflet map and open it
 ```
 
-The `plan` command returns labeled JSON itineraries combining bike (via `osrm-au`) and train (via PTV departures), with optional bike-path enrichment via `gh-route`. v1 supports K=1 (single train segment). Coords use `lat,lon`. Negative coords are auto-handled — pass `-37.78,144.96` directly without escaping.
+`plan` returns labeled JSON itineraries combining bike + train + bike (or pure bike when `--mode bike-only`). Coords are `lat,lon`. Negative coords work directly: `-37.78,144.96` (handled by argv preprocessor in `src/argv.ts`).
+
+### plan key behaviors
+
+- **`--depart 08:00`** is parsed as Melbourne local time (handles AEST/AEDT). Use ISO8601 with explicit offset to disambiguate during DST transitions.
+- **`--max-transfers`** defaults to 1, meaning the planner will fall back to a 2-train route via a known transfer hub (Flinders Street, Southern Cross, etc.; see `src/plan/hubs.ts` for the 13-station list) when no direct route exists. Pass `0` to force direct-only.
+- **`--goal day-ride`** switches the bike-routing engine from `osrm-au` to a GraphHopper REST `custom_model` request that prefers cycleways and quiet residential roads over busy roads. Probe results: Lilydale → Hurstbridge with `day-ride` = 52 km / 46 km on dedicated path / 0 km on busy roads, vs `commute` = 31 km / 1.2 km on path / 17 km on busy.
+- **`--mode bike-only`** skips the K=1/K=2 transit search and returns a single bike leg. Use for short same-suburb trips.
+- **`--prefer-bike-path` and `--hill-weight`** modify the `recommended` label's cost function additively. `--hill-weight 0` (default) is neutral; `-1` mimics "prefer-flat"; `+1` rewards hilly routes (more ascend, less flat fraction).
+- **`--min-on-path-fraction 0.5`** drops itineraries with less than 50% of bike distance on cycleway/path/track. Falls back to a near-miss when all itineraries fail.
+- **`--html trip.html`** writes a self-contained Leaflet HTML map (OSM tiles, layer toggles per labeled itinerary) and runs `open <path>` afterward. Bike legs render along actual road geometry; train legs render as straight lines between station coords.
+- **`--raw`** is currently a no-op for `plan` (the JSON output is already trimmed-by-design). Reserved for future use.
 
 ## Credentials
 
@@ -33,6 +51,11 @@ PTV_API_KEY=<your-api-key>
 ```
 
 Register at: https://www.ptv.vic.gov.au/footer/data-and-reporting/datasets/ptv-timetable-api/
+
+Optional environment overrides:
+- `OSRM_AU_BIN` — path to the `osrm-au` binary (default `~/bin/osrm-au`)
+- `GH_ROUTE_BIN` — path to the `gh-route` binary (default `../grasshopper-bike-routing/bin/gh-route`)
+- `GH_REST_URL` — GraphHopper REST endpoint for `--goal day-ride` custom_model requests (default `http://graphhopper.magpie-inconnu.ts.net:8989/route`)
 
 ## Build & Test
 
@@ -46,50 +69,37 @@ npm run test:e2e
 
 E2e tests run against the compiled binary at `dist/index.js`. Build first.
 
-## Related tooling
-
-### osrm-au
-
-OSRM routing service running on totoro. `~/bin/osrm-au` is a symlink to the CLI in the repo.
-
-```
-osrm-au describe                                          # show host + profiles
-osrm-au route --profile car --point=<lat,lon> --point=<lat,lon>
-osrm-au route --profile bicycle --point=<lat,lon> --point=<lat,lon>
-osrm-au route --profile foot --point=<lat,lon> --point=<lat,lon>
-```
-
-CLI takes `lat,lon` (matches `gh-route`, `ptv nearby`, Google Maps); flips to OSRM's wire `lon,lat` internally. Use `--point=…` (with `=`) so argparse doesn't read leading `-` as a flag.
-
-Profiles: `car` (port 5001), `bicycle` (5002), `foot` (5003) on `totoro.magpie-inconnu.ts.net`.
-Returns `distance_km`, `duration_min`, `weight`.
-
-- **Repo:** `git@github.com:realmindsai/osrm-au.git`
-- **Local clone:** `~/code/realmindsai/active_services/osrm-au` (CLI at `scripts/osrm_cli.py`)
-- **Totoro deploy:** `/tank/services/active_services/osrm-au` (git checkout tracking origin/main — `git pull` to update)
-
-### gh-route
-
-GraphHopper bike-routing CLI. Source repo: `../grasshopper-bike-routing/`, binary: `../grasshopper-bike-routing/bin/gh-route`.
-
-```
-gh-route info                                           # server version, profiles
-gh-route route --point <lat,lon> --point <lat,lon> --profile bike_quiet
-gh-route route --place HOME --place WORK --profile bike --profile bike_quiet
-gh-route places ...                                     # manage places.yml lookup
-```
-
-Profiles: `bike`, `bike_quiet`, `bike_balanced`. Server: `http://graphhopper.magpie-inconnu.ts.net:8989` (override with `GH_BASE_URL`). Waypoints use `lat,lon` order (matches `osrm-au` and `ptv nearby`). Output: `--format pretty|json|geojson`; multi-`--profile` produces a comparison table.
-
 ## Architecture
 
-Three layers in `src/`:
+```
+src/
+  index.ts              # commander root + bin entry
+  argv.ts               # argv preprocessor for negative-coord positional args
+  client.ts             # ptv() helper: HMAC-SHA1 sign + fetch
+  trim.ts               # per-endpoint JSON field projections
+  commands/*.ts         # one file per subcommand; factory pattern
+  plan/                 # the plan subcommand's logic, decomposed:
+    types.ts            # PlanRequest/Itinerary/BikeLeg/TrainLeg + constants
+    external.ts         # osrm-au (subprocess) + gh-route (subprocess + REST)
+    hubs.ts             # 13 Melbourne transfer hub stop_ids + coords + names
+    candidates.ts       # access/egress candidate-stop sets (top close + far)
+    transit.ts          # PTV /departures + /pattern wrappers
+    score.ts            # labelAndSort: feasibility filter + label assignment + cost
+    orchestrator.ts     # plan() entry: dispatch to bike-only / K=1 / K=2 hub fallback
+    map.ts              # writeMapHtml: self-contained Leaflet HTML output
+```
 
-- `client.ts` — single `ptv(path, params)` helper. Builds query string, appends `devid`, HMAC-SHA1-signs the full path-with-devid (uppercase hex), and fetches against `https://timetableapi.ptv.vic.gov.au`. Throws `MissingCredentialsError` (caught in `index.ts` for a clean stderr message) when env vars are missing; non-2xx responses throw `Error` with a JSON-stringified `{error}` payload.
-- `commands/*.ts` — one file per subcommand. Each exports a `xxxCommand()` factory returning a `commander.Command`. The handler calls `ptv(...)` and prints `JSON.stringify(trimmed, null, 2)` unless `--raw` is passed.
-- `trim.ts` — per-endpoint projection functions (`trimDepartures`, `trimRoutes`, `trimStops`, …) that pull only the fields agents typically need. Default output is trimmed; `--raw` bypasses trimming.
+**Core flows:**
 
-`index.ts` is the entry point, wires the subcommands into one `Command`, and is the binary registered via `package.json#bin`.
+- All 8 trivial subcommands (`route-types`, `routes`, etc.): `commands/*.ts` → `ptv()` → `trim*()` → stdout JSON.
+- `plan` (more involved): `commands/plan.ts` → `orchestrator.plan()` which orchestrates `candidates`, `transit`, `external` (osrm-au + gh-route), and `score`, then optionally `map.writeMapHtml`.
+
+**Two bike-routing engines:**
+- `osrm-au` subprocess (`external.osrmRoute`) — fast, returns encoded polyline (decoded in `external.decodePolyline`)
+- `gh-route` subprocess (`external.ghRouteBike`) — provides path/elevation/slope metrics via `parseGhRoute`
+- GraphHopper REST (`external.ghRouteCustom`) — used for `--goal day-ride` with a custom_model body
+
+When `--enrich` is on (default), `ghRouteBike` is called on each bike leg to populate `bikeKmOnPath`, `ascendM`, `descendM`, `maxSustainedGradePercent`, `maxSustainedGradeM`, `flatFraction`, `steepFraction` on the BikeLeg. These also aggregate per Itinerary.
 
 ## Adding a new command
 
@@ -101,12 +111,32 @@ Three layers in `src/`:
 ## Conventions
 
 - CLI arg order may differ from URL path order — e.g. `departures <stop-id> <route-type>` maps to `/v3/departures/route_type/{rt}/stop/{id}`. Don't "fix" by reordering args; the CLI order is user-facing.
-- `buildQueryString` only accepts `string | number | number[]` — never pass booleans/undefined (caller is responsible for filtering).
-- Repeatable options use commander's `.option('--route-types <n>', '...', collect, [])` pattern where applicable.
+- `buildQueryString` accepts `string | number | number[] | string[]` — never pass booleans/undefined.
+- Repeatable options use commander's `.option('--route-types <n>', '...', collect, [])` pattern.
+- Coords everywhere: `lat,lon` (matches gh-route, osrm-au, ptv nearby, Google Maps).
+- For new bike-routing parameters that depend on gh-route data, gate behind `req.enrich` and degrade gracefully when gh-route returns null.
+- JSON output: every new field on `BikeLeg` / `TrainLeg` / `Itinerary` should be optional (`?: T`) — keeps schema additive.
 
 ## Testing
 
 - `npm test -- <pattern>` to run a single test file or pattern (vitest).
-- Unit tests cover HMAC signing and query building — no credentials required.
+- Unit tests cover HMAC signing, query building, score/feasibility logic, parseGhRoute, hubs, map writer — no credentials required.
 - Integration tests hit the live PTV API and `it.skipIf(!process.env.PTV_DEV_ID)` themselves when creds are absent.
 - E2e tests spawn `node dist/index.js` — they require both a fresh `npm run build` and credentials.
+- Tests mock external HTTP via `vi.stubGlobal('fetch', ...)`; subprocess calls via `vi.doMock('child_process', ...)`.
+
+## Issue tracking
+
+This repo uses [`bd`](https://github.com/beadsnz/beads) for local issue tracking (initialized 2026-05-17, prefix `ptv-`).
+
+- `bd list` — open issues
+- `bd ready` — unblocked work
+- `bd show <id>` — full details
+- `bd create "<title>" --type feature --labels v1.6` — new issue
+
+When "Doctor Dee" says "add as a local bead", create a `bd` issue (not a memory entry). Specs and plans live under `docs/superpowers/`; small follow-up ideas live as beads.
+
+## Out-of-scope reminders (open beads as of v1.5)
+
+- `ptv-5fy` (P4): Strava popularity overlay
+- K=3 transfers, full train pattern polylines on maps, `--custom-model-file FILE` escape hatch
