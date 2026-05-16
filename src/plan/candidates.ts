@@ -1,6 +1,7 @@
 import type {
   LatLon, AccessCandidate, RouteTypeBikeable,
 } from './types';
+import { TOP_N_CANDIDATES } from './types';
 
 type PtvFn = (path: string, params?: Record<string, string | number | number[]>) => Promise<unknown>;
 type ExternalMod = typeof import('./external');
@@ -76,6 +77,10 @@ export async function accessCandidates(
       bikeKm: km,
       bikeMin: min,
     });
+  }
+  if (out.length > TOP_N_CANDIDATES) {
+    out.sort((a, b) => a.bikeMin - b.bikeMin);
+    out.length = TOP_N_CANDIDATES;
   }
   return out;
 }

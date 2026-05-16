@@ -91,4 +91,29 @@ describe('accessCandidates()', () => {
       expect.objectContaining({ max_results: 200 }),
     );
   });
+
+  it('caps the result set at TOP_N_CANDIDATES (30), sorted by bikeMin ascending', async () => {
+    const stops = Array.from({ length: 50 }, (_, i) => ({
+      stop_id: 1000 + i, stop_name: `Stop${i}`, route_type: 0,
+      stop_latitude: -37.78 + i * 0.001, stop_longitude: 144.96,
+      routes: [{ route_id: 100, route_type: 0 }],
+    }));
+    const fakePtv = vi.fn(async () => ({ stops }));
+    const fakeExternal = {
+      osrmTable: vi.fn(async () => ({
+        durations: stops.map((_, i) => 300 + i * 60),    // 5min..54min
+        distances: stops.map((_, i) => 1000 + i * 100),   // 1km..5.9km
+      })),
+    };
+    const out = await accessCandidates(
+      { lat: -37.78, lon: 144.96 }, 100, [0, 3],
+      { ptv: fakePtv, external: fakeExternal as never },
+    );
+    expect(out).toHaveLength(30);
+    expect(out[0].bikeMin).toBeCloseTo(5);
+    expect(out[29].bikeMin).toBeCloseTo(34);
+    const keptIds = new Set(out.map((c) => c.stopId));
+    for (let i = 0; i < 30; i++) expect(keptIds.has(1000 + i)).toBe(true);
+    for (let i = 30; i < 50; i++) expect(keptIds.has(1000 + i)).toBe(false);
+  });
 });
