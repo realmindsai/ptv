@@ -1,0 +1,4011 @@
+{
+  "departures": [
+    {
+      "stop_id": 1071,
+      "route_id": 7,
+      "run_id": 950685,
+      "run_ref": "950685",
+      "direction_id": 6,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-16T09:59:00Z",
+      "estimated_departure_utc": "2026-05-16T09:59:00Z",
+      "at_platform": false,
+      "platform_number": "3",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 5,
+      "run_id": 949685,
+      "run_ref": "949685",
+      "direction_id": 9,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:00:00Z",
+      "estimated_departure_utc": "2026-05-16T10:00:00Z",
+      "at_platform": false,
+      "platform_number": "1",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 16,
+      "run_id": 954489,
+      "run_ref": "954489",
+      "direction_id": 16,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:00:00Z",
+      "estimated_departure_utc": "2026-05-16T10:00:00Z",
+      "at_platform": false,
+      "platform_number": "8",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 2,
+      "run_id": 951667,
+      "run_ref": "951667",
+      "direction_id": 2,
+      "disruption_ids": [
+        362298,
+        357977,
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:05:00Z",
+      "estimated_departure_utc": "2026-05-16T10:05:00Z",
+      "at_platform": false,
+      "platform_number": "2",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 6,
+      "run_id": 952445,
+      "run_ref": "952445",
+      "direction_id": 5,
+      "disruption_ids": [
+        358901,
+        352201,
+        344824,
+        341935
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:05:00Z",
+      "estimated_departure_utc": "2026-05-16T10:08:00Z",
+      "at_platform": false,
+      "platform_number": "6",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 8,
+      "run_id": 949885,
+      "run_ref": "949885",
+      "direction_id": 7,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:12:00Z",
+      "estimated_departure_utc": "2026-05-16T10:12:00Z",
+      "at_platform": false,
+      "platform_number": "1",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 3,
+      "run_id": 953287,
+      "run_ref": "953287",
+      "direction_id": 4,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:13:00Z",
+      "estimated_departure_utc": "2026-05-16T10:13:00Z",
+      "at_platform": false,
+      "platform_number": "5",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 12,
+      "run_id": 988087,
+      "run_ref": "988087",
+      "direction_id": 12,
+      "disruption_ids": [],
+      "scheduled_departure_utc": "2026-05-16T10:17:00Z",
+      "estimated_departure_utc": "2026-05-16T10:17:00Z",
+      "at_platform": false,
+      "platform_number": "13",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 16,
+      "run_id": 954491,
+      "run_ref": "954491",
+      "direction_id": 16,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:20:00Z",
+      "estimated_departure_utc": "2026-05-16T10:20:00Z",
+      "at_platform": false,
+      "platform_number": "8",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 15,
+      "run_id": 953087,
+      "run_ref": "953087",
+      "direction_id": 15,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:22:00Z",
+      "estimated_departure_utc": "2026-05-16T10:22:00Z",
+      "at_platform": false,
+      "platform_number": "5",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 6,
+      "run_id": 952447,
+      "run_ref": "952447",
+      "direction_id": 5,
+      "disruption_ids": [
+        358901,
+        352201,
+        344824,
+        341935
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:25:00Z",
+      "estimated_departure_utc": "2026-05-16T10:28:00Z",
+      "at_platform": false,
+      "platform_number": "6",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 7,
+      "run_id": 950687,
+      "run_ref": "950687",
+      "direction_id": 6,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:29:00Z",
+      "estimated_departure_utc": "2026-05-16T10:29:00Z",
+      "at_platform": false,
+      "platform_number": "3",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 5,
+      "run_id": 949687,
+      "run_ref": "949687",
+      "direction_id": 9,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:30:00Z",
+      "estimated_departure_utc": "2026-05-16T10:30:00Z",
+      "at_platform": false,
+      "platform_number": "1",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 9,
+      "run_id": 951871,
+      "run_ref": "951871",
+      "direction_id": 8,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:35:00Z",
+      "estimated_departure_utc": "2026-05-16T10:35:00Z",
+      "at_platform": false,
+      "platform_number": "2",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 12,
+      "run_id": 988089,
+      "run_ref": "988089",
+      "direction_id": 12,
+      "disruption_ids": [],
+      "scheduled_departure_utc": "2026-05-16T10:37:00Z",
+      "estimated_departure_utc": "2026-05-16T10:37:00Z",
+      "at_platform": false,
+      "platform_number": "13",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 16,
+      "run_id": 954493,
+      "run_ref": "954493",
+      "direction_id": 16,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:40:00Z",
+      "estimated_departure_utc": "2026-05-16T10:40:00Z",
+      "at_platform": false,
+      "platform_number": "8",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 8,
+      "run_id": 949887,
+      "run_ref": "949887",
+      "direction_id": 7,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:42:00Z",
+      "estimated_departure_utc": "2026-05-16T10:42:00Z",
+      "at_platform": false,
+      "platform_number": "1",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 3,
+      "run_id": 953289,
+      "run_ref": "953289",
+      "direction_id": 4,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:43:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": "5",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 6,
+      "run_id": 952449,
+      "run_ref": "952449",
+      "direction_id": 5,
+      "disruption_ids": [
+        358901,
+        352201,
+        344824,
+        341935
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:45:00Z",
+      "estimated_departure_utc": "2026-05-16T10:49:00Z",
+      "at_platform": false,
+      "platform_number": "6",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 15,
+      "run_id": 953089,
+      "run_ref": "953089",
+      "direction_id": 15,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:52:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": "5",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 12,
+      "run_id": 988091,
+      "run_ref": "988091",
+      "direction_id": 12,
+      "disruption_ids": [],
+      "scheduled_departure_utc": "2026-05-16T10:57:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": "13",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 7,
+      "run_id": 950689,
+      "run_ref": "950689",
+      "direction_id": 6,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-16T10:59:00Z",
+      "estimated_departure_utc": "2026-05-16T10:59:00Z",
+      "at_platform": false,
+      "platform_number": "2",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 5,
+      "run_id": 949689,
+      "run_ref": "949689",
+      "direction_id": 9,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T11:03:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": "1",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 2,
+      "run_id": 951669,
+      "run_ref": "951669",
+      "direction_id": 2,
+      "disruption_ids": [
+        362298,
+        357977,
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-16T11:05:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": "3",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 8,
+      "run_id": 949889,
+      "run_ref": "949889",
+      "direction_id": 7,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T11:12:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": "1",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 3,
+      "run_id": 953291,
+      "run_ref": "953291",
+      "direction_id": 4,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T11:13:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": "5",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 15,
+      "run_id": 953091,
+      "run_ref": "953091",
+      "direction_id": 15,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T11:22:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": "5",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 9,
+      "run_id": 951873,
+      "run_ref": "951873",
+      "direction_id": 8,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-16T11:35:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": "3",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 2,
+      "run_id": 951671,
+      "run_ref": "951671",
+      "direction_id": 2,
+      "disruption_ids": [
+        362298,
+        357977,
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-16T12:05:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": "2",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 9,
+      "run_id": 951875,
+      "run_ref": "951875",
+      "direction_id": 8,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-16T12:35:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": "3",
+      "flags": "",
+      "departure_sequence": 0,
+      "departure_note": ""
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 1,
+      "run_id": 4702,
+      "run_ref": "4702",
+      "direction_id": 0,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-16T17:43:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_1",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 17,
+      "run_id": 79692,
+      "run_ref": "79692",
+      "direction_id": 17,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T17:55:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_1",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 1,
+      "run_id": 4704,
+      "run_ref": "4704",
+      "direction_id": 0,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-16T18:43:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_3",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 17,
+      "run_id": 79694,
+      "run_ref": "79694",
+      "direction_id": 17,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T19:00:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_3",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 1,
+      "run_id": 4706,
+      "run_ref": "4706",
+      "direction_id": 0,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-16T19:43:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_5",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 17,
+      "run_id": 79696,
+      "run_ref": "79696",
+      "direction_id": 17,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T20:00:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_5",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 8,
+      "run_id": 40530,
+      "run_ref": "40530",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T21:49:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_7",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 5,
+      "run_id": 52259,
+      "run_ref": "52259",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T21:59:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_8",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 8,
+      "run_id": 40532,
+      "run_ref": "40532",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T22:29:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_9",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 5,
+      "run_id": 52261,
+      "run_ref": "52261",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T22:39:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_10",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 8,
+      "run_id": 40534,
+      "run_ref": "40534",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T23:09:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_11",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 5,
+      "run_id": 52263,
+      "run_ref": "52263",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-16T23:19:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_12",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 15,
+      "run_id": 70248,
+      "run_ref": "70248",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-17T00:06:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_8",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 1,
+      "run_id": 5408,
+      "run_ref": "5408",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-17T00:32:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_19",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 2,
+      "run_id": 12473,
+      "run_ref": "12473",
+      "direction_id": 1,
+      "disruption_ids": [
+        362298,
+        357977,
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-17T00:32:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_21",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 9,
+      "run_id": 46700,
+      "run_ref": "46700",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-17T00:32:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_15",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 7,
+      "run_id": 35553,
+      "run_ref": "35553",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-17T00:39:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_9",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 1,
+      "run_id": 5410,
+      "run_ref": "5410",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-17T00:42:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_21",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 2,
+      "run_id": 12475,
+      "run_ref": "12475",
+      "direction_id": 1,
+      "disruption_ids": [
+        362298,
+        357977,
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-17T00:42:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_23",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 9,
+      "run_id": 46701,
+      "run_ref": "46701",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-17T00:42:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_16",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 1,
+      "run_id": 5411,
+      "run_ref": "5411",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-17T00:52:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_22",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 2,
+      "run_id": 12476,
+      "run_ref": "12476",
+      "direction_id": 1,
+      "disruption_ids": [
+        362298,
+        357977,
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-17T00:52:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_24",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 9,
+      "run_id": 46702,
+      "run_ref": "46702",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-17T00:52:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_17",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 3,
+      "run_id": 22538,
+      "run_ref": "22538",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-17T02:41:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_16",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 7,
+      "run_id": 35560,
+      "run_ref": "35560",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-17T02:45:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_16",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 7,
+      "run_id": 35561,
+      "run_ref": "35561",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824,
+        323905
+      ],
+      "scheduled_departure_utc": "2026-05-17T03:05:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_17",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 3,
+      "run_id": 22561,
+      "run_ref": "22561",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-17T09:43:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_39",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 15,
+      "run_id": 70277,
+      "run_ref": "70277",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-17T09:52:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_37",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 15,
+      "run_id": 70065,
+      "run_ref": "70065",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-17T19:12:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_0",
+      "departure_sequence": 0,
+      "departure_note": null
+    },
+    {
+      "stop_id": 1071,
+      "route_id": 3,
+      "run_id": 22296,
+      "run_ref": "22296",
+      "direction_id": 1,
+      "disruption_ids": [
+        344824
+      ],
+      "scheduled_departure_utc": "2026-05-17T19:17:00Z",
+      "estimated_departure_utc": null,
+      "at_platform": false,
+      "platform_number": null,
+      "flags": "S_WCA-RUN_0",
+      "departure_sequence": 0,
+      "departure_note": null
+    }
+  ],
+  "stops": {
+    "1071": {
+      "stop_distance": 0,
+      "stop_suburb": "Melbourne City",
+      "stop_name": "Flinders Street",
+      "stop_id": 1071,
+      "route_type": 0,
+      "stop_latitude": -37.81831,
+      "stop_longitude": 144.966965,
+      "stop_landmark": "",
+      "stop_sequence": 0
+    }
+  },
+  "routes": {},
+  "runs": {
+    "4702": {
+      "run_id": 4702,
+      "run_ref": "4702",
+      "route_id": 1,
+      "route_type": 0,
+      "final_stop_id": 1032,
+      "destination_name": "Camberwell",
+      "status": "scheduled",
+      "direction_id": 0,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "4704": {
+      "run_id": 4704,
+      "run_ref": "4704",
+      "route_id": 1,
+      "route_type": 0,
+      "final_stop_id": 1032,
+      "destination_name": "Camberwell",
+      "status": "scheduled",
+      "direction_id": 0,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "4706": {
+      "run_id": 4706,
+      "run_ref": "4706",
+      "route_id": 1,
+      "route_type": 0,
+      "final_stop_id": 1032,
+      "destination_name": "Camberwell",
+      "status": "scheduled",
+      "direction_id": 0,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "5408": {
+      "run_id": 5408,
+      "run_ref": "5408",
+      "route_id": 1,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "5410": {
+      "run_id": 5410,
+      "run_ref": "5410",
+      "route_id": 1,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "5411": {
+      "run_id": 5411,
+      "run_ref": "5411",
+      "route_id": 1,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "12473": {
+      "run_id": 12473,
+      "run_ref": "12473",
+      "route_id": 2,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "12475": {
+      "run_id": 12475,
+      "run_ref": "12475",
+      "route_id": 2,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "12476": {
+      "run_id": 12476,
+      "run_ref": "12476",
+      "route_id": 2,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "22296": {
+      "run_id": 22296,
+      "run_ref": "22296",
+      "route_id": 3,
+      "route_type": 0,
+      "final_stop_id": 1181,
+      "destination_name": "Southern Cross",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "22538": {
+      "run_id": 22538,
+      "run_ref": "22538",
+      "route_id": 3,
+      "route_type": 0,
+      "final_stop_id": 1181,
+      "destination_name": "Southern Cross",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "22561": {
+      "run_id": 22561,
+      "run_ref": "22561",
+      "route_id": 3,
+      "route_type": 0,
+      "final_stop_id": 1181,
+      "destination_name": "Southern Cross",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "35553": {
+      "run_id": 35553,
+      "run_ref": "35553",
+      "route_id": 7,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "35560": {
+      "run_id": 35560,
+      "run_ref": "35560",
+      "route_id": 7,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "35561": {
+      "run_id": 35561,
+      "run_ref": "35561",
+      "route_id": 7,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "40530": {
+      "run_id": 40530,
+      "run_ref": "40530",
+      "route_id": 8,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "40532": {
+      "run_id": 40532,
+      "run_ref": "40532",
+      "route_id": 8,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "40534": {
+      "run_id": 40534,
+      "run_ref": "40534",
+      "route_id": 8,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "46700": {
+      "run_id": 46700,
+      "run_ref": "46700",
+      "route_id": 9,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "46701": {
+      "run_id": 46701,
+      "run_ref": "46701",
+      "route_id": 9,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "46702": {
+      "run_id": 46702,
+      "run_ref": "46702",
+      "route_id": 9,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "52259": {
+      "run_id": 52259,
+      "run_ref": "52259",
+      "route_id": 5,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "52261": {
+      "run_id": 52261,
+      "run_ref": "52261",
+      "route_id": 5,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "52263": {
+      "run_id": 52263,
+      "run_ref": "52263",
+      "route_id": 5,
+      "route_type": 0,
+      "final_stop_id": 1155,
+      "destination_name": "Parliament",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "70065": {
+      "run_id": 70065,
+      "run_ref": "70065",
+      "route_id": 15,
+      "route_type": 0,
+      "final_stop_id": 1181,
+      "destination_name": "Southern Cross",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "70248": {
+      "run_id": 70248,
+      "run_ref": "70248",
+      "route_id": 15,
+      "route_type": 0,
+      "final_stop_id": 1181,
+      "destination_name": "Southern Cross",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "70277": {
+      "run_id": 70277,
+      "run_ref": "70277",
+      "route_id": 15,
+      "route_type": 0,
+      "final_stop_id": 1181,
+      "destination_name": "Southern Cross",
+      "status": "scheduled",
+      "direction_id": 1,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "79692": {
+      "run_id": 79692,
+      "run_ref": "79692",
+      "route_id": 17,
+      "route_type": 0,
+      "final_stop_id": 1141,
+      "destination_name": "Newport",
+      "status": "scheduled",
+      "direction_id": 17,
+      "run_sequence": 0,
+      "express_stop_count": 1,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "79694": {
+      "run_id": 79694,
+      "run_ref": "79694",
+      "route_id": 17,
+      "route_type": 0,
+      "final_stop_id": 1141,
+      "destination_name": "Newport",
+      "status": "scheduled",
+      "direction_id": 17,
+      "run_sequence": 0,
+      "express_stop_count": 1,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "79696": {
+      "run_id": 79696,
+      "run_ref": "79696",
+      "route_id": 17,
+      "route_type": 0,
+      "final_stop_id": 1141,
+      "destination_name": "Newport",
+      "status": "scheduled",
+      "direction_id": 17,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": null,
+      "run_note": "",
+      "externalService": null
+    },
+    "949685": {
+      "run_id": 949685,
+      "run_ref": "949685",
+      "route_id": 5,
+      "route_type": 0,
+      "final_stop_id": 1228,
+      "destination_name": "Mernda",
+      "status": "scheduled",
+      "direction_id": 9,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "949082",
+          "route_id": 5,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        },
+        "distributor": {
+          "run_ref": "949092",
+          "route_id": 5,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "949687": {
+      "run_id": 949687,
+      "run_ref": "949687",
+      "route_id": 5,
+      "route_type": 0,
+      "final_stop_id": 1228,
+      "destination_name": "Mernda",
+      "status": "scheduled",
+      "direction_id": 9,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "949286",
+          "route_id": 8,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        },
+        "distributor": {
+          "run_ref": "949094",
+          "route_id": 5,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "949689": {
+      "run_id": 949689,
+      "run_ref": "949689",
+      "route_id": 5,
+      "route_type": 0,
+      "final_stop_id": 1228,
+      "destination_name": "Mernda",
+      "status": "scheduled",
+      "direction_id": 9,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "949288",
+          "route_id": 8,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        },
+        "distributor": {
+          "run_ref": "949096",
+          "route_id": 5,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "949885": {
+      "run_id": 949885,
+      "run_ref": "949885",
+      "route_id": 8,
+      "route_type": 0,
+      "final_stop_id": 1062,
+      "destination_name": "Eltham",
+      "status": "scheduled",
+      "direction_id": 7,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "949284",
+          "route_id": 8,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        },
+        "distributor": {
+          "run_ref": "949294",
+          "route_id": 8,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "949887": {
+      "run_id": 949887,
+      "run_ref": "949887",
+      "route_id": 8,
+      "route_type": 0,
+      "final_stop_id": 1100,
+      "destination_name": "Hurstbridge",
+      "status": "scheduled",
+      "direction_id": 7,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "949086",
+          "route_id": 5,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        },
+        "distributor": {
+          "run_ref": "949296",
+          "route_id": 8,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "949889": {
+      "run_id": 949889,
+      "run_ref": "949889",
+      "route_id": 8,
+      "route_type": 0,
+      "final_stop_id": 1062,
+      "destination_name": "Eltham",
+      "status": "scheduled",
+      "direction_id": 7,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "949088",
+          "route_id": 5,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        },
+        "distributor": {
+          "run_ref": "949298",
+          "route_id": 8,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "950685": {
+      "run_id": 950685,
+      "run_ref": "950685",
+      "route_id": 7,
+      "route_type": 0,
+      "final_stop_id": 1078,
+      "destination_name": "Glen Waverley",
+      "status": "scheduled",
+      "direction_id": 6,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "951068",
+          "route_id": 2,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        },
+        "distributor": {
+          "run_ref": "950090",
+          "route_id": 7,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "950687": {
+      "run_id": 950687,
+      "run_ref": "950687",
+      "route_id": 7,
+      "route_type": 0,
+      "final_stop_id": 1078,
+      "destination_name": "Glen Waverley",
+      "status": "scheduled",
+      "direction_id": 6,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "951270",
+          "route_id": 9,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        },
+        "distributor": {
+          "run_ref": "950092",
+          "route_id": 7,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "950689": {
+      "run_id": 950689,
+      "run_ref": "950689",
+      "route_id": 7,
+      "route_type": 0,
+      "final_stop_id": 1078,
+      "destination_name": "Glen Waverley",
+      "status": "scheduled",
+      "direction_id": 6,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "951272",
+          "route_id": 9,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        },
+        "distributor": {
+          "run_ref": "950094",
+          "route_id": 7,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "951667": {
+      "run_id": 951667,
+      "run_ref": "951667",
+      "route_id": 2,
+      "route_type": 0,
+      "final_stop_id": 1018,
+      "destination_name": "Belgrave",
+      "status": "scheduled",
+      "direction_id": 2,
+      "run_sequence": 0,
+      "express_stop_count": 2,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "950084",
+          "route_id": 7,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        },
+        "distributor": {
+          "run_ref": "951072",
+          "route_id": 2,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "951669": {
+      "run_id": 951669,
+      "run_ref": "951669",
+      "route_id": 2,
+      "route_type": 0,
+      "final_stop_id": 1018,
+      "destination_name": "Belgrave",
+      "status": "scheduled",
+      "direction_id": 2,
+      "run_sequence": 0,
+      "express_stop_count": 2,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "950088",
+          "route_id": 7,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        },
+        "distributor": {
+          "run_ref": "951074",
+          "route_id": 2,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "951671": {
+      "run_id": 951671,
+      "run_ref": "951671",
+      "route_id": 2,
+      "route_type": 0,
+      "final_stop_id": 1018,
+      "destination_name": "Belgrave",
+      "status": "scheduled",
+      "direction_id": 2,
+      "run_sequence": 0,
+      "express_stop_count": 2,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "950092",
+          "route_id": 7,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        },
+        "distributor": {
+          "run_ref": "951076",
+          "route_id": 2,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "951871": {
+      "run_id": 951871,
+      "run_ref": "951871",
+      "route_id": 9,
+      "route_type": 0,
+      "final_stop_id": 1115,
+      "destination_name": "Lilydale",
+      "status": "scheduled",
+      "direction_id": 8,
+      "run_sequence": 0,
+      "express_stop_count": 1,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "950086",
+          "route_id": 7,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        },
+        "distributor": {
+          "run_ref": "951316",
+          "route_id": 9,
+          "stop_id": 1163,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Ringwood"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "951873": {
+      "run_id": 951873,
+      "run_ref": "951873",
+      "route_id": 9,
+      "route_type": 0,
+      "final_stop_id": 1115,
+      "destination_name": "Lilydale",
+      "status": "scheduled",
+      "direction_id": 8,
+      "run_sequence": 0,
+      "express_stop_count": 1,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "950090",
+          "route_id": 7,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        },
+        "distributor": {
+          "run_ref": "951318",
+          "route_id": 9,
+          "stop_id": 1163,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Ringwood"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "951875": {
+      "run_id": 951875,
+      "run_ref": "951875",
+      "route_id": 9,
+      "route_type": 0,
+      "final_stop_id": 1115,
+      "destination_name": "Lilydale",
+      "status": "scheduled",
+      "direction_id": 8,
+      "run_sequence": 0,
+      "express_stop_count": 1,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "950094",
+          "route_id": 7,
+          "stop_id": 1155,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Parliament"
+        },
+        "distributor": {
+          "run_ref": "951320",
+          "route_id": 9,
+          "stop_id": 1163,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Ringwood"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "952445": {
+      "run_id": 952445,
+      "run_ref": "952445",
+      "route_id": 6,
+      "route_type": 0,
+      "final_stop_id": 1039,
+      "destination_name": "Cheltenham",
+      "status": "scheduled",
+      "direction_id": 5,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "952942",
+          "route_id": 6,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        },
+        "distributor": {
+          "run_ref": "952952",
+          "route_id": 6,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "952447": {
+      "run_id": 952447,
+      "run_ref": "952447",
+      "route_id": 6,
+      "route_type": 0,
+      "final_stop_id": 1039,
+      "destination_name": "Cheltenham",
+      "status": "scheduled",
+      "direction_id": 5,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "952944",
+          "route_id": 6,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        },
+        "distributor": {
+          "run_ref": "952954",
+          "route_id": 6,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "952449": {
+      "run_id": 952449,
+      "run_ref": "952449",
+      "route_id": 6,
+      "route_type": 0,
+      "final_stop_id": 1039,
+      "destination_name": "Cheltenham",
+      "status": "scheduled",
+      "direction_id": 5,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "952946",
+          "route_id": 6,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        },
+        "distributor": {
+          "run_ref": "952956",
+          "route_id": 6,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "953087": {
+      "run_id": 953087,
+      "run_ref": "953087",
+      "route_id": 15,
+      "route_type": 0,
+      "final_stop_id": 1198,
+      "destination_name": "Upfield",
+      "status": "scheduled",
+      "direction_id": 15,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "953886",
+          "route_id": 3,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        },
+        "distributor": {
+          "run_ref": "953692",
+          "route_id": 15,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "953089": {
+      "run_id": 953089,
+      "run_ref": "953089",
+      "route_id": 15,
+      "route_type": 0,
+      "final_stop_id": 1198,
+      "destination_name": "Upfield",
+      "status": "scheduled",
+      "direction_id": 15,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "953888",
+          "route_id": 3,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        },
+        "distributor": {
+          "run_ref": "953694",
+          "route_id": 15,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "953091": {
+      "run_id": 953091,
+      "run_ref": "953091",
+      "route_id": 15,
+      "route_type": 0,
+      "final_stop_id": 1198,
+      "destination_name": "Upfield",
+      "status": "scheduled",
+      "direction_id": 15,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "953890",
+          "route_id": 3,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        },
+        "distributor": {
+          "run_ref": "953696",
+          "route_id": 15,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "953287": {
+      "run_id": 953287,
+      "run_ref": "953287",
+      "route_id": 3,
+      "route_type": 0,
+      "final_stop_id": 1044,
+      "destination_name": "Craigieburn",
+      "status": "scheduled",
+      "direction_id": 4,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "953686",
+          "route_id": 15,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        },
+        "distributor": {
+          "run_ref": "953892",
+          "route_id": 3,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "953289": {
+      "run_id": 953289,
+      "run_ref": "953289",
+      "route_id": 3,
+      "route_type": 0,
+      "final_stop_id": 1044,
+      "destination_name": "Craigieburn",
+      "status": "scheduled",
+      "direction_id": 4,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "953688",
+          "route_id": 15,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        },
+        "distributor": {
+          "run_ref": "953894",
+          "route_id": 3,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "953291": {
+      "run_id": 953291,
+      "run_ref": "953291",
+      "route_id": 3,
+      "route_type": 0,
+      "final_stop_id": 1044,
+      "destination_name": "Craigieburn",
+      "status": "scheduled",
+      "direction_id": 4,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "953690",
+          "route_id": 15,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        },
+        "distributor": {
+          "run_ref": "953896",
+          "route_id": 3,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "954489": {
+      "run_id": 954489,
+      "run_ref": "954489",
+      "route_id": 16,
+      "route_type": 0,
+      "final_stop_id": 1205,
+      "destination_name": "Werribee",
+      "status": "scheduled",
+      "direction_id": 16,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "954484",
+          "route_id": 16,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        },
+        "distributor": {
+          "run_ref": "954496",
+          "route_id": 16,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "954491": {
+      "run_id": 954491,
+      "run_ref": "954491",
+      "route_id": 16,
+      "route_type": 0,
+      "final_stop_id": 1205,
+      "destination_name": "Werribee",
+      "status": "scheduled",
+      "direction_id": 16,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "954486",
+          "route_id": 16,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        },
+        "distributor": {
+          "run_ref": "954498",
+          "route_id": 16,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "954493": {
+      "run_id": 954493,
+      "run_ref": "954493",
+      "route_id": 16,
+      "route_type": 0,
+      "final_stop_id": 1205,
+      "destination_name": "Werribee",
+      "status": "scheduled",
+      "direction_id": 16,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "954488",
+          "route_id": 16,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        },
+        "distributor": {
+          "run_ref": "954500",
+          "route_id": 16,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "988087": {
+      "run_id": 988087,
+      "run_ref": "988087",
+      "route_id": 12,
+      "route_type": 0,
+      "final_stop_id": 1173,
+      "destination_name": "Sandringham",
+      "status": "scheduled",
+      "direction_id": 12,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "988086",
+          "route_id": 12,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        },
+        "distributor": {
+          "run_ref": "988094",
+          "route_id": 12,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "988089": {
+      "run_id": 988089,
+      "run_ref": "988089",
+      "route_id": 12,
+      "route_type": 0,
+      "final_stop_id": 1173,
+      "destination_name": "Sandringham",
+      "status": "scheduled",
+      "direction_id": 12,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "988088",
+          "route_id": 12,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        },
+        "distributor": {
+          "run_ref": "988096",
+          "route_id": 12,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    },
+    "988091": {
+      "run_id": 988091,
+      "run_ref": "988091",
+      "route_id": 12,
+      "route_type": 0,
+      "final_stop_id": 1173,
+      "destination_name": "Sandringham",
+      "status": "scheduled",
+      "direction_id": 12,
+      "run_sequence": 0,
+      "express_stop_count": 0,
+      "vehicle_position": null,
+      "vehicle_descriptor": null,
+      "geopath": [],
+      "interchange": {
+        "feeder": {
+          "run_ref": "988090",
+          "route_id": 12,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        },
+        "distributor": {
+          "run_ref": "988098",
+          "route_id": 12,
+          "stop_id": 1071,
+          "advertised": false,
+          "direction_id": 1,
+          "destination_name": "Flinders Street"
+        }
+      },
+      "run_note": "",
+      "externalService": null
+    }
+  },
+  "directions": {},
+  "disruptions": {
+    "306628": {
+      "disruption_id": 306628,
+      "title": "Watsonia Station: Temporary car park closures from Thursday 4 April 2024 to 2028",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/watsonia-station-temporary-car-park-closures-from-mid-march-2024-to-2028",
+      "description": "Watsonia Station car park will close from Thursday 4 April 2024 to 2028, due to works.",
+      "disruption_status": "Current",
+      "disruption_type": "Planned Closure",
+      "published_on": "2024-02-14T04:45:53Z",
+      "last_updated": "2025-12-20T10:25:13Z",
+      "from_date": "2024-04-03T16:00:00Z",
+      "to_date": null,
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 8,
+          "route_name": "Hurstbridge",
+          "route_number": "",
+          "route_gtfs_id": "2-HBE",
+          "direction": null
+        }
+      ],
+      "stops": [
+        {
+          "stop_id": 1203,
+          "stop_name": "Watsonia "
+        }
+      ],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "323905": {
+      "disruption_id": 323905,
+      "title": "Alamein, Belgrave, Glen Waverley and Lilydale line stations: Temporary car park closures and pedestrian access changes until further notice",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/alamein-belgrave-glen-waverley-and-lilydale-line-stations-temporary-car-park-closures-and-pedestrian-access-changes-until-further-notice",
+      "description": "Stations on the Alamein, Belgrave, Glen Waverley and Lilydale lines will be affected by temporary car park closures, platform closures and changes to pedestrian access at select times, due to works as part of the Level Crossing Removal Project and other maintenance works.",
+      "disruption_status": "Current",
+      "disruption_type": "Planned Closure",
+      "published_on": "2024-10-29T04:29:05Z",
+      "last_updated": "2026-04-22T01:40:50Z",
+      "from_date": "2024-10-28T10:54:00Z",
+      "to_date": null,
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 2,
+          "route_name": "Belgrave",
+          "route_number": "",
+          "route_gtfs_id": "2-BEG",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 9,
+          "route_name": "Lilydale",
+          "route_number": "",
+          "route_gtfs_id": "2-LIL",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 1,
+          "route_name": "Alamein",
+          "route_number": "",
+          "route_gtfs_id": "2-ALM",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 7,
+          "route_name": "Glen Waverley",
+          "route_number": "",
+          "route_gtfs_id": "2-GWY",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "341935": {
+      "disruption_id": 341935,
+      "title": "Frankston Line: Temporary timetable and service changes until last service Wednesday 20 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/frankston-line-temporary-timetable-and-service-changes-from-first-service-friday-29-august-2025-until-mid-2026",
+      "description": "The Frankston Line will run to a temporary timetable with service changes from first service Friday 29 August 2025 to last service Wednesday 20 May 2026, due to Mordialloc Level Crossing Removal Project works.",
+      "disruption_status": "Current",
+      "disruption_type": "Timetable/Route Changes",
+      "published_on": "2025-08-20T05:34:24Z",
+      "last_updated": "2026-05-14T05:41:02Z",
+      "from_date": "2025-08-28T17:00:00Z",
+      "to_date": "2026-05-20T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 6,
+          "route_name": "Frankston",
+          "route_number": "",
+          "route_gtfs_id": "2-FKN",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd000",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "344824": {
+      "disruption_id": 344824,
+      "title": "Southern Cross Station: From 8.30pm Monday 29 September 2025 until August 2026, there will be changes to the way you access and exit the station, due to escalator upgrade works.",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/page/plan-a-journey/maps/southern-cross-station-map-and-travel-information/",
+      "description": "Southern Cross Station: From 8.30pm Monday 29 September 2025 until August 2026, there will be changes to the way you access and exit the station, due to escalator upgrade works.",
+      "disruption_status": "Current",
+      "disruption_type": "Station detour",
+      "published_on": "2025-09-25T05:26:57Z",
+      "last_updated": "2026-02-10T10:00:02Z",
+      "from_date": "2025-09-25T05:13:00Z",
+      "to_date": "2026-08-31T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 1,
+          "route_name": "Alamein",
+          "route_number": "",
+          "route_gtfs_id": "2-ALM",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 2,
+          "route_name": "Belgrave",
+          "route_number": "",
+          "route_gtfs_id": "2-BEG",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 3,
+          "route_name": "Craigieburn",
+          "route_number": "",
+          "route_gtfs_id": "2-CGB",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 6,
+          "route_name": "Frankston",
+          "route_number": "",
+          "route_gtfs_id": "2-FKN",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 7,
+          "route_name": "Glen Waverley",
+          "route_number": "",
+          "route_gtfs_id": "2-GWY",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 8,
+          "route_name": "Hurstbridge",
+          "route_number": "",
+          "route_gtfs_id": "2-HBE",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 9,
+          "route_name": "Lilydale",
+          "route_number": "",
+          "route_gtfs_id": "2-LIL",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 5,
+          "route_name": "Mernda",
+          "route_number": "",
+          "route_gtfs_id": "2-MDD",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 15,
+          "route_name": "Upfield",
+          "route_number": "",
+          "route_gtfs_id": "2-UFD",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 16,
+          "route_name": "Werribee",
+          "route_number": "",
+          "route_gtfs_id": "2-WER",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 17,
+          "route_name": "Williamstown",
+          "route_number": "",
+          "route_gtfs_id": "2-WIL",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffbb00",
+      "display_on_board": true,
+      "display_status": false
+    },
+    "352201": {
+      "disruption_id": 352201,
+      "title": "Mordialloc Station: Major changes until further notice",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/mordialloc-station-major-changes-until-further-notice-2",
+      "description": "From Thursday 21 May, the Frankston Line will have a new timetable and the temporary timetable introduced for level crossing removal works will end. There may be changes to some journeys. Check your timetable before your travel.",
+      "disruption_status": "Current",
+      "disruption_type": "Planned Closure",
+      "published_on": "2026-01-05T05:08:23Z",
+      "last_updated": "2026-05-15T09:23:20Z",
+      "from_date": "2025-01-29T10:37:00Z",
+      "to_date": null,
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 6,
+          "route_name": "Frankston",
+          "route_number": "",
+          "route_gtfs_id": "2-FKN",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "354390": {
+      "disruption_id": 354390,
+      "title": "Williams Landing Station: Temporary car park closures from Thursday 5 February to early-September 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/williams-landing-station-temporary-car-park-closures-from-thursday-5-february-to-early-september-2026",
+      "description": "Williams Landing Station will be affected by temporary car space closures from Thursday 5 February to early-September 2026, due to works.",
+      "disruption_status": "Current",
+      "disruption_type": "Planned Closure",
+      "published_on": "2026-01-30T07:20:50Z",
+      "last_updated": "2026-01-30T07:25:34Z",
+      "from_date": "2026-02-05T07:15:00Z",
+      "to_date": null,
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 16,
+          "route_name": "Werribee",
+          "route_number": "",
+          "route_gtfs_id": "2-WER",
+          "direction": null
+        }
+      ],
+      "stops": [
+        {
+          "stop_id": 1225,
+          "stop_name": "Williams Landing "
+        }
+      ],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "355984": {
+      "disruption_id": 355984,
+      "title": "Newport Station: Temporary car park closures from Monday 2 March to late April 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/newport-station-temporary-car-park-closures-from-monday-2-march-to-late-april-2026",
+      "description": "Newport Station will be affected by temporary car space closures from Monday 2 March to late April 2026, due to project works.",
+      "disruption_status": "Current",
+      "disruption_type": "Planned Closure",
+      "published_on": "2026-02-18T07:49:42Z",
+      "last_updated": "2026-04-09T05:06:33Z",
+      "from_date": "2026-03-01T16:00:00Z",
+      "to_date": null,
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 16,
+          "route_name": "Werribee",
+          "route_number": "",
+          "route_gtfs_id": "2-WER",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 17,
+          "route_name": "Williamstown",
+          "route_number": "",
+          "route_gtfs_id": "2-WIL",
+          "direction": null
+        }
+      ],
+      "stops": [
+        {
+          "stop_id": 1141,
+          "stop_name": "Newport "
+        }
+      ],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "357977": {
+      "disruption_id": 357977,
+      "title": "Boronia Station: Major changes until spring 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/boronia-disruptions",
+      "description": "Trains will not stop at Boronia Station.",
+      "disruption_status": "Current",
+      "disruption_type": "Planned Closure",
+      "published_on": "2026-03-18T04:56:31Z",
+      "last_updated": "2026-05-06T07:23:48Z",
+      "from_date": "2026-03-26T16:10:00Z",
+      "to_date": null,
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 2,
+          "route_name": "Belgrave",
+          "route_number": "",
+          "route_gtfs_id": "2-BEG",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "358623": {
+      "disruption_id": 358623,
+      "title": "Heidelberg Station: Temporary pedestrian access changes from Monday 16 March to early April 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/heidelberg-station-temporary-pedestrian-access-changes-from-monday-16-march-to-early-april-2026",
+      "description": "Heidelberg Station will be affected by temporary pedestrian access changes from 7.30am to 3.30pm each day, Monday 16 March to early April, due to works.",
+      "disruption_status": "Current",
+      "disruption_type": "Station detour",
+      "published_on": "2026-03-26T06:58:56Z",
+      "last_updated": "2026-03-26T07:08:08Z",
+      "from_date": "2026-03-26T06:47:00Z",
+      "to_date": null,
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 8,
+          "route_name": "Hurstbridge",
+          "route_number": "",
+          "route_gtfs_id": "2-HBE",
+          "direction": null
+        }
+      ],
+      "stops": [
+        {
+          "stop_id": 1093,
+          "stop_name": "Heidelberg "
+        }
+      ],
+      "colour": "#ffbb00",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "358804": {
+      "disruption_id": 358804,
+      "title": "Elsternwick Station: Temporary pedestrian access changes from Tuesday 31 March to late April 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/elsternwick-station-temporary-pedestrian-access-changes-from-tuesday-31-march-to-late-april-2026",
+      "description": "Elsternwick Station will be affected by temporary pedestrian access changes from Tuesday 31 March to late April, due to works.",
+      "disruption_status": "Current",
+      "disruption_type": "Station detour",
+      "published_on": "2026-03-28T10:45:47Z",
+      "last_updated": "2026-03-28T11:00:36Z",
+      "from_date": "2026-03-30T16:00:00Z",
+      "to_date": null,
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 12,
+          "route_name": "Sandringham",
+          "route_number": "",
+          "route_gtfs_id": "2-SHM",
+          "direction": null
+        }
+      ],
+      "stops": [
+        {
+          "stop_id": 1061,
+          "stop_name": "Elsternwick "
+        }
+      ],
+      "colour": "#ffbb00",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "358901": {
+      "disruption_id": 358901,
+      "title": "Frankston Line: Buses replace trains from 10:30pm Thursday 30 April to 8:30pm Monday 18 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/frankston-line-buses-replace-trains-from-10-30pm-thursday-30-april-to-8-30pm-monday-18-may-2026",
+      "description": "10:30pm Thursday 30 April to 8:30pm Monday 18 May.",
+      "disruption_status": "Current",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-03-30T01:11:21Z",
+      "last_updated": "2026-05-13T23:18:56Z",
+      "from_date": "2026-04-30T12:30:00Z",
+      "to_date": "2026-05-18T10:30:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 6,
+          "route_name": "Frankston",
+          "route_number": "",
+          "route_gtfs_id": "2-FKN",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": true,
+      "display_status": true
+    },
+    "359631": {
+      "disruption_id": 359631,
+      "title": "Frankston Station: Temporary car space access changes from 4am Tuesday 28 April to 4am Thursday 21 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/frankston-station-station-temporary-car-space-access-changes-from-4am-tuesday-28-april-to-4am-thursday-21-may-2026",
+      "description": "Frankston Station will be affected by temporary car space access changes from 4am Tuesday 28 April to 4am Thursday 21 May, due to works.",
+      "disruption_status": "Current",
+      "disruption_type": "Station detour",
+      "published_on": "2026-04-09T03:23:54Z",
+      "last_updated": "2026-04-09T04:10:13Z",
+      "from_date": "2026-04-27T18:00:00Z",
+      "to_date": "2026-05-20T18:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 6,
+          "route_name": "Frankston",
+          "route_number": "",
+          "route_gtfs_id": "2-FKN",
+          "direction": null
+        }
+      ],
+      "stops": [
+        {
+          "stop_id": 1073,
+          "stop_name": "Frankston "
+        }
+      ],
+      "colour": "#ffbb00",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "359833": {
+      "disruption_id": 359833,
+      "title": "Frankston Line: Buses replace trains from 8.30pm Monday 18 May to last service Wednesday 20 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/frankston-line-buses-replace-trains-from-8-30pm-monday-18-may-to-last-service-wednesday-20-may-2026",
+      "description": "From 8.30pm Monday 18 May to last service Wednesday 20 May",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-04-11T09:07:22Z",
+      "last_updated": "2026-04-11T09:26:26Z",
+      "from_date": "2026-05-18T10:30:00Z",
+      "to_date": "2026-05-20T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 6,
+          "route_name": "Frankston",
+          "route_number": "",
+          "route_gtfs_id": "2-FKN",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "359834": {
+      "disruption_id": 359834,
+      "title": "Frankston Line: Buses replace trains from 8.30pm to last service each night, Monday 18 May to Wednesday 20 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/frankston-line-buses-replace-trains-from-8-30pm-to-last-service-each-night-monday-18-may-to-wednesday-20-may-2026",
+      "description": "From 8.30pm to last service each night, Monday 18 May to Wednesday 20 May",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-04-11T09:19:44Z",
+      "last_updated": "2026-04-11T09:19:45Z",
+      "from_date": "2026-05-18T10:30:00Z",
+      "to_date": "2026-05-20T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 6,
+          "route_name": "Frankston",
+          "route_number": "",
+          "route_gtfs_id": "2-FKN",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "359870": {
+      "disruption_id": 359870,
+      "title": "Seaford Station: Temporary car park closures until mid July 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/seaford-station-temporary-car-park-closures-until-mid-july-2026",
+      "description": "Seaford Station on the Frankston Line will be affected by temporary car space closures at selected times. These impacts are due to works as part of the Level Crossing Removal Project.",
+      "disruption_status": "Current",
+      "disruption_type": "Planned Closure",
+      "published_on": "2026-04-12T09:12:24Z",
+      "last_updated": "2026-05-04T01:42:11Z",
+      "from_date": "2026-04-16T17:00:00Z",
+      "to_date": "2026-07-15T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 6,
+          "route_name": "Frankston",
+          "route_number": "",
+          "route_gtfs_id": "2-FKN",
+          "direction": null
+        }
+      ],
+      "stops": [
+        {
+          "stop_id": 1174,
+          "stop_name": "Seaford "
+        }
+      ],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "359982": {
+      "disruption_id": 359982,
+      "title": "Moorabbin Station: Temporary car park closures from 12.30am Wednesday 29 April to 3am Thursday 21 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/tue-14-apr-metropolitan-trains-disrupted-48",
+      "description": "Frankston Station will be affected by temporary car park closures from 12.30am Wednesday 29 April to 3am Thursday 21 May 2026, due to works.",
+      "disruption_status": "Current",
+      "disruption_type": "Planned Closure",
+      "published_on": "2026-04-14T05:04:36Z",
+      "last_updated": "2026-04-28T14:31:40Z",
+      "from_date": "2026-04-28T14:30:00Z",
+      "to_date": "2026-05-20T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 6,
+          "route_name": "Frankston",
+          "route_number": "",
+          "route_gtfs_id": "2-FKN",
+          "direction": null
+        }
+      ],
+      "stops": [
+        {
+          "stop_id": 1073,
+          "stop_name": "Frankston "
+        }
+      ],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "360380": {
+      "disruption_id": 360380,
+      "title": "Werribee Line: Buses replace trains from 11.50pm to last service on Sunday 17 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/werribee-line-buses-replace-trains-from-11-55pm-to-last-service-on-sunday-17-may-2026",
+      "description": "From 11.50pm to last service Sunday 17 May",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-04-19T09:20:26Z",
+      "last_updated": "2026-05-08T08:35:29Z",
+      "from_date": "2026-05-17T13:50:00Z",
+      "to_date": "2026-05-17T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 16,
+          "route_name": "Werribee",
+          "route_number": "",
+          "route_gtfs_id": "2-WER",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "360381": {
+      "disruption_id": 360381,
+      "title": "Werribee Line: Buses replace trains from 11.50pm to last service each night, Tuesday 19 May to Thursday 21 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/werribee-line-buses-replace-trains-from-11-55pm-to-last-service-each-night-tuesday-19-may-to-thursday-21-may-2026",
+      "description": "From 11.50pm to last service each night, Tuesday 19 May to Thursday 21 May",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-04-19T10:13:31Z",
+      "last_updated": "2026-05-08T08:36:09Z",
+      "from_date": "2026-05-19T13:50:00Z",
+      "to_date": "2026-05-21T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 16,
+          "route_name": "Werribee",
+          "route_number": "",
+          "route_gtfs_id": "2-WER",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "361545": {
+      "disruption_id": 361545,
+      "title": "Sandringham Line: Buses replace trains from 8:35pm to last service each night, Sunday 17 May to Wednesday 20 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/sandringham-line-buses-replace-trains-from-835pm-to-last-service-each-night-sunday-17-may-to-wednesday-20-may-2026",
+      "description": "From 8:35pm to last service each night, Sunday 17 May to Wednesday 20 May",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-04T09:33:33Z",
+      "last_updated": "2026-05-06T04:01:57Z",
+      "from_date": "2026-05-17T10:35:00Z",
+      "to_date": "2026-05-20T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 12,
+          "route_name": "Sandringham",
+          "route_number": "",
+          "route_gtfs_id": "2-SHM",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "361546": {
+      "disruption_id": 361546,
+      "title": "Frankston Line: Buses replace trains from 8.30pm to last service each night, Sunday 17 May to Wednesday 20 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/frankston-line-buses-replace-trains-from-8-30pm-to-last-service-each-night-sunday-17-may-to-wednesday-20-may-2026",
+      "description": "From 8.30pm to last service each night, Sunday 17 May to Wednesday 20 May",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-04T09:43:10Z",
+      "last_updated": "2026-05-06T03:50:24Z",
+      "from_date": "2026-05-17T10:30:00Z",
+      "to_date": "2026-05-20T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 6,
+          "route_name": "Frankston",
+          "route_number": "",
+          "route_gtfs_id": "2-FKN",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "361548": {
+      "disruption_id": 361548,
+      "title": "Upfield Line: Buses replace trains from 8.30pm Friday 22 May to last service Sunday 24 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/upfield-line-buses-replace-trains-from-8-30pm-friday-22-may-to-last-service-sunday-24-may-2026",
+      "description": "From 8.30pm Friday 22 May to last service Sunday 24 May",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-04T10:07:35Z",
+      "last_updated": "2026-05-13T03:46:53Z",
+      "from_date": "2026-05-22T10:30:00Z",
+      "to_date": "2026-05-24T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 15,
+          "route_name": "Upfield",
+          "route_number": "",
+          "route_gtfs_id": "2-UFD",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "361549": {
+      "disruption_id": 361549,
+      "title": "Upfield Line: Buses replace trains 11.45pm Saturday 30 May to last service Sunday 31 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/mon-4-may-metropolitan-trains-disrupted-67",
+      "description": "From 11.45pm Saturday 30 May to last service Sunday 31 May",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-04T10:16:21Z",
+      "last_updated": "2026-05-04T10:16:22Z",
+      "from_date": "2026-05-30T13:45:00Z",
+      "to_date": "2026-05-31T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 15,
+          "route_name": "Upfield",
+          "route_number": "",
+          "route_gtfs_id": "2-UFD",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "361761": {
+      "disruption_id": 361761,
+      "title": "Werribee and Williamstown lines: Trains start and end at Southern Cross from 9pm to last service each night, Sunday 17 May to Wednesday 20 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/werribee-and-williamstown-lines-trains-start-and-end-at-southern-cross-from-9pm-to-last-service-each-night-sunday-17-may-to-wednesday-20-may-2026",
+      "description": "Trains start and end at Southern Cross Station",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-06T04:42:40Z",
+      "last_updated": "2026-05-06T04:42:41Z",
+      "from_date": "2026-05-17T11:00:00Z",
+      "to_date": "2026-05-20T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 16,
+          "route_name": "Werribee",
+          "route_number": "",
+          "route_gtfs_id": "2-WER",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 17,
+          "route_name": "Williamstown",
+          "route_number": "",
+          "route_gtfs_id": "2-WIL",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362040": {
+      "disruption_id": 362040,
+      "title": "Melbourne Central Station: Due to planned maintenance from 10am to 2pm Momday 18 May, Customers will not be able to tap on/off on devices or perform top ups. at this location during the outage.",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/",
+      "description": "Melbourne Central Station: Due to planned maintenance from 10am to 2pm Momday 18 May, Customers will not be able to tap on/off on devices or perform top ups. at this location during the outage.",
+      "disruption_status": "Planned",
+      "disruption_type": "Power outage",
+      "published_on": "2026-05-09T00:29:19Z",
+      "last_updated": "2026-05-13T01:44:51Z",
+      "from_date": "2026-05-18T00:00:00Z",
+      "to_date": "2026-05-18T04:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 2,
+          "route_name": "Belgrave",
+          "route_number": "",
+          "route_gtfs_id": "2-BEG",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 9,
+          "route_name": "Lilydale",
+          "route_number": "",
+          "route_gtfs_id": "2-LIL",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 8,
+          "route_name": "Hurstbridge",
+          "route_number": "",
+          "route_gtfs_id": "2-HBE",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 5,
+          "route_name": "Mernda",
+          "route_number": "",
+          "route_gtfs_id": "2-MDD",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 16,
+          "route_name": "Werribee",
+          "route_number": "",
+          "route_gtfs_id": "2-WER",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 17,
+          "route_name": "Williamstown",
+          "route_number": "",
+          "route_gtfs_id": "2-WIL",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 15,
+          "route_name": "Upfield",
+          "route_number": "",
+          "route_gtfs_id": "2-UFD",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 3,
+          "route_name": "Craigieburn",
+          "route_number": "",
+          "route_gtfs_id": "2-CGB",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362111": {
+      "disruption_id": 362111,
+      "title": "Werribee and Williamstown lines: Buses replace trains from 11.30pm Friday 22 May to 9.30pm Sunday 24 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/werribee-and-williamstown-lines-buses-replace-trains-from-11-30pm-friday-22-may-to-9-30pm-sunday-24-may-2026",
+      "description": "Buses replace trains between North Melbourne, Newport and Williamstown",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-09T11:32:20Z",
+      "last_updated": "2026-05-09T11:51:43Z",
+      "from_date": "2026-05-22T13:30:00Z",
+      "to_date": "2026-05-24T11:30:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 16,
+          "route_name": "Werribee",
+          "route_number": "",
+          "route_gtfs_id": "2-WER",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 17,
+          "route_name": "Williamstown",
+          "route_number": "",
+          "route_gtfs_id": "2-WIL",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362112": {
+      "disruption_id": 362112,
+      "title": "Werribee and Williamstownl lines: Buses replace trains from 9.30pm to last service Sunday 24 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/werribee-and-williamstownl-lines-buses-replace-trains-from-9-30pm-to-last-service-sunday-24-may-2026",
+      "description": "From 9.30pm to last service Sunday 24 May",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-09T11:41:54Z",
+      "last_updated": "2026-05-09T11:41:55Z",
+      "from_date": "2026-05-24T11:30:00Z",
+      "to_date": "2026-05-24T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 16,
+          "route_name": "Werribee",
+          "route_number": "",
+          "route_gtfs_id": "2-WER",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 17,
+          "route_name": "Williamstown",
+          "route_number": "",
+          "route_gtfs_id": "2-WIL",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362139": {
+      "disruption_id": 362139,
+      "title": "Werribee and Williamstown lines: Buses replace trains from 8:30pm Friday 29 May to last service Sunday 31 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/werribee-and-williamstown-lines-buses-replace-trains-from-830pm-friday-29-may-to-last-service-sunday-31-may-2026",
+      "description": "From 8:30pm Friday 29 May to last service Sunday 31 May",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-10T05:26:38Z",
+      "last_updated": "2026-05-10T05:26:40Z",
+      "from_date": "2026-05-29T10:30:00Z",
+      "to_date": "2026-05-31T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 16,
+          "route_name": "Werribee",
+          "route_number": "",
+          "route_gtfs_id": "2-WER",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 17,
+          "route_name": "Williamstown",
+          "route_number": "",
+          "route_gtfs_id": "2-WIL",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362250": {
+      "disruption_id": 362250,
+      "title": "Craigieburn Line: No City Loop trains from 9pm Friday 22 May to last service Sunday 24 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/craigieburn-line-no-city-loop-trains-from-9pm-friday-22-may-to-last-service-sunday-24-may-2026",
+      "description": "All trains run direct to and from Flinders Street, not via the City Loop.",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-11T20:37:40Z",
+      "last_updated": "2026-05-13T03:04:41Z",
+      "from_date": "2026-05-22T11:00:00Z",
+      "to_date": "2026-05-24T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 3,
+          "route_name": "Craigieburn",
+          "route_number": "",
+          "route_gtfs_id": "2-CGB",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362289": {
+      "disruption_id": 362289,
+      "title": "Belgrave, Lilydale and Glen Waverley lines: No City Loop trains from 9pm Friday 22 May to last service Sunday 24 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/belgrave-lilydale-and-glen-waverley-lines-no-city-loop-trains-from-9pm-friday-22-may-to-last-service-sunday-24-may-2026",
+      "description": "All trains run direct to and from Flinders Street, not via the City Loop.",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-12T00:06:44Z",
+      "last_updated": "2026-05-13T01:53:42Z",
+      "from_date": "2026-05-22T11:00:00Z",
+      "to_date": "2026-05-24T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 9,
+          "route_name": "Lilydale",
+          "route_number": "",
+          "route_gtfs_id": "2-LIL",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 7,
+          "route_name": "Glen Waverley",
+          "route_number": "",
+          "route_gtfs_id": "2-GWY",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 2,
+          "route_name": "Belgrave",
+          "route_number": "",
+          "route_gtfs_id": "2-BEG",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362290": {
+      "disruption_id": 362290,
+      "title": "Hurstbridge and Mernda lines: No City Loop trains from 9pm Friday 22 May to last service Sunday 24 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/hurstbridge-and-mernda-lines-no-city-loop-trains-from-9pm-friday-22-may-to-last-service-sunday-24-may-2",
+      "description": "All trains run direct to and from Flinders Street, not via the City Loop.",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-12T00:15:37Z",
+      "last_updated": "2026-05-13T03:26:24Z",
+      "from_date": "2026-05-22T11:00:00Z",
+      "to_date": "2026-05-24T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 8,
+          "route_name": "Hurstbridge",
+          "route_number": "",
+          "route_gtfs_id": "2-HBE",
+          "direction": null
+        },
+        {
+          "route_type": 0,
+          "route_id": 5,
+          "route_name": "Mernda",
+          "route_number": "",
+          "route_gtfs_id": "2-MDD",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362295": {
+      "disruption_id": 362295,
+      "title": "Craigieburn Line: Trains start and end at Southern Cross from 11:55pm Saturday 30 May to last service Sunday 31 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/craigieburn-line-trains-start-and-end-at-southern-cross-from-1155pm-saturday-30-may-to-last-service-sunday-31-may-2026",
+      "description": "Trains start and end at Southern Cross.",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-12T01:10:50Z",
+      "last_updated": "2026-05-13T03:26:55Z",
+      "from_date": "2026-05-30T13:55:00Z",
+      "to_date": "2026-05-31T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 3,
+          "route_name": "Craigieburn",
+          "route_number": "",
+          "route_gtfs_id": "2-CGB",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362297": {
+      "disruption_id": 362297,
+      "title": " Frankston Line: No City Loop trains from 9pm Friday 29 May to last service Sunday 31 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/frankston-line-no-city-loop-trains-from-9pm-friday-29-may-to-last-service-sunday-31-may-2",
+      "description": "Frankston Line trains run direct to and from Flinders Street, not via the City Loop.",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-12T01:33:08Z",
+      "last_updated": "2026-05-12T01:33:10Z",
+      "from_date": "2026-05-29T11:00:00Z",
+      "to_date": "2026-05-31T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 6,
+          "route_name": "Frankston",
+          "route_number": "",
+          "route_gtfs_id": "2-FKN",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362298": {
+      "disruption_id": 362298,
+      "title": "Belgrave Line: Replacement bus stop relocation at Bayswater Station until late 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/belgrave-line-replacement-bus-stop-relocation-at-bayswater-station-until-late-2026",
+      "description": "Monday 11 May to late 2026",
+      "disruption_status": "Current",
+      "disruption_type": "Station detour",
+      "published_on": "2026-05-12T02:11:45Z",
+      "last_updated": "2026-05-14T09:07:58Z",
+      "from_date": "2026-05-12T00:51:00Z",
+      "to_date": null,
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 2,
+          "route_name": "Belgrave",
+          "route_number": "",
+          "route_gtfs_id": "2-BEG",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffbb00",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362422": {
+      "disruption_id": 362422,
+      "title": "Lalor Station: Temporary car park closures from 6am Wednesday 13 May to 6pm Monday 18 May 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/lalor-station-temporary-car-park-closures-from-6am-wednesday-13-may-to-6pm-monday-18-may-2026",
+      "description": "Lalor Station will be affected by temporary car space closures from 6am Wednesday 13 May to 6pm Monday 18 May, due to project works.",
+      "disruption_status": "Current",
+      "disruption_type": "Planned Closure",
+      "published_on": "2026-05-13T08:34:03Z",
+      "last_updated": "2026-05-13T08:44:09Z",
+      "from_date": "2026-05-13T08:31:00Z",
+      "to_date": "2026-05-18T08:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 5,
+          "route_name": "Mernda",
+          "route_number": "",
+          "route_gtfs_id": "2-MDD",
+          "direction": null
+        }
+      ],
+      "stops": [
+        {
+          "stop_id": 1112,
+          "stop_name": "Lalor "
+        }
+      ],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362520": {
+      "disruption_id": 362520,
+      "title": "Werribee Line: Buses replace trains from 11.55pm to last service each night, Tuesday 2 June to Thursday 4 June 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/werribee-line-buses-replace-trains-from-11-55pm-to-last-service-each-night-tuesday-2-june-to-thursday-4-june-2026",
+      "description": "11.55pm to last service each night, Tuesday 2 June to Thursday 4 June",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-14T21:23:00Z",
+      "last_updated": "2026-05-14T21:23:01Z",
+      "from_date": "2026-06-02T13:55:00Z",
+      "to_date": "2026-06-04T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 16,
+          "route_name": "Werribee",
+          "route_number": "",
+          "route_gtfs_id": "2-WER",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362521": {
+      "disruption_id": 362521,
+      "title": "Werribee Line: Buses replace trains from 11.55pm to last service Sunday 7 June 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/werribee-line-buses-replace-trains-from-11-55pm-to-last-service-sunday-7-june-2026",
+      "description": "From 11.55pm to last service Sunday 7 June 2026",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-14T21:31:35Z",
+      "last_updated": "2026-05-14T21:31:36Z",
+      "from_date": "2026-06-07T13:55:00Z",
+      "to_date": "2026-06-07T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 16,
+          "route_name": "Werribee",
+          "route_number": "",
+          "route_gtfs_id": "2-WER",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362524": {
+      "disruption_id": 362524,
+      "title": "Werribee Line: Buses replace trains from 11.55pm to last service each night, Tuesday 9 June to Thursday 11 June 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/werribee-line-buses-replace-trains-from-11-55pm-to-last-service-each-night-tuesday-9-june-to-thursday-11-june-2026",
+      "description": "From 11.55pm to last service each night, Tuesday 9 June to Thursday 11 June",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-14T21:51:53Z",
+      "last_updated": "2026-05-14T21:51:54Z",
+      "from_date": "2026-06-09T13:55:00Z",
+      "to_date": "2026-06-11T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 16,
+          "route_name": "Werribee",
+          "route_number": "",
+          "route_gtfs_id": "2-WER",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362529": {
+      "disruption_id": 362529,
+      "title": "Werribee Line: Buses replace trains from 11.55pm to last service each night, Tuesday 16 June to Thursday 18 June 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/werribee-line-buses-replace-trains-from-11-55pm-to-last-service-each-night-tuesday-16-june-to-thursday-18-june-2026",
+      "description": "From 11.55pm to last service each night, Tuesday 16 June to Thursday 18 June",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-14T22:24:19Z",
+      "last_updated": "2026-05-14T22:24:20Z",
+      "from_date": "2026-06-16T13:55:00Z",
+      "to_date": "2026-06-18T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 16,
+          "route_name": "Werribee",
+          "route_number": "",
+          "route_gtfs_id": "2-WER",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362535": {
+      "disruption_id": 362535,
+      "title": "Werribee Line: Buses replace trains from 11.55pm to last service each night, Monday 22 June to Thursday 25 June 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/werribee-line-buses-replace-trains-from-11-55pm-to-last-service-each-night-monday-22-june-to-thursday-25-june-2026",
+      "description": "From 11.55pm to last service each night, Monday 22 June to Thursday 25 June",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-14T22:37:50Z",
+      "last_updated": "2026-05-14T22:37:51Z",
+      "from_date": "2026-06-22T13:55:00Z",
+      "to_date": "2026-06-25T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 16,
+          "route_name": "Werribee",
+          "route_number": "",
+          "route_gtfs_id": "2-WER",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362539": {
+      "disruption_id": 362539,
+      "title": "Werribee Line: Buses replace trains from 11.55pm to last service each night, Monday 29 June and Tuesday 30 June 2026",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/article/werribee-line-buses-replace-trains-from-11-55pm-to-last-service-each-night-monday-29-june-and-tuesday-30-june-2026",
+      "description": "From 11.55pm to last service each night, Monday 29 June and Tuesday 30 June",
+      "disruption_status": "Planned",
+      "disruption_type": "Planned Works",
+      "published_on": "2026-05-14T22:50:53Z",
+      "last_updated": "2026-05-14T22:50:55Z",
+      "from_date": "2026-06-29T13:55:00Z",
+      "to_date": "2026-06-30T17:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 16,
+          "route_name": "Werribee",
+          "route_number": "",
+          "route_gtfs_id": "2-WER",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    },
+    "362546": {
+      "disruption_id": 362546,
+      "title": "Diamond Creek Station: Due to planned maintenance from 9am to 5pm on Sunday 24 May, EFTPOS and Card payments will be unavailable for topping up at this location during the outage.",
+      "url": "http://ptv.vic.gov.au/live-travel-updates/",
+      "description": "Diamond Creek Station: Due to planned maintenance from 9am to 5pm on Sunday 24 May, EFTPOS and Card payments will be unavailable for topping up at this location during the outage.",
+      "disruption_status": "Planned",
+      "disruption_type": "Power outage",
+      "published_on": "2026-05-14T23:54:42Z",
+      "last_updated": "2026-05-14T23:54:44Z",
+      "from_date": "2026-05-23T23:00:00Z",
+      "to_date": "2026-05-24T07:00:00Z",
+      "routes": [
+        {
+          "route_type": 0,
+          "route_id": 8,
+          "route_name": "Hurstbridge",
+          "route_number": "",
+          "route_gtfs_id": "2-HBE",
+          "direction": null
+        }
+      ],
+      "stops": [],
+      "colour": "#ffd500",
+      "display_on_board": false,
+      "display_status": false
+    }
+  },
+  "status": {
+    "version": "3.0",
+    "health": 1
+  }
+}
