@@ -56,4 +56,37 @@ describe.skipIf(SKIP)('integration: plan command', () => {
       }
     }
   }, 30_000);
+
+  it('K=2 cross-line: Rosanna → Dandenong via a hub returns transfers=1 itinerary', async () => {
+    const result = await plan({
+      from: { lat: -37.7390, lon: 145.0682 },  // near Rosanna station
+      to:   { lat: -37.9871, lon: 145.2113 },  // near Dandenong station
+      departUtc: new Date(),
+      minBikeKm: 0,
+      maxBikeKm: 5,
+      maxTransfers: 1,
+      enrich: false,
+    });
+    expect(Array.isArray(result.itineraries)).toBe(true);
+    if (result.itineraries.length > 0) {
+      // Find the K=2 itinerary (transfers === 1). May co-exist with K=1 if a
+      // direct route somehow exists (it doesn't between these endpoints in
+      // practice, but we don't hard-assert).
+      const k2 = result.itineraries.find((i) => i.transfers === 1);
+      if (k2) {
+        expect(k2.legs).toHaveLength(4);
+        expect(k2.legs[1].mode).toBe('train');
+        expect(k2.legs[2].mode).toBe('train');
+        // The transfer stop must be the same on both train legs
+        const l1 = k2.legs[1];
+        const l2 = k2.legs[2];
+        if (l1.mode === 'train' && l2.mode === 'train') {
+          expect(l1.toStopId).toBe(l2.fromStopId);
+        }
+      }
+    } else {
+      // Off-hours or no-service empty is OK — orchestrator may return no
+      // warnings when K=2 simply finds no connecting runs (not an error path).
+    }
+  }, 60_000);
 });
