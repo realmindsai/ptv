@@ -1,7 +1,7 @@
 import type {
   LatLon, AccessCandidate, RouteTypeBikeable,
 } from './types';
-import { TOP_N_CANDIDATES } from './types';
+import { TOP_N_CANDIDATES, CANDIDATES_CLOSE, CANDIDATES_FAR } from './types';
 
 type PtvFn = (path: string, params?: Record<string, string | number | number[]>) => Promise<unknown>;
 type ExternalMod = typeof import('./external');
@@ -79,8 +79,11 @@ export async function accessCandidates(
     });
   }
   if (out.length > TOP_N_CANDIDATES) {
-    out.sort((a, b) => a.bikeMin - b.bikeMin);
-    out.length = TOP_N_CANDIDATES;
+    const sorted = out.slice().sort((a, b) => a.bikeMin - b.bikeMin);
+    const closeIds = new Set(sorted.slice(0, CANDIDATES_CLOSE).map((c) => c.stopId));
+    const farIds   = new Set(sorted.slice(-CANDIDATES_FAR).map((c) => c.stopId));
+    const keepIds  = new Set([...closeIds, ...farIds]);
+    return out.filter((c) => keepIds.has(c.stopId));
   }
   return out;
 }

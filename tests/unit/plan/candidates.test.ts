@@ -110,10 +110,36 @@ describe('accessCandidates()', () => {
       { ptv: fakePtv, external: fakeExternal as never },
     );
     expect(out).toHaveLength(30);
-    expect(out[0].bikeMin).toBeCloseTo(5);
-    expect(out[29].bikeMin).toBeCloseTo(34);
+    // Result preserves the 15 closest AND the 15 farthest by bikeMin
     const keptIds = new Set(out.map((c) => c.stopId));
-    for (let i = 0; i < 30; i++) expect(keptIds.has(1000 + i)).toBe(true);
-    for (let i = 30; i < 50; i++) expect(keptIds.has(1000 + i)).toBe(false);
+    for (let i = 0; i < 15; i++) expect(keptIds.has(1000 + i)).toBe(true);   // close
+    for (let i = 35; i < 50; i++) expect(keptIds.has(1000 + i)).toBe(true);  // far
+    for (let i = 15; i < 35; i++) expect(keptIds.has(1000 + i)).toBe(false); // middle dropped
+  });
+
+  it('keeps both close and far stops (15 each, union) when input has more than 30 candidates', async () => {
+    const stops = Array.from({ length: 50 }, (_, i) => ({
+      stop_id: 1000 + i, stop_name: `Stop${i}`, route_type: 0,
+      stop_latitude: -37.78 + i * 0.001, stop_longitude: 144.96,
+      routes: [{ route_id: 100, route_type: 0 }],
+    }));
+    const fakePtv = vi.fn(async () => ({ stops }));
+    const fakeExternal = {
+      osrmTable: vi.fn(async () => ({
+        durations: stops.map((_, i) => 300 + i * 60),    // 5min..54min
+        distances: stops.map((_, i) => 1000 + i * 100),
+      })),
+    };
+    const out = await accessCandidates(
+      { lat: -37.78, lon: 144.96 }, 100, [0, 3],
+      { ptv: fakePtv, external: fakeExternal as never },
+    );
+    expect(out.length).toBeGreaterThan(0);
+    expect(out.length).toBeLessThanOrEqual(30);
+    const ids = new Set(out.map((c) => c.stopId));
+    expect(ids.has(1000)).toBe(true);  // closest (i=0)
+    expect(out.some((c) => c.stopId >= 1000 && c.stopId < 1015)).toBe(true);  // close half
+    expect(out.some((c) => c.stopId >= 1035 && c.stopId < 1050)).toBe(true);  // far half
+    expect(ids.has(1049)).toBe(true);  // farthest (i=49)
   });
 });
