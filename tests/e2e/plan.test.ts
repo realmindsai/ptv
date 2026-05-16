@@ -59,10 +59,10 @@ describe.skipIf(SKIP)('e2e: plan command', () => {
     expect(stderr).toMatch(/mutually exclusive/);
   });
 
-  it('--max-transfers > 0: exits non-zero in v1', () => {
+  it('--max-transfers >= 2: exits non-zero in v1.2', () => {
     const { stderr, code } = run([
       'plan', '-37.7656,144.9614', '-37.648,144.946',
-      '--max-transfers', '1',
+      '--max-transfers', '2',
     ]);
     expect(code).not.toBe(0);
     expect(stderr).toMatch(/max-transfers/);

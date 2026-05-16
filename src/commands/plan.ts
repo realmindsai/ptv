@@ -69,7 +69,7 @@ export function planCommand(): Command {
     .option('--arrive-by <iso>', 'Latest arrival (ISO8601 or HH:MM)')
     .option('--min-bike-km <n>', 'Minimum total bike distance (km)', parseFloat, 0)
     .option('--max-bike-km <n>', 'Maximum total bike distance (km)', parseFloat, 20)
-    .option('--max-transfers <n>', 'Max train transfers (v1: 0)', (v) => parseInt(v, 10), 0)
+    .option('--max-transfers <n>', 'Max train transfers (default 1; max 1 in v1.2)', (v) => parseInt(v, 10), 1)
     .option('--no-enrich', 'Skip gh-route enrichment (bike_km_on_path)')
     .option('--raw', 'Reserved; no-op in v1')
     .action(async (fromStr: string, toStr: string, opts) => {
