@@ -72,6 +72,7 @@ export function planCommand(): Command {
     .option('--max-transfers <n>', 'Max train transfers (default 1; max 1 in v1.2)', (v) => parseInt(v, 10), 1)
     .option('--no-enrich', 'Skip gh-route enrichment (bike_km_on_path)')
     .option('--prefer-bike-path', 'Recommend itineraries with more bike-path km')
+    .option('--hill-weight <n>', 'Signed elevation bias: negative=prefer flat, positive=prefer hills (default 0)', parseFloat, 0)
     .option('--goal <type>', 'commute (default) or day-ride', 'commute')
     .option('--mode <type>', 'bike-only or bike-train (default)', 'bike-train')
     .option('--min-on-path-fraction <n>', 'Require N fraction of bike distance on dedicated paths (0-1)', parseFloat)
@@ -107,6 +108,9 @@ export function planCommand(): Command {
           throw new Error('--min-on-path-fraction requires --enrich (default on)');
         }
       }
+      if (Number.isNaN(opts.hillWeight)) {
+        throw new Error('--hill-weight must be a number');
+      }
       const req: PlanRequest = {
         from: parseCoord(fromStr, '<from>'),
         to:   parseCoord(toStr,   '<to>'),
@@ -117,6 +121,7 @@ export function planCommand(): Command {
         maxTransfers: opts.maxTransfers,
         enrich: opts.enrich !== false,
         preferBikePath: !!opts.preferBikePath,
+        hillWeight: opts.hillWeight,
         goal: opts.goal as PlanGoal,
         mode: opts.mode as PlanMode,
         minOnPathFraction: opts.minOnPathFraction,

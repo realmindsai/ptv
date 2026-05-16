@@ -21,6 +21,7 @@ describe.skipIf(SKIP)('integration: plan command', () => {
       maxTransfers: 0,
       enrich: false,
       preferBikePath: false,
+      hillWeight: 0,
       goal: 'commute',
       mode: 'bike-train',
     });
@@ -50,6 +51,7 @@ describe.skipIf(SKIP)('integration: plan command', () => {
       maxTransfers: 0,
       enrich: false,
       preferBikePath: false,
+      hillWeight: 0,
       goal: 'commute',
       mode: 'bike-train',
     });
@@ -73,6 +75,7 @@ describe.skipIf(SKIP)('integration: plan command', () => {
       maxTransfers: 1,
       enrich: false,
       preferBikePath: false,
+      hillWeight: 0,
       goal: 'commute',
       mode: 'bike-train',
     });

@@ -7,7 +7,7 @@ function makeReq(over: Partial<PlanRequest> = {}): PlanRequest {
     from: { lat: 0, lon: 0 },
     to: { lat: 0, lon: 0 },
     minBikeKm: 0, maxBikeKm: 20, maxTransfers: 0, enrich: true,
-    preferBikePath: false, goal: 'commute', mode: 'bike-train',
+    preferBikePath: false, hillWeight: 0, goal: 'commute', mode: 'bike-train',
     ...over,
   };
 }
@@ -130,5 +130,57 @@ describe('labelAndSort()', () => {
     const out = labelAndSort([a, b], makeReq({ minOnPathFraction: 0.8 }));
     expect(out).toHaveLength(1);
     expect(out[0].constraintsViolated).toContain('min_on_path_fraction');
+  });
+
+  it('--hill-weight 0 (default) is neutral: recommended is still fastest', () => {
+    const fast = it1({ totalTimeMin: 40, bikeKm: 5, ascendM: 200 });
+    const hilly = it1({ totalTimeMin: 60, bikeKm: 5, ascendM: 500 });
+    const out = labelAndSort([fast, hilly], makeReq({ hillWeight: 0 }));
+    const recommended = out.find((i) => i.labels.includes('recommended'));
+    expect(recommended?.totalTimeMin).toBe(40);
+  });
+
+  it('--hill-weight -1 prefers flat: recommended changes to flatter itinerary', () => {
+    // fast: ascendM=300, flatFraction=0.2 → hilliness = 0.05*300 - 0.3*(100*0.2) = 15 - 6 = 9
+    // flat: ascendM=50,  flatFraction=0.9 → hilliness = 0.05*50  - 0.3*(100*0.9) = 2.5 - 27 = -24.5
+    // hillWeight=-1: cost(fast) = 40 - (-1)*9 = 49, cost(flat) = 60 - (-1)*(-24.5) = 35.5  ← min
+    const fast = it1({ totalTimeMin: 40, bikeKm: 8, ascendM: 300, flatFraction: 0.2 });
+    const flat = it1({ totalTimeMin: 60, bikeKm: 8, ascendM: 50,  flatFraction: 0.9 });
+    const out = labelAndSort([fast, flat], makeReq({ hillWeight: -1 }));
+    const recommended = out.find((i) => i.labels.includes('recommended'));
+    expect(recommended?.totalTimeMin).toBe(60); // flat route preferred despite slower
+  });
+
+  it('--hill-weight +1 prefers hills: recommended changes to hillier itinerary', () => {
+    // fast: ascendM=50,  flatFraction=0.9 → hilliness = 2.5 - 27 = -24.5
+    // hilly: ascendM=300, flatFraction=0.2 → hilliness = 15 - 6 = 9
+    // hillWeight=+1: cost(fast) = 40 - 1*(-24.5) = 64.5, cost(hilly) = 60 - 1*9 = 51  ← min
+    const fast  = it1({ totalTimeMin: 40, bikeKm: 8, ascendM: 50,  flatFraction: 0.9 });
+    const hilly = it1({ totalTimeMin: 60, bikeKm: 8, ascendM: 300, flatFraction: 0.2 });
+    const out = labelAndSort([fast, hilly], makeReq({ hillWeight: 1 }));
+    const recommended = out.find((i) => i.labels.includes('recommended'));
+    expect(recommended?.totalTimeMin).toBe(60); // hilly route preferred despite slower
+  });
+
+  it('--hill-weight composes with --prefer-bike-path', () => {
+    // a: time=50, pathKm=3, ascendM=300, flatFraction=0.2 → hilliness=9
+    //    hillWeight=-1: cost = 50 - 5*3 - (-1)*9 = 50 - 15 + 9 = 44
+    // b: time=60, pathKm=7, ascendM=50,  flatFraction=0.9 → hilliness=-24.5
+    //    hillWeight=-1: cost = 60 - 5*7 - (-1)*(-24.5) = 60 - 35 - 24.5 = 0.5  ← min
+    const a = it1({ totalTimeMin: 50, bikeKm: 10, bikeKmOnPath: 3, ascendM: 300, flatFraction: 0.2 });
+    const b = it1({ totalTimeMin: 60, bikeKm: 10, bikeKmOnPath: 7, ascendM: 50,  flatFraction: 0.9 });
+    const out = labelAndSort([a, b], makeReq({ preferBikePath: true, hillWeight: -1 }));
+    const recommended = out.find((i) => i.labels.includes('recommended'));
+    expect(recommended?.bikeKmOnPath).toBe(7); // flat + more path wins
+  });
+
+  it('--hill-weight falls back gracefully when elevation data absent', () => {
+    // No ascendM / flatFraction / maxSustainedGradePercent on either — hilliness=0 for both
+    // hillWeight=-5 but hilliness=0, so cost == totalTimeMin → fastest wins
+    const fast = it1({ totalTimeMin: 40, bikeKm: 8 });
+    const slow = it1({ totalTimeMin: 60, bikeKm: 8 });
+    const out = labelAndSort([fast, slow], makeReq({ hillWeight: -5 }));
+    const recommended = out.find((i) => i.labels.includes('recommended'));
+    expect(recommended?.totalTimeMin).toBe(40);
   });
 });

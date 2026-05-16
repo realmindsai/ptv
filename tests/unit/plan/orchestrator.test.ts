@@ -8,7 +8,7 @@ function makeReq(over: Partial<PlanRequest> = {}): PlanRequest {
     to:   { lat: -38.14, lon: 145.12 },
     departUtc: new Date('2026-05-16T22:00:00Z'),
     minBikeKm: 0, maxBikeKm: 15, maxTransfers: 0, enrich: false,
-    preferBikePath: false, goal: 'commute', mode: 'bike-train',
+    preferBikePath: false, hillWeight: 0, goal: 'commute', mode: 'bike-train',
     ...over,
   };
 }

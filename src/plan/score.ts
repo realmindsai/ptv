@@ -1,5 +1,19 @@
 import type { Itinerary, PlanRequest, ItineraryLabel } from './types';
-import { PATH_BONUS_PER_KM } from './types';
+import { PATH_BONUS_PER_KM, HILL_ASCEND_WEIGHT, HILL_SUSTAINED_WEIGHT, HILL_FLAT_OFFSET } from './types';
+
+function hilliness(i: Itinerary): number {
+  let h = 0;
+  if (typeof i.ascendM === 'number') {
+    h += HILL_ASCEND_WEIGHT * i.ascendM;
+  }
+  if (typeof i.maxSustainedGradePercent === 'number' && typeof i.maxSustainedGradeM === 'number') {
+    h += HILL_SUSTAINED_WEIGHT * (i.maxSustainedGradePercent * i.maxSustainedGradeM);
+  }
+  if (typeof i.flatFraction === 'number') {
+    h -= HILL_FLAT_OFFSET * (100 * i.flatFraction);
+  }
+  return h;
+}
 
 function legsKey(it: Itinerary): string {
   return JSON.stringify([
@@ -79,9 +93,11 @@ export function labelAndSort(items: Itinerary[], req: PlanRequest): Itinerary[] 
     : null;
 
   let recommended: Itinerary;
-  if (req.preferBikePath && withPath.length > 0) {
+  if (req.preferBikePath && withPath.length > 0 || req.hillWeight !== 0) {
     const cost = (i: Itinerary): number =>
-      i.totalTimeMin - PATH_BONUS_PER_KM * ((i.bikeKmOnPath as number) ?? 0);
+      i.totalTimeMin
+      - PATH_BONUS_PER_KM * (req.preferBikePath && typeof i.bikeKmOnPath === 'number' ? i.bikeKmOnPath : 0)
+      - req.hillWeight * hilliness(i);
     recommended = deduped.reduce((m, i) => (cost(i) < cost(m) ? i : m));
   } else {
     recommended = deduped.reduce((m, i) =>

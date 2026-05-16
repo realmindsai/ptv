@@ -105,6 +105,7 @@ export type PlanRequest = {
   maxTransfers: number;
   enrich: boolean;
   preferBikePath: boolean;
+  hillWeight: number;
   goal: PlanGoal;
   mode: PlanMode;
   minOnPathFraction?: number;
@@ -143,3 +144,6 @@ export const CANDIDATES_CLOSE = 15;        // closest by bikeMin
 export const CANDIDATES_FAR = 15;          // farthest by bikeMin within radius
 export const MAX_HUB_FANOUT = 50;
 export const PATH_BONUS_PER_KM = 5;
+export const HILL_ASCEND_WEIGHT = 0.05;    // cost reduction per metre ascended when hillWeight > 0
+export const HILL_SUSTAINED_WEIGHT = 0.02; // cost reduction per (grade% * metres) when hillWeight > 0
+export const HILL_FLAT_OFFSET = 0.3;       // flat-fraction penalty term (makes hilliness negative for flat routes)
