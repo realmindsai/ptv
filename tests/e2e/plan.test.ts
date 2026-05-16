@@ -76,4 +76,21 @@ describe.skipIf(SKIP)('e2e: plan command', () => {
     expect(code).not.toBe(0);
     expect(stderr).toMatch(/min-bike-km/);
   });
+
+  it('--html writes a file containing Leaflet markup', () => {
+    const fs = require('fs');
+    const pathMod = require('path');
+    const os = require('os');
+    const tmpDir = fs.mkdtempSync(pathMod.join(os.tmpdir(), 'ptv-e2e-'));
+    const htmlPath = pathMod.join(tmpDir, 'trip.html');
+    const { code } = run([
+      'plan', '-37.7656,144.9614', '-37.648,144.946',
+      '--max-bike-km', '8', '--no-enrich', '--html', htmlPath,
+    ]);
+    expect(code).toBe(0);
+    const contents = fs.readFileSync(htmlPath, 'utf8');
+    expect(contents).toContain('leaflet@1.9.4');
+    expect(contents).toContain('data');
+    fs.unlinkSync(htmlPath);
+  }, 60_000);
 });

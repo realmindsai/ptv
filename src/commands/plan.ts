@@ -72,6 +72,7 @@ export function planCommand(): Command {
     .option('--max-transfers <n>', 'Max train transfers (default 1; max 1 in v1.2)', (v) => parseInt(v, 10), 1)
     .option('--no-enrich', 'Skip gh-route enrichment (bike_km_on_path)')
     .option('--prefer-bike-path', 'Recommend itineraries with more bike-path km')
+    .option('--html <path>', 'Write a Leaflet HTML map to <path> and open it')
     .option('--raw', 'Reserved; no-op in v1')
     .action(async (fromStr: string, toStr: string, opts) => {
       if (opts.depart && opts.arriveBy) {
@@ -102,5 +103,9 @@ export function planCommand(): Command {
       };
       const result = await plan(req);
       console.log(JSON.stringify(result, null, 2));
+      if (opts.html) {
+        const { writeMapHtml } = await import('../plan/map');
+        writeMapHtml(opts.html, result);
+      }
     });
 }
