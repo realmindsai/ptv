@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { plan } from '../plan/orchestrator';
-import type { LatLon, PlanRequest, PlanGoal } from '../plan/types';
+import type { LatLon, PlanRequest, PlanGoal, PlanMode } from '../plan/types';
 import { NEG_COORD_PREFIX } from '../argv';
 
 function parseCoord(raw: string, label: string): LatLon {
@@ -73,6 +73,7 @@ export function planCommand(): Command {
     .option('--no-enrich', 'Skip gh-route enrichment (bike_km_on_path)')
     .option('--prefer-bike-path', 'Recommend itineraries with more bike-path km')
     .option('--goal <type>', 'commute (default) or day-ride', 'commute')
+    .option('--mode <type>', 'bike-only or bike-train (default)', 'bike-train')
     .option('--html <path>', 'Write a Leaflet HTML map to <path> and open it')
     .option('--raw', 'Reserved; no-op in v1')
     .action(async (fromStr: string, toStr: string, opts) => {
@@ -94,6 +95,9 @@ export function planCommand(): Command {
       if (opts.goal !== 'commute' && opts.goal !== 'day-ride') {
         throw new Error(`--goal must be 'commute' or 'day-ride' (got ${opts.goal})`);
       }
+      if (opts.mode !== 'bike-only' && opts.mode !== 'bike-train') {
+        throw new Error(`--mode must be 'bike-only' or 'bike-train' (got ${opts.mode})`);
+      }
       const req: PlanRequest = {
         from: parseCoord(fromStr, '<from>'),
         to:   parseCoord(toStr,   '<to>'),
@@ -105,6 +109,7 @@ export function planCommand(): Command {
         enrich: opts.enrich !== false,
         preferBikePath: !!opts.preferBikePath,
         goal: opts.goal as PlanGoal,
+        mode: opts.mode as PlanMode,
       };
       const result = await plan(req);
       console.log(JSON.stringify(result, null, 2));

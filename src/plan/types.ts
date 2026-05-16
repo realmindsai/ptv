@@ -72,6 +72,8 @@ export type Itinerary = {
 
 export type PlanGoal = 'commute' | 'day-ride';
 
+export type PlanMode = 'bike-only' | 'bike-train';
+
 export type CustomModelPriorityRule = {
   if: string;
   multiply_by: number;
@@ -104,6 +106,7 @@ export type PlanRequest = {
   enrich: boolean;
   preferBikePath: boolean;
   goal: PlanGoal;
+  mode: PlanMode;
 };
 
 export type PlanResult = {

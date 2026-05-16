@@ -1,6 +1,7 @@
 import type {
   PlanRequest, PlanResult, Itinerary, AccessCandidate, Leg, GeoJsonLineString, LatLon,
 } from './types';
+import type { ParsedGhRoute } from './external';
 import {
   BIKEABLE_ROUTE_TYPES, MAX_PLAUSIBLE_TOTAL_MIN,
   TRANSFER_BUFFER_MIN, MAX_HUB_FANOUT,
@@ -105,6 +106,83 @@ async function getPattern(s: SearchState, runRef: string, routeType: 0 | 3): Pro
     s.patternCache.set(runRef, p);
   }
   return p;
+}
+
+// ---------------------------------------------------------------------------
+// Bike-only: direct bike trip, no transit
+// ---------------------------------------------------------------------------
+
+async function planBikeOnly(
+  req: PlanRequest, deps: Deps,
+): Promise<PlanResult> {
+  if (req.maxTransfers > 0) {
+    throw new Error('--mode bike-only is incompatible with --max-transfers > 0');
+  }
+  let bikeRouting: { km: number; min: number; geometry: GeoJsonLineString | null;
+                     kmOnPath?: number; ascendM?: number; descendM?: number;
+                     maxSustainedGradePercent?: number; maxSustainedGradeM?: number;
+                     flatFraction?: number; steepFraction?: number };
+  if (req.goal === 'day-ride') {
+    const { DAY_RIDE_CUSTOM_MODEL } = await import('./types');
+    const custom = await deps.external.ghRouteCustom(req.from, req.to, DAY_RIDE_CUSTOM_MODEL);
+    bikeRouting = custom ?? await deps.external.osrmRoute('bicycle', req.from, req.to);
+  } else {
+    bikeRouting = await deps.external.osrmRoute('bicycle', req.from, req.to);
+  }
+
+  // Enrichment for commute mode: gh-route call to get path/elevation if osrm-au was used
+  let enrich: ParsedGhRoute | null = null;
+  if (req.enrich && req.goal !== 'day-ride') {
+    enrich = await deps.external.ghRouteBike(req.from, req.to);
+  }
+
+  const km = bikeRouting.km;
+  const min = bikeRouting.min;
+  const kmOnPath = (bikeRouting as ParsedGhRoute).kmOnPath ?? enrich?.kmOnPath;
+  const ascendM = (bikeRouting as ParsedGhRoute).ascendM ?? enrich?.ascendM;
+  const descendM = (bikeRouting as ParsedGhRoute).descendM ?? enrich?.descendM;
+  const maxSustainedGradePercent = (bikeRouting as ParsedGhRoute).maxSustainedGradePercent ?? enrich?.maxSustainedGradePercent;
+  const maxSustainedGradeM = (bikeRouting as ParsedGhRoute).maxSustainedGradeM ?? enrich?.maxSustainedGradeM;
+  const flatFraction = (bikeRouting as ParsedGhRoute).flatFraction ?? enrich?.flatFraction;
+  const steepFraction = (bikeRouting as ParsedGhRoute).steepFraction ?? enrich?.steepFraction;
+
+  if (km > req.maxBikeKm) {
+    return {
+      query: req,
+      itineraries: [{
+        labels: ['fastest', 'recommended'],
+        totalTimeMin: min, bikeKm: km, bikeMin: min,
+        bikeKmOnPath: kmOnPath, ascendM, descendM,
+        maxSustainedGradePercent, maxSustainedGradeM, flatFraction, steepFraction,
+        trainKm: 0, trainMin: 0, waitMin: 0, transfers: 0,
+        constraintsViolated: ['max_bike_km'],
+        legs: [{ mode: 'bike', from: req.from, to: req.to,
+                 km, min, geometry: bikeRouting.geometry,
+                 kmOnPath, ascendM, descendM,
+                 maxSustainedGradePercent, maxSustainedGradeM,
+                 flatFraction, steepFraction }],
+      }],
+      warnings: [`bike-only distance ${km.toFixed(1)} km exceeds --max-bike-km=${req.maxBikeKm}`],
+    };
+  }
+
+  return {
+    query: req,
+    itineraries: [{
+      labels: ['fastest', 'recommended'],
+      totalTimeMin: min, bikeKm: km, bikeMin: min,
+      bikeKmOnPath: kmOnPath,
+      ascendM, descendM,
+      maxSustainedGradePercent, maxSustainedGradeM,
+      flatFraction, steepFraction,
+      trainKm: 0, trainMin: 0, waitMin: 0, transfers: 0,
+      legs: [{ mode: 'bike', from: req.from, to: req.to,
+               km, min, geometry: bikeRouting.geometry,
+               kmOnPath, ascendM, descendM,
+               maxSustainedGradePercent, maxSustainedGradeM,
+               flatFraction, steepFraction }],
+    }],
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -427,6 +505,10 @@ export async function plan(req: PlanRequest, deps?: Partial<Deps>): Promise<Plan
   }
   if (req.departUtc && req.arriveByUtc) {
     throw new Error('--depart and --arrive-by are mutually exclusive');
+  }
+
+  if (req.mode === 'bike-only') {
+    return planBikeOnly(req, resolved);
   }
 
   const seedTime: Date = req.departUtc

@@ -8,7 +8,7 @@ function makeReq(over: Partial<PlanRequest> = {}): PlanRequest {
     to:   { lat: -38.14, lon: 145.12 },
     departUtc: new Date('2026-05-16T22:00:00Z'),
     minBikeKm: 0, maxBikeKm: 15, maxTransfers: 0, enrich: false,
-    preferBikePath: false, goal: 'commute',
+    preferBikePath: false, goal: 'commute', mode: 'bike-train',
     ...over,
   };
 }
@@ -206,7 +206,7 @@ describe('plan() — happy path', () => {
         to:   { lat: -37.9871, lon: 145.2113 },
         departUtc: new Date('2026-05-17T21:30:00Z'),
         minBikeKm: 0, maxBikeKm: 10, maxTransfers: 1, enrich: false,
-        preferBikePath: false, goal: 'commute',
+        preferBikePath: false, goal: 'commute', mode: 'bike-train',
       },
       { ptv, external: k2External as never },
     );
@@ -248,7 +248,7 @@ describe('plan() — happy path', () => {
         to:   { lat: -37.9871, lon: 145.2113 },
         departUtc: new Date('2026-05-17T21:30:00Z'),
         minBikeKm: 0, maxBikeKm: 10, maxTransfers: 0, enrich: false,
-        preferBikePath: false, goal: 'commute',
+        preferBikePath: false, goal: 'commute', mode: 'bike-train',
       },
       { ptv, external: k2External as never },
     );
@@ -263,7 +263,7 @@ describe('plan() — happy path', () => {
         to:   { lat: -37.9871, lon: 145.2113 },
         departUtc: new Date('2026-05-17T21:30:00Z'),
         minBikeKm: 0, maxBikeKm: 10, maxTransfers: 1, enrich: false,
-        preferBikePath: false, goal: 'commute',
+        preferBikePath: false, goal: 'commute', mode: 'bike-train',
       },
       { ptv, external: k2External as never },
     );
@@ -374,5 +374,50 @@ describe('plan() — happy path', () => {
     const out = await plan(makeReq({ goal: 'day-ride' }), { ptv, external: ext as never });
     expect(out.itineraries.length).toBeGreaterThan(0);
     expect(osrmSpy).toHaveBeenCalled();
+  });
+
+  it('--mode bike-only returns single bike leg without transit calls', async () => {
+    const ptvSpy = vi.fn(async () => ({ stops: [], departures: [] }));
+    const ext = {
+      osrmTable: vi.fn(async () => ({ durations: [], distances: [] })),
+      osrmRoute: vi.fn(async () => ({ km: 5, min: 20, geometry: null })),
+      ghRouteBike: vi.fn(async () => null),
+      ghRouteCustom: vi.fn(async () => null),
+    };
+    const out = await plan(
+      makeReq({ mode: 'bike-only', maxBikeKm: 20, maxTransfers: 0 }),
+      { ptv: ptvSpy, external: ext as never },
+    );
+    expect(out.itineraries).toHaveLength(1);
+    const it = out.itineraries[0];
+    expect(it.legs).toHaveLength(1);
+    expect(it.legs[0].mode).toBe('bike');
+    expect(it.transfers).toBe(0);
+    expect(ptvSpy).not.toHaveBeenCalled();
+  });
+
+  it('--mode bike-only over maxBikeKm returns near-miss', async () => {
+    const ext = {
+      osrmTable: vi.fn(async () => ({ durations: [], distances: [] })),
+      osrmRoute: vi.fn(async () => ({ km: 50, min: 180, geometry: null })),
+      ghRouteBike: vi.fn(async () => null),
+      ghRouteCustom: vi.fn(async () => null),
+    };
+    const out = await plan(
+      makeReq({ mode: 'bike-only', maxBikeKm: 20, maxTransfers: 0 }),
+      { ptv: vi.fn(async () => ({})), external: ext as never },
+    );
+    expect(out.itineraries[0].constraintsViolated).toContain('max_bike_km');
+    expect(out.warnings?.length).toBeGreaterThan(0);
+  });
+
+  it('--mode bike-only + --max-transfers > 0 is rejected', async () => {
+    await expect(
+      plan(makeReq({ mode: 'bike-only', maxTransfers: 1 }), {
+        ptv: vi.fn(async () => ({})),
+        external: { osrmTable: vi.fn(), osrmRoute: vi.fn(),
+                    ghRouteBike: vi.fn(), ghRouteCustom: vi.fn() } as never,
+      }),
+    ).rejects.toThrow(/bike-only.*max-transfers/);
   });
 });

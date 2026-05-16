@@ -22,6 +22,7 @@ describe.skipIf(SKIP)('integration: plan command', () => {
       enrich: false,
       preferBikePath: false,
       goal: 'commute',
+      mode: 'bike-train',
     });
     expect(Array.isArray(result.itineraries)).toBe(true);
     if (result.itineraries.length > 0) {
@@ -50,6 +51,7 @@ describe.skipIf(SKIP)('integration: plan command', () => {
       enrich: false,
       preferBikePath: false,
       goal: 'commute',
+      mode: 'bike-train',
     });
     if (result.itineraries.length > 0) {
       // Most realistic candidate itineraries will have bike total < 9 km
@@ -72,6 +74,7 @@ describe.skipIf(SKIP)('integration: plan command', () => {
       enrich: false,
       preferBikePath: false,
       goal: 'commute',
+      mode: 'bike-train',
     });
     expect(Array.isArray(result.itineraries)).toBe(true);
     if (result.itineraries.length > 0) {
