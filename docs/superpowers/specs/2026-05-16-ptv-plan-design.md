@@ -20,7 +20,7 @@ ptv plan <from-lat,lon> <to-lat,lon>
   [--raw]                                # honored, mostly a no-op in v1
 ```
 
-Coordinates use `lat,lon` order — matches `gh-route` and the project convention; `osrm-au`'s native `lon,lat` is converted internally.
+Coordinates use `lat,lon` order — matches `gh-route` and `osrm-au` (the latter accepts `lat,lon` on its CLI surface, matching "human/Google Maps order"). No internal coordinate conversion is needed at the CLI boundary.
 
 Constraint scope (resolved during brainstorming):
 
