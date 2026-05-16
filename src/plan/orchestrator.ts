@@ -33,7 +33,7 @@ function haversineKm(a: { lat: number; lon: number }, b: { lat: number; lon: num
 }
 
 type RouteResult = { km: number; min: number; geometry: GeoJsonLineString | null };
-type EnrichResult = { km: number; min: number; kmOnPath: number } | null;
+type EnrichResult = import('./external').ParsedGhRoute | null;
 type PatternStop = { stopId: number; arriveUtc: string };
 
 type SearchState = {
@@ -143,9 +143,12 @@ async function planK1(s: SearchState): Promise<Itinerary[]> {
     const totalTimeMin = bikeMin + waitMin + trainMin;
 
     let bikeKmOnPath: number | null | undefined = undefined;
+    let outEnrich: import('./external').ParsedGhRoute | null = null;
+    let intoEnrich: import('./external').ParsedGhRoute | null = null;
     if (s.req.enrich) {
-      const [out, into] = await Promise.all([accessEnrich(s, t.access), egressEnrich(s, t.egress)]);
-      if (out && into) bikeKmOnPath = out.kmOnPath + into.kmOnPath;
+      const [o, i] = await Promise.all([accessEnrich(s, t.access), egressEnrich(s, t.egress)]);
+      outEnrich = o; intoEnrich = i;
+      if (o && i) bikeKmOnPath = o.kmOnPath + i.kmOnPath;
       else {
         bikeKmOnPath = null;
         if (!s.warnings.includes('gh-route unavailable; bike_km_on_path omitted')) {
@@ -154,9 +157,33 @@ async function planK1(s: SearchState): Promise<Itinerary[]> {
       }
     }
 
+    const ascendM = (outEnrich?.ascendM ?? 0) + (intoEnrich?.ascendM ?? 0);
+    const descendM = (outEnrich?.descendM ?? 0) + (intoEnrich?.descendM ?? 0);
+    const outGrade = (outEnrich?.maxSustainedGradePercent ?? 0)
+      * (outEnrich?.maxSustainedGradeM ?? 0);
+    const inGrade = (intoEnrich?.maxSustainedGradePercent ?? 0)
+      * (intoEnrich?.maxSustainedGradeM ?? 0);
+    const hardestEnrich = outGrade >= inGrade ? outEnrich : intoEnrich;
+    const maxSustainedGradePercent = hardestEnrich?.maxSustainedGradePercent ?? 0;
+    const maxSustainedGradeM = hardestEnrich?.maxSustainedGradeM ?? 0;
+    const totalBikeKm = bikeOut.km + bikeIn.km;
+    const flatFraction = totalBikeKm > 0
+      ? ((outEnrich?.flatFraction ?? 0) * bikeOut.km + (intoEnrich?.flatFraction ?? 0) * bikeIn.km) / totalBikeKm
+      : 0;
+    const steepFraction = totalBikeKm > 0
+      ? ((outEnrich?.steepFraction ?? 0) * bikeOut.km + (intoEnrich?.steepFraction ?? 0) * bikeIn.km) / totalBikeKm
+      : 0;
+
     const legs: Leg[] = [
       { mode: 'bike', from: s.req.from, to: t.access.coord,
-        km: bikeOut.km, min: bikeOut.min, geometry: bikeOut.geometry },
+        km: bikeOut.km, min: bikeOut.min, geometry: bikeOut.geometry,
+        kmOnPath: outEnrich?.kmOnPath,
+        ascendM: outEnrich?.ascendM,
+        descendM: outEnrich?.descendM,
+        maxSustainedGradePercent: outEnrich?.maxSustainedGradePercent,
+        maxSustainedGradeM: outEnrich?.maxSustainedGradeM,
+        flatFraction: outEnrich?.flatFraction,
+        steepFraction: outEnrich?.steepFraction },
       { mode: 'train', routeId: t.routeId, routeType: t.access.routeType,
         routeName: t.routeName,
         fromStopId: t.access.stopId, toStopId: t.egress.stopId,
@@ -165,11 +192,21 @@ async function planK1(s: SearchState): Promise<Itinerary[]> {
         toLat: t.egress.coord.lat, toLon: t.egress.coord.lon,
         departUtc: t.departUtc, arriveUtc: t.arriveUtc, runRef: t.runRef },
       { mode: 'bike', from: t.egress.coord, to: s.req.to,
-        km: bikeIn.km, min: bikeIn.min, geometry: bikeIn.geometry },
+        km: bikeIn.km, min: bikeIn.min, geometry: bikeIn.geometry,
+        kmOnPath: intoEnrich?.kmOnPath,
+        ascendM: intoEnrich?.ascendM,
+        descendM: intoEnrich?.descendM,
+        maxSustainedGradePercent: intoEnrich?.maxSustainedGradePercent,
+        maxSustainedGradeM: intoEnrich?.maxSustainedGradeM,
+        flatFraction: intoEnrich?.flatFraction,
+        steepFraction: intoEnrich?.steepFraction },
     ];
 
     itineraries.push({
       labels: [], totalTimeMin, bikeKm, bikeMin, bikeKmOnPath,
+      ascendM, descendM,
+      maxSustainedGradePercent, maxSustainedGradeM,
+      flatFraction, steepFraction,
       trainKm, trainMin, waitMin, transfers: 0, legs,
     });
   }
@@ -276,9 +313,12 @@ async function planK2Hubs(s: SearchState): Promise<Itinerary[]> {
     const totalTimeMin = bikeMin + waitMin + trainMin + transferDwellMin;
 
     let bikeKmOnPath: number | null | undefined = undefined;
+    let outEnrich: import('./external').ParsedGhRoute | null = null;
+    let intoEnrich: import('./external').ParsedGhRoute | null = null;
     if (s.req.enrich) {
-      const [out, into] = await Promise.all([accessEnrich(s, t.access), egressEnrich(s, t.egress)]);
-      if (out && into) bikeKmOnPath = out.kmOnPath + into.kmOnPath;
+      const [o, i] = await Promise.all([accessEnrich(s, t.access), egressEnrich(s, t.egress)]);
+      outEnrich = o; intoEnrich = i;
+      if (o && i) bikeKmOnPath = o.kmOnPath + i.kmOnPath;
       else {
         bikeKmOnPath = null;
         if (!s.warnings.includes('gh-route unavailable; bike_km_on_path omitted')) {
@@ -287,13 +327,37 @@ async function planK2Hubs(s: SearchState): Promise<Itinerary[]> {
       }
     }
 
+    const ascendM = (outEnrich?.ascendM ?? 0) + (intoEnrich?.ascendM ?? 0);
+    const descendM = (outEnrich?.descendM ?? 0) + (intoEnrich?.descendM ?? 0);
+    const outGrade = (outEnrich?.maxSustainedGradePercent ?? 0)
+      * (outEnrich?.maxSustainedGradeM ?? 0);
+    const inGrade = (intoEnrich?.maxSustainedGradePercent ?? 0)
+      * (intoEnrich?.maxSustainedGradeM ?? 0);
+    const hardestEnrich = outGrade >= inGrade ? outEnrich : intoEnrich;
+    const maxSustainedGradePercent = hardestEnrich?.maxSustainedGradePercent ?? 0;
+    const maxSustainedGradeM = hardestEnrich?.maxSustainedGradeM ?? 0;
+    const totalBikeKm = bikeOut.km + bikeIn.km;
+    const flatFraction = totalBikeKm > 0
+      ? ((outEnrich?.flatFraction ?? 0) * bikeOut.km + (intoEnrich?.flatFraction ?? 0) * bikeIn.km) / totalBikeKm
+      : 0;
+    const steepFraction = totalBikeKm > 0
+      ? ((outEnrich?.steepFraction ?? 0) * bikeOut.km + (intoEnrich?.steepFraction ?? 0) * bikeIn.km) / totalBikeKm
+      : 0;
+
     const hub = hubCoord(t.hubStopId);
     const hubLat = hub?.lat;
     const hubLon = hub?.lon;
 
     const legs: Leg[] = [
       { mode: 'bike', from: s.req.from, to: t.access.coord,
-        km: bikeOut.km, min: bikeOut.min, geometry: bikeOut.geometry },
+        km: bikeOut.km, min: bikeOut.min, geometry: bikeOut.geometry,
+        kmOnPath: outEnrich?.kmOnPath,
+        ascendM: outEnrich?.ascendM,
+        descendM: outEnrich?.descendM,
+        maxSustainedGradePercent: outEnrich?.maxSustainedGradePercent,
+        maxSustainedGradeM: outEnrich?.maxSustainedGradeM,
+        flatFraction: outEnrich?.flatFraction,
+        steepFraction: outEnrich?.steepFraction },
       { mode: 'train', routeId: t.routeId1, routeType: t.access.routeType,
         routeName: t.routeName1,
         fromStopId: t.access.stopId, toStopId: t.hubStopId,
@@ -309,11 +373,21 @@ async function planK2Hubs(s: SearchState): Promise<Itinerary[]> {
         toLat: t.egress.coord.lat, toLon: t.egress.coord.lon,
         departUtc: t.depart2Utc, arriveUtc: t.arrive2Utc, runRef: t.run2Ref },
       { mode: 'bike', from: t.egress.coord, to: s.req.to,
-        km: bikeIn.km, min: bikeIn.min, geometry: bikeIn.geometry },
+        km: bikeIn.km, min: bikeIn.min, geometry: bikeIn.geometry,
+        kmOnPath: intoEnrich?.kmOnPath,
+        ascendM: intoEnrich?.ascendM,
+        descendM: intoEnrich?.descendM,
+        maxSustainedGradePercent: intoEnrich?.maxSustainedGradePercent,
+        maxSustainedGradeM: intoEnrich?.maxSustainedGradeM,
+        flatFraction: intoEnrich?.flatFraction,
+        steepFraction: intoEnrich?.steepFraction },
     ];
 
     itineraries.push({
       labels: [], totalTimeMin, bikeKm, bikeMin, bikeKmOnPath,
+      ascendM, descendM,
+      maxSustainedGradePercent, maxSustainedGradeM,
+      flatFraction, steepFraction,
       trainKm, trainMin, waitMin, transfers: 1, transferDwellMin, legs,
     });
   }

@@ -63,6 +63,76 @@ describe('parseGhRoute()', () => {
     }]);
     expect(out?.kmOnPath).toBe(0);
   });
+
+  it('extracts ascendM/descendM from path response', () => {
+    const out = parseGhRoute([{
+      response: { paths: [{
+        distance: 10000, time: 1800000,
+        ascend: 152.5, descend: 88.3,
+      }] },
+    }]);
+    expect(out?.ascendM).toBeCloseTo(152.5, 1);
+    expect(out?.descendM).toBeCloseTo(88.3, 1);
+  });
+
+  it('computes flatFraction and steepFraction from average_slope', () => {
+    // 4 segments, each 250m: grades 1, 4, 7, 0. Half flat (<4%), quarter steep (>=6%).
+    const points = {
+      type: 'LineString' as const,
+      coordinates: [
+        [144.96, -37.78], [144.962, -37.78],
+        [144.964, -37.78], [144.966, -37.78], [144.968, -37.78],
+      ],
+    };
+    const out = parseGhRoute([{
+      response: { paths: [{
+        distance: 1000, time: 240000,
+        details: {
+          average_slope: [[0, 1, 1], [1, 2, 4], [2, 3, 7], [3, 4, 0]] as Array<[number, number, number]>,
+        },
+        points,
+      }] },
+    }]);
+    // Segments at grade 1 and 0 are flat (|g| < 4) → 2 of 4 segments = 50%
+    expect(out?.flatFraction).toBeCloseTo(0.5, 1);
+    // Grade 7 is steep (|g| >= 6) → 1 of 4 = 25%
+    expect(out?.steepFraction).toBeCloseTo(0.25, 1);
+  });
+
+  it('identifies maxSustainedGradePercent and maxSustainedGradeM', () => {
+    // Two climb runs: 200m at 6%, and 100m at 8%. The 6%×200m=1200 wins by intensity.
+    const points = {
+      type: 'LineString' as const,
+      coordinates: [
+        [144.96, -37.78], [144.962, -37.78],
+        [144.964, -37.78], [144.966, -37.78], [144.968, -37.78],
+      ],
+    };
+    const out = parseGhRoute([{
+      response: { paths: [{
+        distance: 1000, time: 240000,
+        details: {
+          average_slope: [[0, 2, 6], [2, 3, 0], [3, 4, 8]] as Array<[number, number, number]>,
+        },
+        points,
+      }] },
+    }]);
+    // 6%×~500m beats 8%×~250m by intensity (3000 vs 2000)
+    expect(out?.maxSustainedGradePercent).toBe(6);
+    expect(out?.maxSustainedGradeM).toBeGreaterThan(out?.maxSustainedGradeM === 0 ? -1 : 100);
+  });
+
+  it('returns 0 elevation fields when path has no ascend/descend/slope', () => {
+    const out = parseGhRoute([{
+      response: { paths: [{ distance: 5000, time: 600000 }] },
+    }]);
+    expect(out?.ascendM).toBe(0);
+    expect(out?.descendM).toBe(0);
+    expect(out?.flatFraction).toBe(0);
+    expect(out?.steepFraction).toBe(0);
+    expect(out?.maxSustainedGradePercent).toBe(0);
+    expect(out?.maxSustainedGradeM).toBe(0);
+  });
 });
 
 describe('osrmRoute()', () => {

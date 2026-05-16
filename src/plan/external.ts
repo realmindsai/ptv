@@ -137,40 +137,123 @@ type GhRouteRaw = Array<{
     paths?: Array<{
       distance?: number;
       time?: number;
+      ascend?: number;
+      descend?: number;
+      points?: GeoJsonLineString | string;
       details?: {
         road_class?: Array<[number, number, string]>;
+        average_slope?: Array<[number, number, number]>;
       };
     }>;
   };
 }>;
 
+function haversineM(a: [number, number], b: [number, number]): number {
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b[1] - a[1]);
+  const dLon = toRad(b[0] - a[0]);
+  const h = Math.sin(dLat / 2) ** 2
+    + Math.cos(toRad(a[1])) * Math.cos(toRad(b[1])) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+export type ParsedGhRoute = {
+  km: number;
+  min: number;
+  kmOnPath: number;
+  ascendM: number;
+  descendM: number;
+  maxSustainedGradePercent: number;
+  maxSustainedGradeM: number;
+  flatFraction: number;
+  steepFraction: number;
+  geometry: GeoJsonLineString | null;
+};
+
 const PATH_ROAD_CLASSES = new Set(['cycleway', 'path', 'track']);
 
-export function parseGhRoute(raw: unknown):
-  { km: number; min: number; kmOnPath: number } | null {
+export function parseGhRoute(raw: unknown): ParsedGhRoute | null {
   const arr = raw as GhRouteRaw;
   const p = arr?.[0]?.response?.paths?.[0];
   if (typeof p?.distance !== 'number' || typeof p?.time !== 'number') return null;
   const km = p.distance / 1000;
   const min = p.time / 60_000;
-  const segments = p.details?.road_class ?? [];
-  if (segments.length === 0) return { km, min, kmOnPath: 0 };
-  let totalIdx = 0;
+
+  // road_class for kmOnPath
+  const rcSegments = p.details?.road_class ?? [];
+  let totalRcIdx = 0;
   let pathIdx = 0;
-  for (const [from, to, cls] of segments) {
+  for (const [from, to, cls] of rcSegments) {
     const span = to - from;
-    totalIdx += span;
+    totalRcIdx += span;
     if (PATH_ROAD_CLASSES.has(cls)) pathIdx += span;
   }
-  const kmOnPath = totalIdx > 0 ? km * (pathIdx / totalIdx) : 0;
-  return { km, min, kmOnPath };
+  const kmOnPath = totalRcIdx > 0 ? km * (pathIdx / totalRcIdx) : 0;
+
+  // Geometry (points is either GeoJsonLineString or absent for ghRouteBike)
+  const geometry = p.points && typeof p.points === 'object'
+    ? (p.points as GeoJsonLineString) : null;
+
+  // Slope analysis — compute per-segment distances from geometry, then aggregate
+  const slopeSegments = p.details?.average_slope ?? [];
+  let ascendM = typeof p.ascend === 'number' ? p.ascend : 0;
+  let descendM = typeof p.descend === 'number' ? p.descend : 0;
+  let flatFraction = 0;
+  let steepFraction = 0;
+  let maxSustainedGradePercent = 0;
+  let maxSustainedGradeM = 0;
+
+  if (slopeSegments.length > 0 && geometry && geometry.coordinates.length > 1) {
+    const coords = geometry.coordinates;
+    const segDistM: number[] = [];
+    for (let i = 0; i < coords.length - 1; i++) {
+      segDistM.push(haversineM(coords[i], coords[i + 1]));
+    }
+    let totalSlopeD = 0;
+    let flatD = 0;
+    let steepD = 0;
+    let curRun: { endIdx: number; g: number; dist: number } | null = null;
+    for (const [a, b, g] of slopeSegments) {
+      let d = 0;
+      for (let i = a; i < b; i++) d += segDistM[i] ?? 0;
+      totalSlopeD += d;
+      const absG = Math.abs(g);
+      if (absG < 4) flatD += d;
+      if (absG >= 6) steepD += d;
+      if (g >= 5) {
+        if (curRun && curRun.endIdx === a) {
+          curRun.endIdx = b; curRun.dist += d; curRun.g = Math.max(curRun.g, g);
+        } else {
+          curRun = { endIdx: b, g, dist: d };
+        }
+        if (curRun.dist * curRun.g > maxSustainedGradeM * maxSustainedGradePercent) {
+          maxSustainedGradePercent = curRun.g;
+          maxSustainedGradeM = curRun.dist;
+        }
+      } else {
+        curRun = null;
+      }
+    }
+    if (totalSlopeD > 0) {
+      flatFraction = flatD / totalSlopeD;
+      steepFraction = steepD / totalSlopeD;
+    }
+  }
+
+  return {
+    km, min, kmOnPath, ascendM, descendM,
+    maxSustainedGradePercent, maxSustainedGradeM,
+    flatFraction, steepFraction,
+    geometry,
+  };
 }
 
 export async function ghRouteBike(
   from: LatLon,
   to: LatLon,
   profile: 'bike' | 'bike_quiet' = 'bike',
-): Promise<{ km: number; min: number; kmOnPath: number } | null> {
+): Promise<ParsedGhRoute | null> {
   try {
     const raw = runJson(GH_BIN, [
       'route',

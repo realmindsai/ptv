@@ -20,6 +20,12 @@ export type BikeLeg = {
   km: number;
   min: number;
   kmOnPath?: number | null;
+  ascendM?: number;
+  descendM?: number;
+  maxSustainedGradePercent?: number;
+  maxSustainedGradeM?: number;
+  flatFraction?: number;
+  steepFraction?: number;
   geometry?: GeoJsonLineString | null;
 };
 
@@ -54,6 +60,12 @@ export type Itinerary = {
   waitMin: number;
   transfers: number;
   transferDwellMin?: number;
+  ascendM?: number;
+  descendM?: number;
+  maxSustainedGradePercent?: number;
+  maxSustainedGradeM?: number;
+  flatFraction?: number;
+  steepFraction?: number;
   legs: Leg[];
   constraintsViolated?: ConstraintViolation[];
 };
