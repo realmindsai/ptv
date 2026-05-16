@@ -1,8 +1,11 @@
 import { Command } from 'commander';
 import { plan } from '../plan/orchestrator';
 import type { LatLon, PlanRequest } from '../plan/types';
+import { NEG_COORD_PREFIX } from '../argv';
 
-function parseCoord(s: string, label: string): LatLon {
+function parseCoord(raw: string, label: string): LatLon {
+  // Unwrap the negative-coordinate sentinel inserted by index.ts argv preprocessing.
+  const s = raw.startsWith(NEG_COORD_PREFIX) ? '-' + raw.slice(NEG_COORD_PREFIX.length) : raw;
   const parts = s.split(',');
   if (parts.length !== 2) {
     throw new Error(`${label} must be lat,lon (got: ${s})`);

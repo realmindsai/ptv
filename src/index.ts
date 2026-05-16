@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { MissingCredentialsError } from './client';
+import { preprocessArgv } from './argv';
 import { routeTypesCommand } from './commands/route-types';
 import { routesCommand } from './commands/routes';
 import { departuresCommand } from './commands/departures';
@@ -10,6 +11,8 @@ import { searchCommand } from './commands/search';
 import { nearbyCommand } from './commands/nearby';
 import { stopDetailsCommand } from './commands/stop-details';
 import { planCommand } from './commands/plan';
+
+const argv = preprocessArgv(process.argv);
 
 const program = new Command()
   .name('ptv')
@@ -26,7 +29,7 @@ program.addCommand(nearbyCommand());
 program.addCommand(stopDetailsCommand());
 program.addCommand(planCommand());
 
-program.parseAsync(process.argv).catch((err: Error) => {
+program.parseAsync(argv).catch((err: Error) => {
   if (err instanceof MissingCredentialsError) {
     process.stderr.write(`Error: ${err.message}\n`);
   } else {
