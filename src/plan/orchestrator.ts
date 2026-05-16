@@ -266,11 +266,12 @@ async function planK2Hubs(s: SearchState): Promise<Itinerary[]> {
     const train1Min = (Date.parse(t.arrive1Utc) - Date.parse(t.depart1Utc)) / 60_000;
     const train2Min = (Date.parse(t.arrive2Utc) - Date.parse(t.depart2Utc)) / 60_000;
     const trainMin = train1Min + train2Min;
+    const transferDwellMin = (Date.parse(t.depart2Utc) - Date.parse(t.arrive1Utc)) / 60_000;
     const isArriveBy = !!s.req.arriveByUtc;
     const waitMin = isArriveBy
       ? 0
       : Math.max(0, (Date.parse(t.depart1Utc) - s.seedTime.getTime()) / 60_000 - bikeOut.min);
-    const totalTimeMin = bikeMin + waitMin + trainMin;
+    const totalTimeMin = bikeMin + waitMin + trainMin + transferDwellMin;
 
     let bikeKmOnPath: number | null | undefined = undefined;
     if (s.req.enrich) {
@@ -303,7 +304,7 @@ async function planK2Hubs(s: SearchState): Promise<Itinerary[]> {
 
     itineraries.push({
       labels: [], totalTimeMin, bikeKm, bikeMin, bikeKmOnPath,
-      trainKm, trainMin, waitMin, transfers: 1, legs,
+      trainKm, trainMin, waitMin, transfers: 1, transferDwellMin, legs,
     });
   }
   return itineraries;

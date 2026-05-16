@@ -239,6 +239,27 @@ describe('plan() — happy path', () => {
     expect(out.itineraries).toHaveLength(0);
   });
 
+  it('K=2: totalTimeMin includes transferDwellMin and the field is populated', async () => {
+    const { ptv } = k2PtvFactory();
+    const out = await plan(
+      {
+        from: { lat: -37.7390, lon: 145.0682 },
+        to:   { lat: -37.9871, lon: 145.2113 },
+        departUtc: new Date('2026-05-17T21:30:00Z'),
+        minBikeKm: 0, maxBikeKm: 10, maxTransfers: 1, enrich: false,
+      },
+      { ptv, external: k2External as never },
+    );
+    expect(out.itineraries).toHaveLength(1);
+    const it = out.itineraries[0];
+    // k2PtvFactory: RUN1 arrives FSS 22:25; RUN2 departs FSS 22:35. Dwell = 10 min.
+    expect(it.transferDwellMin).toBe(10);
+    // train1 = 25 min (22:00→22:25), dwell = 10, train2 = 35 min (22:35→23:10)
+    // bike = 2 × 5 = 10 min, wait = (22:00 - 21:30) - 5 = 25 min
+    // total = 10 + 25 + 25 + 10 + 35 = 105 min
+    expect(it.totalTimeMin).toBeCloseTo(105);
+  });
+
   it('memoizes osrmRoute calls by stop id (no redundant calls across tuples)', async () => {
     // PTV stub: TWO departures from stop 1071, both reaching stop 1162.
     const ptv = vi.fn(async (path: string) => {

@@ -44,6 +44,7 @@ export type Itinerary = {
   trainMin: number;
   waitMin: number;
   transfers: number;
+  transferDwellMin?: number;
   legs: Leg[];
   constraintsViolated?: ConstraintViolation[];
 };
