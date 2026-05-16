@@ -6,7 +6,7 @@ export type ItineraryLabel =
   | 'recommended' | 'fastest' | 'most-bike' | 'most-bike-path' | 'fewest-transfers';
 
 export type ConstraintViolation =
-  | 'min_bike_km' | 'max_bike_km' | 'max_transfers';
+  | 'min_bike_km' | 'max_bike_km' | 'max_transfers' | 'min_on_path_fraction';
 
 export type GeoJsonLineString = {
   type: 'LineString';
@@ -107,6 +107,7 @@ export type PlanRequest = {
   preferBikePath: boolean;
   goal: PlanGoal;
   mode: PlanMode;
+  minOnPathFraction?: number;
 };
 
 export type PlanResult = {

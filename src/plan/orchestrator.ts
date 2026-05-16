@@ -559,6 +559,11 @@ export async function plan(req: PlanRequest, deps?: Partial<Deps>): Promise<Plan
     if (v.includes('max_bike_km')) {
       warnings.push(`no itinerary met --max-bike-km=${req.maxBikeKm}; showing best near-miss (bike_km=${allItems[0].bikeKm.toFixed(1)})`);
     }
+    if (v.includes('min_on_path_fraction')) {
+      const actual = allItems[0].bikeKm > 0 && typeof allItems[0].bikeKmOnPath === 'number'
+        ? allItems[0].bikeKmOnPath / allItems[0].bikeKm : 0;
+      warnings.push(`no itinerary met --min-on-path-fraction=${req.minOnPathFraction}; showing best near-miss (on_path=${(actual * 100).toFixed(0)}%)`);
+    }
   }
 
   return {

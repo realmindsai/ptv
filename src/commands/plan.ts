@@ -74,6 +74,7 @@ export function planCommand(): Command {
     .option('--prefer-bike-path', 'Recommend itineraries with more bike-path km')
     .option('--goal <type>', 'commute (default) or day-ride', 'commute')
     .option('--mode <type>', 'bike-only or bike-train (default)', 'bike-train')
+    .option('--min-on-path-fraction <n>', 'Require N fraction of bike distance on dedicated paths (0-1)', parseFloat)
     .option('--html <path>', 'Write a Leaflet HTML map to <path> and open it')
     .option('--raw', 'Reserved; no-op in v1')
     .action(async (fromStr: string, toStr: string, opts) => {
@@ -98,6 +99,14 @@ export function planCommand(): Command {
       if (opts.mode !== 'bike-only' && opts.mode !== 'bike-train') {
         throw new Error(`--mode must be 'bike-only' or 'bike-train' (got ${opts.mode})`);
       }
+      if (opts.minOnPathFraction !== undefined) {
+        if (Number.isNaN(opts.minOnPathFraction) || opts.minOnPathFraction < 0 || opts.minOnPathFraction > 1) {
+          throw new Error('--min-on-path-fraction must be in [0, 1]');
+        }
+        if (opts.enrich === false) {
+          throw new Error('--min-on-path-fraction requires --enrich (default on)');
+        }
+      }
       const req: PlanRequest = {
         from: parseCoord(fromStr, '<from>'),
         to:   parseCoord(toStr,   '<to>'),
@@ -110,6 +119,7 @@ export function planCommand(): Command {
         preferBikePath: !!opts.preferBikePath,
         goal: opts.goal as PlanGoal,
         mode: opts.mode as PlanMode,
+        minOnPathFraction: opts.minOnPathFraction,
       };
       const result = await plan(req);
       console.log(JSON.stringify(result, null, 2));

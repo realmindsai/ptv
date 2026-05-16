@@ -16,6 +16,11 @@ function legsKey(it: Itinerary): string {
 function feasible(it: Itinerary, req: PlanRequest): boolean {
   if (it.bikeKm < req.minBikeKm) return false;
   if (it.bikeKm > req.maxBikeKm) return false;
+  if (req.minOnPathFraction !== undefined && req.minOnPathFraction > 0) {
+    const onPathFraction = it.bikeKm > 0 && typeof it.bikeKmOnPath === 'number'
+      ? it.bikeKmOnPath / it.bikeKm : 0;
+    if (onPathFraction < req.minOnPathFraction) return false;
+  }
   return true;
 }
 
@@ -25,18 +30,27 @@ export function labelAndSort(items: Itinerary[], req: PlanRequest): Itinerary[] 
   const feasibleItems = items.filter((i) => feasible(i, req));
 
   if (feasibleItems.length === 0) {
-    const closest = items.slice().sort((a, b) => {
-      const da = a.bikeKm < req.minBikeKm
-        ? req.minBikeKm - a.bikeKm
-        : a.bikeKm - req.maxBikeKm;
-      const db = b.bikeKm < req.minBikeKm
-        ? req.minBikeKm - b.bikeKm
-        : b.bikeKm - req.maxBikeKm;
-      return da - db;
-    })[0];
+    function onPathFraction(it: Itinerary): number {
+      return it.bikeKm > 0 && typeof it.bikeKmOnPath === 'number'
+        ? it.bikeKmOnPath / it.bikeKm : 0;
+    }
+    function violationDistance(a: Itinerary): number {
+      let d = 0;
+      if (a.bikeKm < req.minBikeKm) d += req.minBikeKm - a.bikeKm;
+      if (a.bikeKm > req.maxBikeKm) d += a.bikeKm - req.maxBikeKm;
+      if (req.minOnPathFraction !== undefined) {
+        const f = onPathFraction(a);
+        if (f < req.minOnPathFraction) d += (req.minOnPathFraction - f) * 10;
+      }
+      return d;
+    }
+    const closest = items.slice().sort((a, b) => violationDistance(a) - violationDistance(b))[0];
     const violations: Itinerary['constraintsViolated'] = [];
     if (closest.bikeKm < req.minBikeKm) violations.push('min_bike_km');
     if (closest.bikeKm > req.maxBikeKm) violations.push('max_bike_km');
+    if (req.minOnPathFraction !== undefined && onPathFraction(closest) < req.minOnPathFraction) {
+      violations.push('min_on_path_fraction');
+    }
     return [{ ...closest, labels: ['fastest', 'recommended'], constraintsViolated: violations }];
   }
 

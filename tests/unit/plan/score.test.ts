@@ -7,7 +7,7 @@ function makeReq(over: Partial<PlanRequest> = {}): PlanRequest {
     from: { lat: 0, lon: 0 },
     to: { lat: 0, lon: 0 },
     minBikeKm: 0, maxBikeKm: 20, maxTransfers: 0, enrich: true,
-    preferBikePath: false,
+    preferBikePath: false, goal: 'commute', mode: 'bike-train',
     ...over,
   };
 }
@@ -112,5 +112,23 @@ describe('labelAndSort()', () => {
     const out = labelAndSort([a, b], makeReq({ preferBikePath: true }));
     const recommended = out.find((i) => i.labels.includes('recommended'));
     expect(recommended?.totalTimeMin).toBe(50);
+  });
+
+  it('--min-on-path-fraction filters out itineraries below threshold', () => {
+    // 5km bike, 1km on path → 20% on path. With threshold 0.5, filtered.
+    const a = it1({ totalTimeMin: 40, bikeKm: 5, bikeKmOnPath: 1 });
+    // 5km bike, 4km on path → 80%, kept
+    const b = it1({ totalTimeMin: 60, bikeKm: 5, bikeKmOnPath: 4 });
+    const out = labelAndSort([a, b], makeReq({ minOnPathFraction: 0.5 }));
+    expect(out).toHaveLength(1);
+    expect(out[0].bikeKmOnPath).toBe(4);
+  });
+
+  it('--min-on-path-fraction near-miss when all filtered', () => {
+    const a = it1({ totalTimeMin: 40, bikeKm: 5, bikeKmOnPath: 1 });
+    const b = it1({ totalTimeMin: 60, bikeKm: 5, bikeKmOnPath: 1.5 });
+    const out = labelAndSort([a, b], makeReq({ minOnPathFraction: 0.8 }));
+    expect(out).toHaveLength(1);
+    expect(out[0].constraintsViolated).toContain('min_on_path_fraction');
   });
 });
