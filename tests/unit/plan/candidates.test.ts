@@ -76,4 +76,19 @@ describe('accessCandidates()', () => {
     expect(out[0].bikeKm).toBeCloseTo(3);
     expect(out[0].routeIds).toEqual([100]);
   });
+
+  it('passes max_results: 200 to PTV stops/location', async () => {
+    const fakePtv = vi.fn(async () => ({ stops: [] }));
+    const fakeExternal = {
+      osrmTable: vi.fn(async () => ({ durations: [], distances: [] })),
+    };
+    await accessCandidates(
+      { lat: -37.78, lon: 144.96 }, 5, [0, 3],
+      { ptv: fakePtv, external: fakeExternal as never },
+    );
+    expect(fakePtv).toHaveBeenCalledWith(
+      expect.stringContaining('/v3/stops/location'),
+      expect.objectContaining({ max_results: 200 }),
+    );
+  });
 });

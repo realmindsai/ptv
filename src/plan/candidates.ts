@@ -34,7 +34,18 @@ export async function accessCandidates(
     max_distance: Math.round(maxBikeKm * 1000),
     route_types: routeTypes as number[],
     expand: 'Route',
+    max_results: 200,
   })) as { stops?: StopRaw[] };
+
+  if ((raw.stops?.length ?? 0) === 200) {
+    // Truncation signal: the caller may want to narrow the radius.
+    // We write to stderr because this helper has no warnings channel back to
+    // the orchestrator in v1.1. A future refactor can return warnings as a
+    // second value if a caller needs to surface them in the JSON response.
+    process.stderr.write(
+      `candidates: stops/location returned exactly 200 — possible truncation at ${origin.lat},${origin.lon}\n`,
+    );
+  }
 
   const stops = (raw.stops ?? []).filter((s) =>
     (routeTypes as number[]).includes(s.route_type),
