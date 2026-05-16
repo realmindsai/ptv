@@ -214,6 +214,9 @@ describe('plan() — happy path', () => {
     const l2 = it.legs[2];
     if (l1.mode === 'train' && l2.mode === 'train') {
       expect(l1.toStopId).toBe(l2.fromStopId);
+      // Hub name is populated for the transfer point (Flinders Street, stop_id 1071)
+      expect(l1.toStopName).toBe('Flinders Street Station');
+      expect(l2.fromStopName).toBe('Flinders Street Station');
     }
   });
 

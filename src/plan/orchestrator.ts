@@ -8,7 +8,7 @@ import {
 import { accessCandidates } from './candidates';
 import { departuresFrom, runPattern } from './transit';
 import { labelAndSort } from './score';
-import { isHub } from './hubs';
+import { isHub, hubName } from './hubs';
 
 type PtvFn = (path: string, params?: Record<string, string | number | number[] | string[]>) => Promise<unknown>;
 type ExternalMod = typeof import('./external');
@@ -291,12 +291,12 @@ async function planK2Hubs(s: SearchState): Promise<Itinerary[]> {
       { mode: 'train', routeId: t.routeId1, routeType: t.access.routeType,
         routeName: t.routeName1,
         fromStopId: t.access.stopId, toStopId: t.hubStopId,
-        fromStopName: t.access.stopName, toStopName: '',
+        fromStopName: t.access.stopName, toStopName: hubName(t.hubStopId),
         departUtc: t.depart1Utc, arriveUtc: t.arrive1Utc, runRef: t.run1Ref },
       { mode: 'train', routeId: t.routeId2, routeType: t.egress.routeType,
         routeName: t.routeName2,
         fromStopId: t.hubStopId, toStopId: t.egress.stopId,
-        fromStopName: '', toStopName: t.egress.stopName,
+        fromStopName: hubName(t.hubStopId), toStopName: t.egress.stopName,
         departUtc: t.depart2Utc, arriveUtc: t.arrive2Utc, runRef: t.run2Ref },
       { mode: 'bike', from: t.egress.coord, to: s.req.to,
         km: bikeIn.km, min: bikeIn.min, geometry: bikeIn.geometry },
