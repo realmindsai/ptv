@@ -96,4 +96,20 @@ describe('plan() — happy path', () => {
     expect(out.itineraries[0].constraintsViolated).toContain('min_bike_km');
     expect(out.warnings?.[0]).toMatch(/min-bike-km/);
   });
+
+  it('--arrive-by: waitMin is 0, totalTimeMin is bikeOut + train + bikeIn', async () => {
+    const { ptv } = fakePtvFactory();
+    const out = await plan(
+      makeReq({
+        departUtc: undefined,
+        arriveByUtc: new Date('2026-05-17T01:00:00Z'),
+      }),
+      { ptv, external: fakeExternal as never },
+    );
+    expect(out.itineraries).toHaveLength(1);
+    const it = out.itineraries[0];
+    expect(it.waitMin).toBe(0);
+    // bikeOut.min + bikeIn.min = 10 + 10 = 20; train run is 22:20→23:10 = 50 min.
+    expect(it.totalTimeMin).toBeCloseTo(70, 5);
+  });
 });

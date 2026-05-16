@@ -99,8 +99,10 @@ export async function plan(req: PlanRequest, deps?: Partial<Deps>): Promise<Plan
     const bikeMin = bikeOut.min + bikeIn.min;
     const trainKm = haversineKm(t.access.coord, t.egress.coord);
     const trainMin = (Date.parse(t.arriveUtc) - Date.parse(t.departUtc)) / 60_000;
-    const waitMin = Math.max(0,
-      (Date.parse(t.departUtc) - seedTime.getTime()) / 60_000 - bikeOut.min);
+    const isArriveBy = !!req.arriveByUtc;
+    const waitMin = isArriveBy
+      ? 0
+      : Math.max(0, (Date.parse(t.departUtc) - seedTime.getTime()) / 60_000 - bikeOut.min);
     const totalTimeMin = bikeMin + waitMin + trainMin;
 
     let bikeKmOnPath: number | null | undefined = undefined;
