@@ -75,36 +75,54 @@ export async function osrmRoute(
   };
 }
 
+type GhRouteRaw = Array<{
+  response?: {
+    paths?: Array<{
+      distance?: number;
+      time?: number;
+      details?: {
+        road_class?: Array<[number, number, string]>;
+      };
+    }>;
+  };
+}>;
+
+const PATH_ROAD_CLASSES = new Set(['cycleway', 'path', 'track']);
+
+export function parseGhRoute(raw: unknown):
+  { km: number; min: number; kmOnPath: number } | null {
+  const arr = raw as GhRouteRaw;
+  const p = arr?.[0]?.response?.paths?.[0];
+  if (typeof p?.distance !== 'number' || typeof p?.time !== 'number') return null;
+  const km = p.distance / 1000;
+  const min = p.time / 60_000;
+  const segments = p.details?.road_class ?? [];
+  if (segments.length === 0) return { km, min, kmOnPath: 0 };
+  let totalIdx = 0;
+  let pathIdx = 0;
+  for (const [from, to, cls] of segments) {
+    const span = to - from;
+    totalIdx += span;
+    if (PATH_ROAD_CLASSES.has(cls)) pathIdx += span;
+  }
+  const kmOnPath = totalIdx > 0 ? km * (pathIdx / totalIdx) : 0;
+  return { km, min, kmOnPath };
+}
+
 export async function ghRouteBike(
   from: LatLon,
   to: LatLon,
   profile: 'bike' | 'bike_quiet' = 'bike',
 ): Promise<{ km: number; min: number; kmOnPath: number } | null> {
   try {
-    // gh-route --format json returns [{profile, response: {paths: [{distance (m), time (ms),
-    // details: {surface: [[from_idx, to_idx, value], ...]}}]}}].
-    // We compute kmOnPath from the surface details by counting path nodes in each segment;
-    // since we lack per-segment distance, we approximate as a fraction of total distance.
-    // surface_breakdown is a best-guess field name — if absent, kmOnPath defaults to 0.
     const raw = runJson(GH_BIN, [
       'route',
-      '--point', `${from.lat},${from.lon}`,
-      '--point', `${to.lat},${to.lon}`,
+      `--point=${from.lat},${from.lon}`,
+      `--point=${to.lat},${to.lon}`,
       '--profile', profile,
       '--format', 'json',
-    ]) as {
-      distance_km?: number;
-      time_min?: number;
-      surface_breakdown?: Record<string, number>;
-    };
-    if (raw.distance_km === undefined || raw.time_min === undefined) return null;
-    // surface_breakdown maps surface→km; "path-like" surfaces aggregate to kmOnPath.
-    const pathSurfaces = new Set(['cycleway', 'path', 'track', 'unpaved', 'gravel']);
-    let kmOnPath = 0;
-    for (const [surface, km] of Object.entries(raw.surface_breakdown ?? {})) {
-      if (pathSurfaces.has(surface)) kmOnPath += km;
-    }
-    return { km: raw.distance_km, min: raw.time_min, kmOnPath };
+    ]);
+    return parseGhRoute(raw);
   } catch {
     return null;
   }
