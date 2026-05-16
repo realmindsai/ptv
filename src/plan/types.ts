@@ -70,6 +70,29 @@ export type Itinerary = {
   constraintsViolated?: ConstraintViolation[];
 };
 
+export type PlanGoal = 'commute' | 'day-ride';
+
+export type CustomModelPriorityRule = {
+  if: string;
+  multiply_by: number;
+};
+
+export type CustomModel = {
+  priority: CustomModelPriorityRule[];
+  distance_influence: number;
+};
+
+export const DAY_RIDE_CUSTOM_MODEL: CustomModel = {
+  priority: [
+    { if: 'road_class == SECONDARY',   multiply_by: 0.1 },
+    { if: 'road_class == PRIMARY',     multiply_by: 0.05 },
+    { if: 'road_class == TRUNK',       multiply_by: 0.05 },
+    { if: 'road_class == TERTIARY',    multiply_by: 0.4 },
+    { if: 'road_class == RESIDENTIAL', multiply_by: 0.7 },
+  ],
+  distance_influence: 50,
+};
+
 export type PlanRequest = {
   from: LatLon;
   to: LatLon;
@@ -80,6 +103,7 @@ export type PlanRequest = {
   maxTransfers: number;
   enrich: boolean;
   preferBikePath: boolean;
+  goal: PlanGoal;
 };
 
 export type PlanResult = {

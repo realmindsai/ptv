@@ -8,7 +8,7 @@ function makeReq(over: Partial<PlanRequest> = {}): PlanRequest {
     to:   { lat: -38.14, lon: 145.12 },
     departUtc: new Date('2026-05-16T22:00:00Z'),
     minBikeKm: 0, maxBikeKm: 15, maxTransfers: 0, enrich: false,
-    preferBikePath: false,
+    preferBikePath: false, goal: 'commute',
     ...over,
   };
 }
@@ -130,6 +130,7 @@ const k2External = {
   })),
   osrmRoute: vi.fn(async () => ({ km: 1.5, min: 5, geometry: null })),
   ghRouteBike: vi.fn(async () => null),
+  ghRouteCustom: vi.fn(async () => null),
 };
 
 const fakeExternal = {
@@ -139,6 +140,7 @@ const fakeExternal = {
   })),
   osrmRoute: vi.fn(async () => ({ km: 3, min: 10, geometry: null })),
   ghRouteBike: vi.fn(async () => null),
+  ghRouteCustom: vi.fn(async () => null),
 };
 
 describe('plan() — happy path', () => {
@@ -204,7 +206,7 @@ describe('plan() — happy path', () => {
         to:   { lat: -37.9871, lon: 145.2113 },
         departUtc: new Date('2026-05-17T21:30:00Z'),
         minBikeKm: 0, maxBikeKm: 10, maxTransfers: 1, enrich: false,
-        preferBikePath: false,
+        preferBikePath: false, goal: 'commute',
       },
       { ptv, external: k2External as never },
     );
@@ -246,7 +248,7 @@ describe('plan() — happy path', () => {
         to:   { lat: -37.9871, lon: 145.2113 },
         departUtc: new Date('2026-05-17T21:30:00Z'),
         minBikeKm: 0, maxBikeKm: 10, maxTransfers: 0, enrich: false,
-        preferBikePath: false,
+        preferBikePath: false, goal: 'commute',
       },
       { ptv, external: k2External as never },
     );
@@ -261,7 +263,7 @@ describe('plan() — happy path', () => {
         to:   { lat: -37.9871, lon: 145.2113 },
         departUtc: new Date('2026-05-17T21:30:00Z'),
         minBikeKm: 0, maxBikeKm: 10, maxTransfers: 1, enrich: false,
-        preferBikePath: false,
+        preferBikePath: false, goal: 'commute',
       },
       { ptv, external: k2External as never },
     );
@@ -325,6 +327,7 @@ describe('plan() — happy path', () => {
       })),
       osrmRoute: osrmRouteSpy,
       ghRouteBike: vi.fn(async () => null),
+      ghRouteCustom: vi.fn(async () => null),
     };
 
     const out = await plan(makeReq(), { ptv, external: memoExternal as never });
@@ -332,5 +335,44 @@ describe('plan() — happy path', () => {
     // With memoization: 1 call for (origin → 1071), 1 call for (1162 → dest) = 2 total.
     // Without: 2 tuples × 2 calls = 4.
     expect(osrmRouteSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('--goal day-ride calls ghRouteCustom instead of osrmRoute for bike legs', async () => {
+    const { ptv } = fakePtvFactory();
+    const customSpy = vi.fn(async () => ({
+      km: 3, min: 10, kmOnPath: 1.5,
+      ascendM: 20, descendM: 15,
+      maxSustainedGradePercent: 5, maxSustainedGradeM: 100,
+      flatFraction: 0.7, steepFraction: 0.05,
+      geometry: null,
+    }));
+    const osrmSpy = vi.fn(async () => ({ km: 3, min: 10, geometry: null }));
+    const ext = {
+      osrmTable: vi.fn(async (_p: string, _s: never, dests: unknown[]) => ({
+        durations: dests.map(() => 600), distances: dests.map(() => 3000),
+      })),
+      osrmRoute: osrmSpy,
+      ghRouteBike: vi.fn(async () => null),
+      ghRouteCustom: customSpy,
+    };
+    await plan(makeReq({ goal: 'day-ride' }), { ptv, external: ext as never });
+    expect(customSpy).toHaveBeenCalled();
+    expect(osrmSpy).not.toHaveBeenCalled();
+  });
+
+  it('--goal day-ride falls back to osrmRoute when ghRouteCustom returns null', async () => {
+    const { ptv } = fakePtvFactory();
+    const osrmSpy = vi.fn(async () => ({ km: 3, min: 10, geometry: null }));
+    const ext = {
+      osrmTable: vi.fn(async (_p: string, _s: never, dests: unknown[]) => ({
+        durations: dests.map(() => 600), distances: dests.map(() => 3000),
+      })),
+      osrmRoute: osrmSpy,
+      ghRouteBike: vi.fn(async () => null),
+      ghRouteCustom: vi.fn(async () => null),
+    };
+    const out = await plan(makeReq({ goal: 'day-ride' }), { ptv, external: ext as never });
+    expect(out.itineraries.length).toBeGreaterThan(0);
+    expect(osrmSpy).toHaveBeenCalled();
   });
 });

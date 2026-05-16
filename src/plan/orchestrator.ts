@@ -1,5 +1,5 @@
 import type {
-  PlanRequest, PlanResult, Itinerary, AccessCandidate, Leg, GeoJsonLineString,
+  PlanRequest, PlanResult, Itinerary, AccessCandidate, Leg, GeoJsonLineString, LatLon,
 } from './types';
 import {
   BIKEABLE_ROUTE_TYPES, MAX_PLAUSIBLE_TOTAL_MIN,
@@ -51,10 +51,24 @@ type SearchState = {
   warnings: string[];
 };
 
+async function bikeRouteCall(
+  s: SearchState, from: LatLon, to: LatLon,
+): Promise<RouteResult> {
+  if (s.req.goal === 'day-ride') {
+    const { DAY_RIDE_CUSTOM_MODEL } = await import('./types');
+    const r = await s.deps.external.ghRouteCustom(from, to, DAY_RIDE_CUSTOM_MODEL);
+    if (r) {
+      return { km: r.km, min: r.min, geometry: r.geometry };
+    }
+    // Fall through to osrm-au on failure
+  }
+  return s.deps.external.osrmRoute('bicycle', from, to);
+}
+
 function accessBikeRoute(s: SearchState, a: AccessCandidate): Promise<RouteResult> {
   let p = s.accessRouteCache.get(a.stopId);
   if (!p) {
-    p = s.deps.external.osrmRoute('bicycle', s.req.from, a.coord);
+    p = bikeRouteCall(s, s.req.from, a.coord);
     s.accessRouteCache.set(a.stopId, p);
   }
   return p;
@@ -62,7 +76,7 @@ function accessBikeRoute(s: SearchState, a: AccessCandidate): Promise<RouteResul
 function egressBikeRoute(s: SearchState, e: AccessCandidate): Promise<RouteResult> {
   let p = s.egressRouteCache.get(e.stopId);
   if (!p) {
-    p = s.deps.external.osrmRoute('bicycle', e.coord, s.req.to);
+    p = bikeRouteCall(s, e.coord, s.req.to);
     s.egressRouteCache.set(e.stopId, p);
   }
   return p;

@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { plan } from '../plan/orchestrator';
-import type { LatLon, PlanRequest } from '../plan/types';
+import type { LatLon, PlanRequest, PlanGoal } from '../plan/types';
 import { NEG_COORD_PREFIX } from '../argv';
 
 function parseCoord(raw: string, label: string): LatLon {
@@ -72,6 +72,7 @@ export function planCommand(): Command {
     .option('--max-transfers <n>', 'Max train transfers (default 1; max 1 in v1.2)', (v) => parseInt(v, 10), 1)
     .option('--no-enrich', 'Skip gh-route enrichment (bike_km_on_path)')
     .option('--prefer-bike-path', 'Recommend itineraries with more bike-path km')
+    .option('--goal <type>', 'commute (default) or day-ride', 'commute')
     .option('--html <path>', 'Write a Leaflet HTML map to <path> and open it')
     .option('--raw', 'Reserved; no-op in v1')
     .action(async (fromStr: string, toStr: string, opts) => {
@@ -90,6 +91,9 @@ export function planCommand(): Command {
           throw new Error(`${name} must be >= 0 (got ${value})`);
         }
       }
+      if (opts.goal !== 'commute' && opts.goal !== 'day-ride') {
+        throw new Error(`--goal must be 'commute' or 'day-ride' (got ${opts.goal})`);
+      }
       const req: PlanRequest = {
         from: parseCoord(fromStr, '<from>'),
         to:   parseCoord(toStr,   '<to>'),
@@ -100,6 +104,7 @@ export function planCommand(): Command {
         maxTransfers: opts.maxTransfers,
         enrich: opts.enrich !== false,
         preferBikePath: !!opts.preferBikePath,
+        goal: opts.goal as PlanGoal,
       };
       const result = await plan(req);
       console.log(JSON.stringify(result, null, 2));

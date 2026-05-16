@@ -1,7 +1,7 @@
 import { spawnSync } from 'child_process';
 import { resolve } from 'path';
 import { homedir } from 'os';
-import type { LatLon, GeoJsonLineString } from './types';
+import type { LatLon, GeoJsonLineString, CustomModel } from './types';
 
 const OSRM_BIN = process.env.OSRM_AU_BIN ?? resolve(homedir(), 'bin/osrm-au');
 
@@ -43,6 +43,9 @@ function decodePolyline(encoded: string, precision = 5): GeoJsonLineString {
 
 const GH_BIN = process.env.GH_ROUTE_BIN
   ?? resolve(__dirname, '../../../grasshopper-bike-routing/bin/gh-route');
+
+const GH_REST_URL = process.env.GH_REST_URL
+  ?? 'http://graphhopper.magpie-inconnu.ts.net:8989/route';
 
 function runJson(cmd: string, args: string[]): unknown {
   const result = spawnSync(cmd, args, { encoding: 'utf8' });
@@ -263,6 +266,36 @@ export async function ghRouteBike(
       '--format', 'json',
     ]);
     return parseGhRoute(raw);
+  } catch {
+    return null;
+  }
+}
+
+export async function ghRouteCustom(
+  from: LatLon,
+  to: LatLon,
+  customModel: CustomModel,
+): Promise<ParsedGhRoute | null> {
+  const body = {
+    points: [[from.lon, from.lat], [to.lon, to.lat]],
+    profile: 'bike',
+    'ch.disable': true,
+    points_encoded: false,
+    instructions: false,
+    elevation: true,
+    details: ['road_class', 'average_slope', 'surface'],
+    custom_model: customModel,
+  };
+  try {
+    const r = await fetch(GH_REST_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) return null;
+    const data = await r.json() as { paths?: unknown[] };
+    if (!data.paths || data.paths.length === 0) return null;
+    return parseGhRoute([{ response: { paths: data.paths as never } }]);
   } catch {
     return null;
   }

@@ -135,6 +135,71 @@ describe('parseGhRoute()', () => {
   });
 });
 
+describe('ghRouteCustom()', () => {
+  beforeEach(() => { vi.resetModules(); });
+
+  it('parses successful GraphHopper REST response', async () => {
+    const fakeResponse = {
+      paths: [{
+        distance: 12345, time: 600000,
+        ascend: 75, descend: 60,
+        details: { road_class: [[0, 10, 'cycleway']], average_slope: [] },
+      }],
+    };
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => fakeResponse,
+    })));
+    const { ghRouteCustom } = await import('../../../src/plan/external');
+    const { DAY_RIDE_CUSTOM_MODEL } = await import('../../../src/plan/types');
+    const r = await ghRouteCustom(
+      { lat: -37.78, lon: 144.96 }, { lat: -37.79, lon: 144.97 },
+      DAY_RIDE_CUSTOM_MODEL,
+    );
+    expect(r?.km).toBeCloseTo(12.345);
+    expect(r?.ascendM).toBe(75);
+    vi.unstubAllGlobals();
+  });
+
+  it('returns null on non-2xx response', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 500 })));
+    const { ghRouteCustom } = await import('../../../src/plan/external');
+    const { DAY_RIDE_CUSTOM_MODEL } = await import('../../../src/plan/types');
+    const r = await ghRouteCustom(
+      { lat: -37.78, lon: 144.96 }, { lat: -37.79, lon: 144.97 },
+      DAY_RIDE_CUSTOM_MODEL,
+    );
+    expect(r).toBeNull();
+    vi.unstubAllGlobals();
+  });
+
+  it('returns null when fetch throws', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('network'); }));
+    const { ghRouteCustom } = await import('../../../src/plan/external');
+    const { DAY_RIDE_CUSTOM_MODEL } = await import('../../../src/plan/types');
+    const r = await ghRouteCustom(
+      { lat: -37.78, lon: 144.96 }, { lat: -37.79, lon: 144.97 },
+      DAY_RIDE_CUSTOM_MODEL,
+    );
+    expect(r).toBeNull();
+    vi.unstubAllGlobals();
+  });
+
+  it('returns null when response has no paths', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true, json: async () => ({ paths: [] }),
+    })));
+    const { ghRouteCustom } = await import('../../../src/plan/external');
+    const { DAY_RIDE_CUSTOM_MODEL } = await import('../../../src/plan/types');
+    const r = await ghRouteCustom(
+      { lat: -37.78, lon: 144.96 }, { lat: -37.79, lon: 144.97 },
+      DAY_RIDE_CUSTOM_MODEL,
+    );
+    expect(r).toBeNull();
+    vi.unstubAllGlobals();
+  });
+});
+
 describe('osrmRoute()', () => {
   beforeEach(() => { vi.resetModules(); });
 
