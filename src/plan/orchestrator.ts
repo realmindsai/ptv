@@ -85,16 +85,52 @@ export async function plan(req: PlanRequest, deps?: Partial<Deps>): Promise<Plan
     }
   }));
 
-  async function bikeLegRoute(from: { lat: number; lon: number }, to: { lat: number; lon: number }): Promise<{ km: number; min: number; geometry: string }> {
-    return resolved.external.osrmRoute('bicycle', from, to);
+  type RouteResult = { km: number; min: number; geometry: string };
+  type EnrichResult = { km: number; min: number; kmOnPath: number } | null;
+  const accessRouteCache = new Map<number, Promise<RouteResult>>();
+  const egressRouteCache = new Map<number, Promise<RouteResult>>();
+  const accessEnrichCache = new Map<number, Promise<EnrichResult>>();
+  const egressEnrichCache = new Map<number, Promise<EnrichResult>>();
+
+  function accessBikeRoute(a: AccessCandidate): Promise<RouteResult> {
+    let p = accessRouteCache.get(a.stopId);
+    if (!p) {
+      p = resolved.external.osrmRoute('bicycle', req.from, a.coord);
+      accessRouteCache.set(a.stopId, p);
+    }
+    return p;
+  }
+  function egressBikeRoute(e: AccessCandidate): Promise<RouteResult> {
+    let p = egressRouteCache.get(e.stopId);
+    if (!p) {
+      p = resolved.external.osrmRoute('bicycle', e.coord, req.to);
+      egressRouteCache.set(e.stopId, p);
+    }
+    return p;
+  }
+  function accessEnrich(a: AccessCandidate): Promise<EnrichResult> {
+    let p = accessEnrichCache.get(a.stopId);
+    if (!p) {
+      p = resolved.external.ghRouteBike(req.from, a.coord);
+      accessEnrichCache.set(a.stopId, p);
+    }
+    return p;
+  }
+  function egressEnrich(e: AccessCandidate): Promise<EnrichResult> {
+    let p = egressEnrichCache.get(e.stopId);
+    if (!p) {
+      p = resolved.external.ghRouteBike(e.coord, req.to);
+      egressEnrichCache.set(e.stopId, p);
+    }
+    return p;
   }
 
   const itineraries: Itinerary[] = [];
   for (const t of tuples) {
     if (req.arriveByUtc && Date.parse(t.arriveUtc) > req.arriveByUtc.getTime()) continue;
 
-    const bikeOut = await bikeLegRoute(req.from, t.access.coord);
-    const bikeIn  = await bikeLegRoute(t.egress.coord, req.to);
+    const bikeOut = await accessBikeRoute(t.access);
+    const bikeIn  = await egressBikeRoute(t.egress);
     const bikeKm  = bikeOut.km + bikeIn.km;
     const bikeMin = bikeOut.min + bikeIn.min;
     const trainKm = haversineKm(t.access.coord, t.egress.coord);
@@ -108,8 +144,8 @@ export async function plan(req: PlanRequest, deps?: Partial<Deps>): Promise<Plan
     let bikeKmOnPath: number | null | undefined = undefined;
     if (req.enrich) {
       const [out, into] = await Promise.all([
-        resolved.external.ghRouteBike(req.from, t.access.coord),
-        resolved.external.ghRouteBike(t.egress.coord, req.to),
+        accessEnrich(t.access),
+        egressEnrich(t.egress),
       ]);
       if (out && into) bikeKmOnPath = out.kmOnPath + into.kmOnPath;
       else {
