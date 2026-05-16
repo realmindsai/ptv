@@ -1,0 +1,87 @@
+export type LatLon = { lat: number; lon: number };
+
+export type RouteTypeBikeable = 0 | 3; // 0 = Metro Train, 3 = V/Line
+
+export type ItineraryLabel =
+  | 'recommended' | 'fastest' | 'most-bike' | 'fewest-transfers';
+
+export type ConstraintViolation =
+  | 'min_bike_km' | 'max_bike_km' | 'max_transfers';
+
+export type BikeLeg = {
+  mode: 'bike';
+  from: LatLon;
+  to: LatLon;
+  km: number;
+  min: number;
+  kmOnPath?: number | null;
+  geometry?: string;
+};
+
+export type TrainLeg = {
+  mode: 'train';
+  routeId: number;
+  routeType: RouteTypeBikeable;
+  routeName: string;
+  fromStopId: number;
+  toStopId: number;
+  fromStopName: string;
+  toStopName: string;
+  departUtc: string;
+  arriveUtc: string;
+  runRef: string;
+};
+
+export type Leg = BikeLeg | TrainLeg;
+
+export type Itinerary = {
+  labels: ItineraryLabel[];
+  totalTimeMin: number;
+  bikeKm: number;
+  bikeMin: number;
+  bikeKmOnPath?: number | null;
+  trainKm: number;
+  trainMin: number;
+  waitMin: number;
+  transfers: number;
+  legs: Leg[];
+  constraintsViolated?: ConstraintViolation[];
+};
+
+export type PlanRequest = {
+  from: LatLon;
+  to: LatLon;
+  departUtc?: Date;
+  arriveByUtc?: Date;
+  minBikeKm: number;
+  maxBikeKm: number;
+  maxTransfers: number;
+  enrich: boolean;
+};
+
+export type PlanResult = {
+  query: PlanRequest;
+  itineraries: Itinerary[];
+  warnings?: string[];
+};
+
+export type AccessCandidate = {
+  stopId: number;
+  stopName: string;
+  routeType: RouteTypeBikeable;
+  routeIds: number[];
+  coord: LatLon;
+  bikeKm: number;
+  bikeMin: number;
+};
+
+export type DepartureWithPattern = {
+  routeId: number;
+  routeType: RouteTypeBikeable;
+  runRef: string;
+  departUtc: string;
+  pattern: { stopId: number; arriveUtc: string }[];
+};
+
+export const MAX_PLAUSIBLE_TOTAL_MIN = 180;
+export const BIKEABLE_ROUTE_TYPES: RouteTypeBikeable[] = [0, 3];
