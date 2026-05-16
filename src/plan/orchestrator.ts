@@ -6,7 +6,7 @@ import { accessCandidates } from './candidates';
 import { departuresFrom, runPattern } from './transit';
 import { labelAndSort } from './score';
 
-type PtvFn = (path: string, params?: Record<string, string | number | number[]>) => Promise<unknown>;
+type PtvFn = (path: string, params?: Record<string, string | number | number[] | string[]>) => Promise<unknown>;
 type ExternalMod = typeof import('./external');
 type Deps = { ptv: PtvFn; external: ExternalMod };
 

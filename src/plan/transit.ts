@@ -1,6 +1,6 @@
 import type { DepartureWithPattern, RouteTypeBikeable } from './types';
 
-type PtvFn = (path: string, params?: Record<string, string | number | number[]>) => Promise<unknown>;
+type PtvFn = (path: string, params?: Record<string, string | number | number[] | string[]>) => Promise<unknown>;
 type Deps = { ptv: PtvFn };
 
 type DepartureRaw = {

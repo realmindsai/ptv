@@ -15,7 +15,7 @@ function getCredentials(): { devId: string; apiKey: string } {
   return { devId, apiKey };
 }
 
-export function buildQueryString(params: Record<string, string | number | number[]>): string {
+export function buildQueryString(params: Record<string, string | number | number[] | string[]>): string {
   // Callers must not pass boolean/undefined values — encodeURIComponent would coerce them to strings
   const parts: string[] = [];
   for (const [key, value] of Object.entries(params)) {
@@ -36,7 +36,7 @@ export function sign(pathWithDevId: string, apiKey: string): string {
 
 export async function ptv(
   path: string,
-  params: Record<string, string | number | number[]> = {}
+  params: Record<string, string | number | number[] | string[]> = {}
 ): Promise<unknown> {
   const { devId, apiKey } = getCredentials();
 
