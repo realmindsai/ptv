@@ -51,6 +51,15 @@ export function planCommand(): Command {
       if (opts.minBikeKm > opts.maxBikeKm) {
         throw new Error('--min-bike-km must be <= --max-bike-km');
       }
+      for (const [name, value] of [
+        ['--min-bike-km', opts.minBikeKm],
+        ['--max-bike-km', opts.maxBikeKm],
+        ['--max-transfers', opts.maxTransfers],
+      ] as const) {
+        if (typeof value === 'number' && value < 0) {
+          throw new Error(`${name} must be >= 0 (got ${value})`);
+        }
+      }
       const req: PlanRequest = {
         from: parseCoord(fromStr, '<from>'),
         to:   parseCoord(toStr,   '<to>'),

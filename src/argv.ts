@@ -1,9 +1,12 @@
 /**
- * Commander treats any arg beginning with '-' as an option flag, which breaks
- * lat/lon coordinate pairs like "-37.7656,144.9614" (negative latitude).
+ * Commander 14 treats any arg beginning with '-' as an option flag, which
+ * breaks lat/lon coordinate pairs like "-37.7656,144.9614" (negative latitude).
  *
- * We rewrite those args to a sentinel prefix in index.ts before commander
- * parses them, and unwrap the sentinel in parseCoord() inside commands/plan.ts.
+ * SCOPE: This preprocessor handles negative coordinate-shaped args ONLY
+ * (matched by /^-\d[\d.]*,\d/). It does NOT handle negative values passed
+ * to numeric options (e.g. `--min-bike-km -5`). Negative numeric option
+ * values are rejected by commands/plan.ts after parsing, which is the
+ * correct layer for input validation.
  */
 export const NEG_COORD_PREFIX = '__NEG__';
 

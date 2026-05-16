@@ -65,4 +65,13 @@ describe.skipIf(SKIP)('e2e: plan command', () => {
     expect(code).not.toBe(0);
     expect(stderr).toMatch(/max-transfers/);
   });
+
+  it('--min-bike-km negative: exits non-zero', () => {
+    const { stderr, code } = run([
+      'plan', '-37.7656,144.9614', '-37.648,144.946',
+      '--min-bike-km=-5',
+    ]);
+    expect(code).not.toBe(0);
+    expect(stderr).toMatch(/min-bike-km/);
+  });
 });
