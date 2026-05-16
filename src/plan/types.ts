@@ -88,3 +88,4 @@ export const MAX_PLAUSIBLE_TOTAL_MIN = 180;
 export const BIKEABLE_ROUTE_TYPES: RouteTypeBikeable[] = [0, 3];
 export const TRANSFER_BUFFER_MIN = 5;
 export const TOP_N_CANDIDATES = 30;
+export const MAX_HUB_FANOUT = 50;

@@ -58,6 +58,79 @@ function fakePtvFactory(): {
   return { ptv };
 }
 
+function k2PtvFactory(): {
+  ptv: (path: string, params?: Record<string, unknown>) => Promise<unknown>;
+} {
+  // Scenario: Rosanna(2011) → Flinders Street(1071) → Dandenong(1049).
+  // Route 7 (Hurstbridge): Rosanna → Flinders Street
+  // Route 11 (Cranbourne):  Flinders Street → Dandenong
+  const ROSANNA = { lat: -37.7390, lon: 145.0682 };
+  const DANDY   = { lat: -37.9871, lon: 145.2113 };
+  const ptv = vi.fn(async (path: string) => {
+    if (path.includes(`/v3/stops/location/${ROSANNA.lat},${ROSANNA.lon}`)) {
+      return { stops: [{
+        stop_id: 2011, stop_name: 'Rosanna', route_type: 0,
+        stop_latitude: -37.7395, stop_longitude: 145.068,
+        routes: [{ route_id: 7, route_type: 0 }],
+      }] };
+    }
+    if (path.includes(`/v3/stops/location/${DANDY.lat},${DANDY.lon}`)) {
+      return { stops: [{
+        stop_id: 1049, stop_name: 'Dandenong', route_type: 0,
+        stop_latitude: -37.988, stop_longitude: 145.212,
+        routes: [{ route_id: 11, route_type: 0 }],
+      }] };
+    }
+    if (path.startsWith('/v3/departures/route_type/0/stop/2011')) {
+      return {
+        departures: [{
+          route_id: 7, run_ref: 'RUN1', stop_id: 2011,
+          scheduled_departure_utc: '2026-05-17T22:00:00Z',
+          estimated_departure_utc: null,
+        }],
+        routes: { 7: { route_id: 7, route_name: 'Hurstbridge' } },
+      };
+    }
+    if (path.startsWith('/v3/pattern/run/RUN1/route_type/0')) {
+      return {
+        departures: [
+          { stop_id: 2011, scheduled_departure_utc: '2026-05-17T22:00:00Z', estimated_departure_utc: null },
+          { stop_id: 1071, scheduled_departure_utc: '2026-05-17T22:25:00Z', estimated_departure_utc: null },
+        ],
+      };
+    }
+    if (path.startsWith('/v3/departures/route_type/0/stop/1071')) {
+      return {
+        departures: [{
+          route_id: 11, run_ref: 'RUN2', stop_id: 1071,
+          scheduled_departure_utc: '2026-05-17T22:35:00Z',
+          estimated_departure_utc: null,
+        }],
+        routes: { 11: { route_id: 11, route_name: 'Cranbourne' } },
+      };
+    }
+    if (path.startsWith('/v3/pattern/run/RUN2/route_type/0')) {
+      return {
+        departures: [
+          { stop_id: 1071, scheduled_departure_utc: '2026-05-17T22:35:00Z', estimated_departure_utc: null },
+          { stop_id: 1049, scheduled_departure_utc: '2026-05-17T23:10:00Z', estimated_departure_utc: null },
+        ],
+      };
+    }
+    return { stops: [], departures: [] };
+  });
+  return { ptv };
+}
+
+const k2External = {
+  osrmTable: vi.fn(async (_p: string, _s: never, dests: unknown[]) => ({
+    durations: dests.map(() => 300),
+    distances: dests.map(() => 1500),
+  })),
+  osrmRoute: vi.fn(async () => ({ km: 1.5, min: 5, geometry: '' })),
+  ghRouteBike: vi.fn(async () => null),
+};
+
 const fakeExternal = {
   osrmTable: vi.fn(async (_p: string, _s: never, dests: unknown[]) => ({
     durations: dests.map(() => 600),
@@ -84,11 +157,11 @@ describe('plan() — happy path', () => {
     }
   });
 
-  it('rejects --max-transfers > 0 in v1', async () => {
+  it('--max-transfers >= 2 not yet implemented in v1.2', async () => {
     const { ptv } = fakePtvFactory();
     await expect(
-      plan(makeReq({ maxTransfers: 1 }), { ptv, external: fakeExternal as never }),
-    ).rejects.toThrow(/max-transfers/);
+      plan(makeReq({ maxTransfers: 2 }), { ptv, external: fakeExternal as never }),
+    ).rejects.toThrow(/not yet implemented in v1\.2/);
   });
 
   it('infeasible: returns near-miss when minBikeKm exceeds available', async () => {
@@ -116,6 +189,54 @@ describe('plan() — happy path', () => {
     expect(it.waitMin).toBe(0);
     // bikeOut.min + bikeIn.min = 10 + 10 = 20; train run is 22:20→23:10 = 50 min.
     expect(it.totalTimeMin).toBeCloseTo(70, 5);
+  });
+
+  it('K=2 fallback: returns itinerary with transfers=1 and 4 legs when K=1 has no shared route', async () => {
+    const { ptv } = k2PtvFactory();
+    const out = await plan(
+      {
+        from: { lat: -37.7390, lon: 145.0682 },
+        to:   { lat: -37.9871, lon: 145.2113 },
+        departUtc: new Date('2026-05-17T21:30:00Z'),
+        minBikeKm: 0, maxBikeKm: 10, maxTransfers: 1, enrich: false,
+      },
+      { ptv, external: k2External as never },
+    );
+    expect(out.itineraries).toHaveLength(1);
+    const it = out.itineraries[0];
+    expect(it.transfers).toBe(1);
+    expect(it.legs).toHaveLength(4);
+    expect(it.legs[0].mode).toBe('bike');
+    expect(it.legs[1].mode).toBe('train');
+    expect(it.legs[2].mode).toBe('train');
+    expect(it.legs[3].mode).toBe('bike');
+    const l1 = it.legs[1];
+    const l2 = it.legs[2];
+    if (l1.mode === 'train' && l2.mode === 'train') {
+      expect(l1.toStopId).toBe(l2.fromStopId);
+    }
+  });
+
+  it('K=1 result is preferred when it has feasible itineraries (no K=2 fallback)', async () => {
+    const { ptv } = fakePtvFactory();
+    const out = await plan(makeReq({ maxTransfers: 1 }), { ptv, external: fakeExternal as never });
+    expect(out.itineraries).toHaveLength(1);
+    expect(out.itineraries[0].transfers).toBe(0);
+    expect(out.itineraries[0].legs).toHaveLength(3);
+  });
+
+  it('--max-transfers=0 forces K=1 only (no fallback even when K=2 would succeed)', async () => {
+    const { ptv } = k2PtvFactory();
+    const out = await plan(
+      {
+        from: { lat: -37.7390, lon: 145.0682 },
+        to:   { lat: -37.9871, lon: 145.2113 },
+        departUtc: new Date('2026-05-17T21:30:00Z'),
+        minBikeKm: 0, maxBikeKm: 10, maxTransfers: 0, enrich: false,
+      },
+      { ptv, external: k2External as never },
+    );
+    expect(out.itineraries).toHaveLength(0);
   });
 
   it('memoizes osrmRoute calls by stop id (no redundant calls across tuples)', async () => {
