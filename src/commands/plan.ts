@@ -71,6 +71,7 @@ export function planCommand(): Command {
     .option('--max-bike-km <n>', 'Maximum total bike distance (km)', parseFloat, 20)
     .option('--max-transfers <n>', 'Max train transfers (default 1; max 1 in v1.2)', (v) => parseInt(v, 10), 1)
     .option('--no-enrich', 'Skip gh-route enrichment (bike_km_on_path)')
+    .option('--prefer-bike-path', 'Recommend itineraries with more bike-path km')
     .option('--raw', 'Reserved; no-op in v1')
     .action(async (fromStr: string, toStr: string, opts) => {
       if (opts.depart && opts.arriveBy) {
@@ -97,6 +98,7 @@ export function planCommand(): Command {
         maxBikeKm:  opts.maxBikeKm,
         maxTransfers: opts.maxTransfers,
         enrich: opts.enrich !== false,
+        preferBikePath: !!opts.preferBikePath,
       };
       const result = await plan(req);
       console.log(JSON.stringify(result, null, 2));

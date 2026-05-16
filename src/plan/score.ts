@@ -1,4 +1,5 @@
 import type { Itinerary, PlanRequest, ItineraryLabel } from './types';
+import { PATH_BONUS_PER_KM } from './types';
 
 function legsKey(it: Itinerary): string {
   return JSON.stringify([
@@ -24,8 +25,6 @@ export function labelAndSort(items: Itinerary[], req: PlanRequest): Itinerary[] 
   const feasibleItems = items.filter((i) => feasible(i, req));
 
   if (feasibleItems.length === 0) {
-    // Near-miss: pick the single itinerary closest to satisfying min_bike_km
-    // (the most common violation; for max_bike_km, pick the smallest)
     const closest = items.slice().sort((a, b) => {
       const da = a.bikeKm < req.minBikeKm
         ? req.minBikeKm - a.bikeKm
@@ -41,7 +40,6 @@ export function labelAndSort(items: Itinerary[], req: PlanRequest): Itinerary[] 
     return [{ ...closest, labels: ['fastest', 'recommended'], constraintsViolated: violations }];
   }
 
-  // Dedupe by legs
   const byKey = new Map<string, Itinerary>();
   for (const it of feasibleItems) {
     const k = legsKey(it);
@@ -49,19 +47,33 @@ export function labelAndSort(items: Itinerary[], req: PlanRequest): Itinerary[] 
   }
   const deduped = Array.from(byKey.values());
 
-  // Sort by total time ascending (stable)
   deduped.sort((a, b) => a.totalTimeMin - b.totalTimeMin);
 
-  // Compute winners
   const fastest = deduped[0];
   const mostBike = deduped.reduce((m, i) => (i.bikeKm > m.bikeKm ? i : m));
   const fewestTransfers = deduped.reduce((m, i) =>
     i.transfers < m.transfers ? i : m,
   );
-  // Generalized cost: total time + transfer penalty (0 for v1)
-  const recommended = deduped.reduce((m, i) =>
-    i.totalTimeMin < m.totalTimeMin ? i : m,
-  );
+
+  const withPath = deduped.filter((i) => typeof i.bikeKmOnPath === 'number');
+  const mostBikePath = withPath.length > 0
+    ? withPath.reduce((m, i) =>
+        ((i.bikeKmOnPath as number) > (m.bikeKmOnPath as number)
+          || ((i.bikeKmOnPath as number) === (m.bikeKmOnPath as number) && i.bikeKm > m.bikeKm))
+          ? i : m,
+      )
+    : null;
+
+  let recommended: Itinerary;
+  if (req.preferBikePath && withPath.length > 0) {
+    const cost = (i: Itinerary): number =>
+      i.totalTimeMin - PATH_BONUS_PER_KM * ((i.bikeKmOnPath as number) ?? 0);
+    recommended = deduped.reduce((m, i) => (cost(i) < cost(m) ? i : m));
+  } else {
+    recommended = deduped.reduce((m, i) =>
+      i.totalTimeMin < m.totalTimeMin ? i : m,
+    );
+  }
 
   function tag(it: Itinerary, label: ItineraryLabel): void {
     if (!it.labels.includes(label)) it.labels.push(label);
@@ -70,6 +82,7 @@ export function labelAndSort(items: Itinerary[], req: PlanRequest): Itinerary[] 
   tag(mostBike, 'most-bike');
   tag(fewestTransfers, 'fewest-transfers');
   tag(recommended, 'recommended');
+  if (mostBikePath) tag(mostBikePath, 'most-bike-path');
 
   return deduped;
 }

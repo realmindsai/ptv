@@ -8,6 +8,7 @@ function makeReq(over: Partial<PlanRequest> = {}): PlanRequest {
     to:   { lat: -38.14, lon: 145.12 },
     departUtc: new Date('2026-05-16T22:00:00Z'),
     minBikeKm: 0, maxBikeKm: 15, maxTransfers: 0, enrich: false,
+    preferBikePath: false,
     ...over,
   };
 }
@@ -199,6 +200,7 @@ describe('plan() — happy path', () => {
         to:   { lat: -37.9871, lon: 145.2113 },
         departUtc: new Date('2026-05-17T21:30:00Z'),
         minBikeKm: 0, maxBikeKm: 10, maxTransfers: 1, enrich: false,
+        preferBikePath: false,
       },
       { ptv, external: k2External as never },
     );
@@ -236,6 +238,7 @@ describe('plan() — happy path', () => {
         to:   { lat: -37.9871, lon: 145.2113 },
         departUtc: new Date('2026-05-17T21:30:00Z'),
         minBikeKm: 0, maxBikeKm: 10, maxTransfers: 0, enrich: false,
+        preferBikePath: false,
       },
       { ptv, external: k2External as never },
     );
@@ -250,6 +253,7 @@ describe('plan() — happy path', () => {
         to:   { lat: -37.9871, lon: 145.2113 },
         departUtc: new Date('2026-05-17T21:30:00Z'),
         minBikeKm: 0, maxBikeKm: 10, maxTransfers: 1, enrich: false,
+        preferBikePath: false,
       },
       { ptv, external: k2External as never },
     );

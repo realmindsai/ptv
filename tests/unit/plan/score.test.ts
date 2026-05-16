@@ -7,6 +7,7 @@ function makeReq(over: Partial<PlanRequest> = {}): PlanRequest {
     from: { lat: 0, lon: 0 },
     to: { lat: 0, lon: 0 },
     minBikeKm: 0, maxBikeKm: 20, maxTransfers: 0, enrich: true,
+    preferBikePath: false,
     ...over,
   };
 }
@@ -73,5 +74,43 @@ describe('labelAndSort()', () => {
     const out = labelAndSort([over, under], makeReq({ minBikeKm: 10 }));
     const winner = out.find((i) => i.labels.includes('most-bike'));
     expect(winner?.bikeKm).toBe(15);
+  });
+
+  it('assigns most-bike-path to itinerary with max bikeKmOnPath', () => {
+    const a = it1({ totalTimeMin: 50, bikeKm: 10, bikeKmOnPath: 3 });
+    const b = it1({ totalTimeMin: 60, bikeKm: 10, bikeKmOnPath: 7 });
+    const c = it1({ totalTimeMin: 70, bikeKm: 10, bikeKmOnPath: 5 });
+    const out = labelAndSort([a, b, c], makeReq());
+    const winner = out.find((i) => i.labels.includes('most-bike-path'));
+    expect(winner?.bikeKmOnPath).toBe(7);
+  });
+
+  it('does not assign most-bike-path when no itinerary has bikeKmOnPath', () => {
+    const a = it1({ totalTimeMin: 50, bikeKm: 10 });
+    const b = it1({ totalTimeMin: 60, bikeKm: 10 });
+    const out = labelAndSort([a, b], makeReq());
+    for (const it of out) {
+      expect(it.labels).not.toContain('most-bike-path');
+    }
+  });
+
+  it('--prefer-bike-path changes recommended to maximize path km', () => {
+    // a: cost = 50 - 5*3 = 35
+    // b: cost = 60 - 5*7 = 25  ← min
+    // c: cost = 70 - 5*5 = 45
+    const a = it1({ totalTimeMin: 50, bikeKm: 10, bikeKmOnPath: 3 });
+    const b = it1({ totalTimeMin: 60, bikeKm: 10, bikeKmOnPath: 7 });
+    const c = it1({ totalTimeMin: 70, bikeKm: 10, bikeKmOnPath: 5 });
+    const out = labelAndSort([a, b, c], makeReq({ preferBikePath: true }));
+    const recommended = out.find((i) => i.labels.includes('recommended'));
+    expect(recommended?.bikeKmOnPath).toBe(7);
+  });
+
+  it('--prefer-bike-path falls back gracefully when no itinerary has bikeKmOnPath', () => {
+    const a = it1({ totalTimeMin: 50, bikeKm: 10 });
+    const b = it1({ totalTimeMin: 60, bikeKm: 10 });
+    const out = labelAndSort([a, b], makeReq({ preferBikePath: true }));
+    const recommended = out.find((i) => i.labels.includes('recommended'));
+    expect(recommended?.totalTimeMin).toBe(50);
   });
 });

@@ -3,7 +3,7 @@ export type LatLon = { lat: number; lon: number };
 export type RouteTypeBikeable = 0 | 3; // 0 = Metro Train, 3 = V/Line
 
 export type ItineraryLabel =
-  | 'recommended' | 'fastest' | 'most-bike' | 'fewest-transfers';
+  | 'recommended' | 'fastest' | 'most-bike' | 'most-bike-path' | 'fewest-transfers';
 
 export type ConstraintViolation =
   | 'min_bike_km' | 'max_bike_km' | 'max_transfers';
@@ -58,6 +58,7 @@ export type PlanRequest = {
   maxBikeKm: number;
   maxTransfers: number;
   enrich: boolean;
+  preferBikePath: boolean;
 };
 
 export type PlanResult = {
@@ -92,3 +93,4 @@ export const TOP_N_CANDIDATES = 30;        // upper bound on total kept
 export const CANDIDATES_CLOSE = 15;        // closest by bikeMin
 export const CANDIDATES_FAR = 15;          // farthest by bikeMin within radius
 export const MAX_HUB_FANOUT = 50;
+export const PATH_BONUS_PER_KM = 5;

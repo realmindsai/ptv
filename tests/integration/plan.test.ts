@@ -20,6 +20,7 @@ describe.skipIf(SKIP)('integration: plan command', () => {
       maxBikeKm: 8,
       maxTransfers: 0,
       enrich: false,
+      preferBikePath: false,
     });
     expect(Array.isArray(result.itineraries)).toBe(true);
     if (result.itineraries.length > 0) {
@@ -46,6 +47,7 @@ describe.skipIf(SKIP)('integration: plan command', () => {
       maxBikeKm: 10,
       maxTransfers: 0,
       enrich: false,
+      preferBikePath: false,
     });
     if (result.itineraries.length > 0) {
       // Most realistic candidate itineraries will have bike total < 9 km
@@ -66,6 +68,7 @@ describe.skipIf(SKIP)('integration: plan command', () => {
       maxBikeKm: 5,
       maxTransfers: 1,
       enrich: false,
+      preferBikePath: false,
     });
     expect(Array.isArray(result.itineraries)).toBe(true);
     if (result.itineraries.length > 0) {
