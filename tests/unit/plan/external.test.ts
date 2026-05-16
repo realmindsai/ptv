@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { parseGhRoute } from '../../../src/plan/external';
 
 describe('parseGhRoute()', () => {
@@ -62,5 +62,48 @@ describe('parseGhRoute()', () => {
       response: { paths: [{ distance: 5000, time: 600000 }] },
     }]);
     expect(out?.kmOnPath).toBe(0);
+  });
+});
+
+describe('osrmRoute()', () => {
+  beforeEach(() => { vi.resetModules(); });
+
+  it('returns geometry as a GeoJSON LineString object when osrm-au includes it', async () => {
+    vi.doMock('child_process', () => ({
+      spawnSync: () => ({
+        status: 0,
+        stdout: JSON.stringify({
+          routes: [{
+            distance: 1500,
+            duration: 360,
+            geometry: { type: 'LineString', coordinates: [[144.96, -37.78], [144.97, -37.79]] },
+          }],
+        }),
+        stderr: '',
+      }),
+    }));
+    const { osrmRoute } = await import('../../../src/plan/external');
+    const r = await osrmRoute('bicycle', { lat: -37.78, lon: 144.96 }, { lat: -37.79, lon: 144.97 });
+    expect(r.km).toBeCloseTo(1.5);
+    expect(r.min).toBeCloseTo(6);
+    expect(r.geometry).toEqual({
+      type: 'LineString',
+      coordinates: [[144.96, -37.78], [144.97, -37.79]],
+    });
+  });
+
+  it('returns geometry: null when osrm-au omits the geometry field', async () => {
+    vi.doMock('child_process', () => ({
+      spawnSync: () => ({
+        status: 0,
+        stdout: JSON.stringify({
+          routes: [{ distance: 1500, duration: 360 }],
+        }),
+        stderr: '',
+      }),
+    }));
+    const { osrmRoute } = await import('../../../src/plan/external');
+    const r = await osrmRoute('bicycle', { lat: -37.78, lon: 144.96 }, { lat: -37.79, lon: 144.97 });
+    expect(r.geometry).toBeNull();
   });
 });

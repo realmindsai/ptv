@@ -1,5 +1,5 @@
 import type {
-  PlanRequest, PlanResult, Itinerary, AccessCandidate, Leg,
+  PlanRequest, PlanResult, Itinerary, AccessCandidate, Leg, GeoJsonLineString,
 } from './types';
 import {
   BIKEABLE_ROUTE_TYPES, MAX_PLAUSIBLE_TOTAL_MIN,
@@ -32,7 +32,7 @@ function haversineKm(a: { lat: number; lon: number }, b: { lat: number; lon: num
   return 2 * EARTH_KM * Math.asin(Math.sqrt(h));
 }
 
-type RouteResult = { km: number; min: number; geometry: string };
+type RouteResult = { km: number; min: number; geometry: GeoJsonLineString | null };
 type EnrichResult = { km: number; min: number; kmOnPath: number } | null;
 type PatternStop = { stopId: number; arriveUtc: string };
 

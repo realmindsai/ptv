@@ -8,6 +8,11 @@ export type ItineraryLabel =
 export type ConstraintViolation =
   | 'min_bike_km' | 'max_bike_km' | 'max_transfers';
 
+export type GeoJsonLineString = {
+  type: 'LineString';
+  coordinates: [number, number][];  // [lon, lat] pairs (GeoJSON convention)
+};
+
 export type BikeLeg = {
   mode: 'bike';
   from: LatLon;
@@ -15,7 +20,7 @@ export type BikeLeg = {
   km: number;
   min: number;
   kmOnPath?: number | null;
-  geometry?: string;
+  geometry?: GeoJsonLineString | null;
 };
 
 export type TrainLeg = {

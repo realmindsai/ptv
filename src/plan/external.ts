@@ -1,7 +1,7 @@
 import { spawnSync } from 'child_process';
 import { resolve } from 'path';
 import { homedir } from 'os';
-import type { LatLon } from './types';
+import type { LatLon, GeoJsonLineString } from './types';
 
 const OSRM_BIN = process.env.OSRM_AU_BIN ?? resolve(homedir(), 'bin/osrm-au');
 const GH_BIN = process.env.GH_ROUTE_BIN
@@ -56,22 +56,32 @@ export async function osrmRoute(
   profile: 'bicycle' | 'foot',
   from: LatLon,
   to: LatLon,
-): Promise<{ km: number; min: number; geometry: string }> {
+): Promise<{ km: number; min: number; geometry: GeoJsonLineString | null }> {
+  // --overview full + --geometries geojson asks for the full route shape as a GeoJSON LineString.
   // --json returns native OSRM format: routes[0].distance in meters, duration in seconds.
   const data = runJson(OSRM_BIN, [
     'route', '--profile', profile,
     osrmPointArg(from),
     osrmPointArg(to),
+    '--overview', 'full',
+    '--geometries', 'geojson',
     '--json',
-  ]) as { routes?: Array<{ distance?: number; duration?: number; geometry?: unknown }> };
+  ]) as { routes?: Array<{
+    distance?: number;
+    duration?: number;
+    geometry?: GeoJsonLineString | string;
+  }> };
   const route = data.routes?.[0];
   if (route?.distance === undefined || route?.duration === undefined) {
     throw new Error('osrm-au route response missing distance/duration');
   }
+  const geom = route.geometry && typeof route.geometry === 'object'
+    ? (route.geometry as GeoJsonLineString)
+    : null;
   return {
     km: route.distance / 1000,
     min: route.duration / 60,
-    geometry: typeof route.geometry === 'string' ? route.geometry : '',
+    geometry: geom,
   };
 }
 

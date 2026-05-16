@@ -128,7 +128,7 @@ const k2External = {
     durations: dests.map(() => 300),
     distances: dests.map(() => 1500),
   })),
-  osrmRoute: vi.fn(async () => ({ km: 1.5, min: 5, geometry: '' })),
+  osrmRoute: vi.fn(async () => ({ km: 1.5, min: 5, geometry: null })),
   ghRouteBike: vi.fn(async () => null),
 };
 
@@ -137,7 +137,7 @@ const fakeExternal = {
     durations: dests.map(() => 600),
     distances: dests.map(() => 3000),
   })),
-  osrmRoute: vi.fn(async () => ({ km: 3, min: 10, geometry: '' })),
+  osrmRoute: vi.fn(async () => ({ km: 3, min: 10, geometry: null })),
   ghRouteBike: vi.fn(async () => null),
 };
 
@@ -310,7 +310,7 @@ describe('plan() — happy path', () => {
       return { stops: [], departures: [] };
     });
 
-    const osrmRouteSpy = vi.fn(async () => ({ km: 3, min: 10, geometry: '' }));
+    const osrmRouteSpy = vi.fn(async () => ({ km: 3, min: 10, geometry: null }));
     const memoExternal = {
       osrmTable: vi.fn(async (_p: string, _s: never, dests: unknown[]) => ({
         durations: dests.map(() => 600), distances: dests.map(() => 3000),
