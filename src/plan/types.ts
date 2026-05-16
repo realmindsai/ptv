@@ -32,6 +32,10 @@ export type TrainLeg = {
   toStopId: number;
   fromStopName: string;
   toStopName: string;
+  fromLat?: number;
+  fromLon?: number;
+  toLat?: number;
+  toLon?: number;
   departUtc: string;
   arriveUtc: string;
   runRef: string;

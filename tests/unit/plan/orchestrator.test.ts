@@ -155,6 +155,10 @@ describe('plan() — happy path', () => {
     const trainLeg = it.legs[1];
     if (trainLeg.mode === 'train') {
       expect(trainLeg.routeName).toBe('Frankston');
+      expect(typeof trainLeg.fromLat).toBe('number');
+      expect(typeof trainLeg.fromLon).toBe('number');
+      expect(typeof trainLeg.toLat).toBe('number');
+      expect(typeof trainLeg.toLon).toBe('number');
     }
   });
 
@@ -219,6 +223,10 @@ describe('plan() — happy path', () => {
       // Hub name is populated for the transfer point (Flinders Street, stop_id 1071)
       expect(l1.toStopName).toBe('Flinders Street Station');
       expect(l2.fromStopName).toBe('Flinders Street Station');
+      expect(typeof l1.toLat).toBe('number');
+      expect(typeof l1.toLon).toBe('number');
+      expect(l2.fromLat).toBe(l1.toLat);
+      expect(l2.fromLon).toBe(l1.toLon);
     }
   });
 

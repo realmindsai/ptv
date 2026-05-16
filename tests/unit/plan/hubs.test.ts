@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { HUB_STOP_IDS, isHub, hubName } from '../../../src/plan/hubs';
+import { HUB_STOP_IDS, isHub, hubName, hubCoord } from '../../../src/plan/hubs';
 
 describe('hubs', () => {
   it('HUB_STOP_IDS has exactly 13 entries', () => {
@@ -35,5 +35,21 @@ describe('hubs', () => {
   it('hubName returns empty string for unknown stop_id', () => {
     expect(hubName(0)).toBe('');
     expect(hubName(99999999)).toBe('');
+  });
+
+  it('hubCoord returns coords in Melbourne range for each HUB_STOP_ID', () => {
+    for (const id of HUB_STOP_IDS) {
+      const c = hubCoord(id);
+      expect(c).not.toBeNull();
+      expect(c!.lat).toBeGreaterThan(-39);
+      expect(c!.lat).toBeLessThan(-36);
+      expect(c!.lon).toBeGreaterThan(144);
+      expect(c!.lon).toBeLessThan(146);
+    }
+  });
+
+  it('hubCoord returns null for unknown stop_id', () => {
+    expect(hubCoord(0)).toBeNull();
+    expect(hubCoord(99999999)).toBeNull();
   });
 });

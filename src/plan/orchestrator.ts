@@ -8,7 +8,7 @@ import {
 import { accessCandidates } from './candidates';
 import { departuresFrom, runPattern } from './transit';
 import { labelAndSort } from './score';
-import { isHub, hubName } from './hubs';
+import { isHub, hubName, hubCoord } from './hubs';
 
 type PtvFn = (path: string, params?: Record<string, string | number | number[] | string[]>) => Promise<unknown>;
 type ExternalMod = typeof import('./external');
@@ -161,6 +161,8 @@ async function planK1(s: SearchState): Promise<Itinerary[]> {
         routeName: t.routeName,
         fromStopId: t.access.stopId, toStopId: t.egress.stopId,
         fromStopName: t.access.stopName, toStopName: t.egress.stopName,
+        fromLat: t.access.coord.lat, fromLon: t.access.coord.lon,
+        toLat: t.egress.coord.lat, toLon: t.egress.coord.lon,
         departUtc: t.departUtc, arriveUtc: t.arriveUtc, runRef: t.runRef },
       { mode: 'bike', from: t.egress.coord, to: s.req.to,
         km: bikeIn.km, min: bikeIn.min, geometry: bikeIn.geometry },
@@ -285,6 +287,10 @@ async function planK2Hubs(s: SearchState): Promise<Itinerary[]> {
       }
     }
 
+    const hub = hubCoord(t.hubStopId);
+    const hubLat = hub?.lat;
+    const hubLon = hub?.lon;
+
     const legs: Leg[] = [
       { mode: 'bike', from: s.req.from, to: t.access.coord,
         km: bikeOut.km, min: bikeOut.min, geometry: bikeOut.geometry },
@@ -292,11 +298,15 @@ async function planK2Hubs(s: SearchState): Promise<Itinerary[]> {
         routeName: t.routeName1,
         fromStopId: t.access.stopId, toStopId: t.hubStopId,
         fromStopName: t.access.stopName, toStopName: hubName(t.hubStopId),
+        fromLat: t.access.coord.lat, fromLon: t.access.coord.lon,
+        toLat: hubLat, toLon: hubLon,
         departUtc: t.depart1Utc, arriveUtc: t.arrive1Utc, runRef: t.run1Ref },
       { mode: 'train', routeId: t.routeId2, routeType: t.egress.routeType,
         routeName: t.routeName2,
         fromStopId: t.hubStopId, toStopId: t.egress.stopId,
         fromStopName: hubName(t.hubStopId), toStopName: t.egress.stopName,
+        fromLat: hubLat, fromLon: hubLon,
+        toLat: t.egress.coord.lat, toLon: t.egress.coord.lon,
         departUtc: t.depart2Utc, arriveUtc: t.arrive2Utc, runRef: t.run2Ref },
       { mode: 'bike', from: t.egress.coord, to: s.req.to,
         km: bikeIn.km, min: bikeIn.min, geometry: bikeIn.geometry },
