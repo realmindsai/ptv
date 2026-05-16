@@ -4,6 +4,43 @@ import { homedir } from 'os';
 import type { LatLon, GeoJsonLineString } from './types';
 
 const OSRM_BIN = process.env.OSRM_AU_BIN ?? resolve(homedir(), 'bin/osrm-au');
+
+/**
+ * Decode a Google polyline-encoded string into a GeoJsonLineString.
+ * OSRM uses precision 5 (1e5) by default with `--overview full`.
+ * Algorithm reference: https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+ */
+function decodePolyline(encoded: string, precision = 5): GeoJsonLineString {
+  const factor = Math.pow(10, precision);
+  const coordinates: [number, number][] = [];
+  let index = 0;
+  let lat = 0;
+  let lng = 0;
+  while (index < encoded.length) {
+    let result = 0;
+    let shift = 0;
+    let byte: number;
+    do {
+      byte = encoded.charCodeAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+    const dlat = (result & 1) ? ~(result >> 1) : (result >> 1);
+    lat += dlat;
+    result = 0;
+    shift = 0;
+    do {
+      byte = encoded.charCodeAt(index++) - 63;
+      result |= (byte & 0x1f) << shift;
+      shift += 5;
+    } while (byte >= 0x20);
+    const dlng = (result & 1) ? ~(result >> 1) : (result >> 1);
+    lng += dlng;
+    coordinates.push([lng / factor, lat / factor]);
+  }
+  return { type: 'LineString', coordinates };
+}
+
 const GH_BIN = process.env.GH_ROUTE_BIN
   ?? resolve(__dirname, '../../../grasshopper-bike-routing/bin/gh-route');
 
@@ -57,14 +94,15 @@ export async function osrmRoute(
   from: LatLon,
   to: LatLon,
 ): Promise<{ km: number; min: number; geometry: GeoJsonLineString | null }> {
-  // --overview full + --geometries geojson asks for the full route shape as a GeoJSON LineString.
+  // --overview full returns the full route shape as an encoded polyline string (precision 5).
   // --json returns native OSRM format: routes[0].distance in meters, duration in seconds.
+  // Note: osrm-au does NOT support --geometries; geometry arrives as an encoded polyline
+  // which we decode via decodePolyline().
   const data = runJson(OSRM_BIN, [
     'route', '--profile', profile,
     osrmPointArg(from),
     osrmPointArg(to),
     '--overview', 'full',
-    '--geometries', 'geojson',
     '--json',
   ]) as { routes?: Array<{
     distance?: number;
@@ -75,9 +113,18 @@ export async function osrmRoute(
   if (route?.distance === undefined || route?.duration === undefined) {
     throw new Error('osrm-au route response missing distance/duration');
   }
-  const geom = route.geometry && typeof route.geometry === 'object'
-    ? (route.geometry as GeoJsonLineString)
-    : null;
+  let geom: GeoJsonLineString | null = null;
+  if (route.geometry) {
+    if (typeof route.geometry === 'object') {
+      geom = route.geometry as GeoJsonLineString;
+    } else if (typeof route.geometry === 'string') {
+      try {
+        geom = decodePolyline(route.geometry);
+      } catch {
+        geom = null;
+      }
+    }
+  }
   return {
     km: route.distance / 1000,
     min: route.duration / 60,

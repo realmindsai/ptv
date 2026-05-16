@@ -92,6 +92,33 @@ describe('osrmRoute()', () => {
     });
   });
 
+  it('decodes osrm-au encoded polyline geometry to a GeoJSON LineString', async () => {
+    // '~{qeF_owsZn}@o}@' is the Google polyline (precision 5) encoding of
+    // (-37.78, 144.96) → (-37.79, 144.97) — verified via manual encode/decode.
+    vi.doMock('child_process', () => ({
+      spawnSync: () => ({
+        status: 0,
+        stdout: JSON.stringify({
+          routes: [{
+            distance: 1500,
+            duration: 360,
+            geometry: '~{qeF_owsZn}@o}@',
+          }],
+        }),
+        stderr: '',
+      }),
+    }));
+    const { osrmRoute } = await import('../../../src/plan/external');
+    const r = await osrmRoute('bicycle', { lat: -37.78, lon: 144.96 }, { lat: -37.79, lon: 144.97 });
+    expect(r.geometry).not.toBeNull();
+    expect(r.geometry!.type).toBe('LineString');
+    expect(r.geometry!.coordinates).toHaveLength(2);
+    // Decoded coords should be close to the input lat/lon (within ~0.01 deg)
+    const [lon1, lat1] = r.geometry!.coordinates[0];
+    expect(lon1).toBeCloseTo(144.96, 1);
+    expect(lat1).toBeCloseTo(-37.78, 1);
+  });
+
   it('returns geometry: null when osrm-au omits the geometry field', async () => {
     vi.doMock('child_process', () => ({
       spawnSync: () => ({
