@@ -40,6 +40,7 @@ ptv plan <from-lat,lon> <to-lat,lon>
 - **`--prefer-bike-path` and `--hill-weight`** modify the `recommended` label's cost function additively. `--hill-weight 0` (default) is neutral; `-1` mimics "prefer-flat"; `+1` rewards hilly routes (more ascend, less flat fraction).
 - **`--min-on-path-fraction 0.5`** drops itineraries with less than 50% of bike distance on cycleway/path/track. Falls back to a near-miss when all itineraries fail.
 - **`--html trip.html`** writes a self-contained Leaflet HTML map (OSM tiles, layer toggles per labeled itinerary) and runs `open <path>` afterward. Bike legs render along actual road geometry; train legs render as straight lines between station coords.
+- **`--gpx <path>`** writes a GPX 1.1 file with one `<trk>` per labeled itinerary and `<wpt>` markers at transfer stations. Loads in OsmAnd, Locus, Gaia, Organic Maps, Mapy.cz. Push to phone via Syncthing (recommended), Tailscale Drop, or ad-hoc `python3 -m http.server`. Not a navigable route — for live re-routing use OsmAnd's own offline router.
 - **`--raw`** is currently a no-op for `plan` (the JSON output is already trimmed-by-design). Reserved for future use.
 
 ## Credentials
