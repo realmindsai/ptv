@@ -161,3 +161,41 @@ test('typing in autocomplete does not throw and does not flash plan indicator', 
   const sheetClass = await page.evaluate(() => document.getElementById('results-sheet')?.className ?? '');
   expect(sheetClass).not.toContain('htmx-request');
 });
+
+test('form submits depart=HH:MM through to /api/plan', async ({ page }) => {
+  // Capture what the form posts to the server.
+  let capturedBody = '';
+  await page.route('**/api/plan', async (route) => {
+    capturedBody = route.request().postData() ?? '';
+    // Return an empty 200 fragment so HTMX has something to swap.
+    await route.fulfill({
+      status: 200, contentType: 'text/html',
+      body: '<div id="results-inner" class="results-empty">ok</div>',
+    });
+  });
+
+  await page.goto(BASE);
+
+  // Populate hidden lat/lon directly (matches the swap-on-error e2e test).
+  await page.evaluate(() => {
+    (document.getElementById('origin-lat') as HTMLInputElement).value = '-37.64';
+    (document.getElementById('origin-lon') as HTMLInputElement).value = '145.19';
+    (document.getElementById('destination-lat') as HTMLInputElement).value = '-37.86';
+    (document.getElementById('destination-lon') as HTMLInputElement).value = '144.89';
+  });
+
+  // The depart input lives inside a <details> element; open it first.
+  await page.locator('details summary').click();
+
+  // Type a depart value through the actual input the user would use.
+  await page.locator('input[name="depart"]').fill('08:00');
+
+  await page.locator('#plan-btn').click();
+
+  // Wait for the fulfilled response to come back so capturedBody is populated.
+  await expect(page.locator('#results .results-empty')).toBeVisible({ timeout: 3000 });
+
+  // HTMX serializes as form-urlencoded by default. URL-decode and check.
+  const decoded = decodeURIComponent(capturedBody);
+  expect(decoded).toContain('depart=08:00');
+});
