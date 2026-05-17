@@ -1,0 +1,8 @@
+<ul class="geocode-list" role="listbox">
+  {{#each results}}
+  <li class="geocode-item" role="option" data-lat="{{lat}}" data-lon="{{lon}}">
+    <span class="geocode-label">{{label}}</span>
+    <span class="geocode-coord">{{lat}}, {{lon}}</span>
+  </li>
+  {{/each}}
+</ul>
