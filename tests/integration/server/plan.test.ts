@@ -186,4 +186,20 @@ describe('POST /api/plan', () => {
     expect(planFn).not.toHaveBeenCalled();
     await app.close();
   });
+
+  it('returns 400 when both depart and arriveBy are non-empty', async () => {
+    const planFn = vi.fn(async () => fakeResult);
+    const app = createApp({ logger: false, planFn, cache: null, nominatimUrl: 'http://x' });
+    const res = await app.inject({
+      method: 'POST', url: '/api/plan',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      payload: { origin: { lat: -37.64, lon: 145.19 }, destination: { lat: -37.86, lon: 144.89 },
+                 mode: 'bike-only', goal: 'commute', depart: '08:00', arriveBy: '09:00' },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error.code).toBe('BAD_INPUT');
+    expect(res.json().error.message).toMatch(/either depart or arriveBy/);
+    expect(planFn).not.toHaveBeenCalled();
+    await app.close();
+  });
 });

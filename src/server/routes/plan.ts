@@ -93,6 +93,9 @@ async function resolveRequest(body: PlanBody, nom: Nominatim): Promise<PlanReque
   const maxTransfers = mode === 'bike-only' ? 0 : toNumber(body.maxTransfers, 1);
   const departUtc   = parseOptionalTime(body.depart,   'depart');
   const arriveByUtc = parseOptionalTime(body.arriveBy, 'arriveBy');
+  if (departUtc && arriveByUtc) {
+    throw new Error('specify either depart or arriveBy, not both');
+  }
   return {
     from, to,
     departUtc,
