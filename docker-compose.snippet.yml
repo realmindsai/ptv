@@ -18,19 +18,24 @@ services:
       PTV_DEV_ID: ${PTV_DEV_ID}
       PTV_API_KEY: ${PTV_API_KEY}
       NOMINATIM_URL: http://nominatim:8080
+      OSRM_AU_BICYCLE_URL: http://osrm-au-bicycle:5000
+      OSRM_AU_FOOT_URL: http://osrm-au-foot:5000
       REDIS_URL: redis://twenty-twenty-redis-1:6379
       GH_REST_URL: http://graphhopper-vic-bike:8989/route
       LOG_LEVEL: info
     networks:
       - default
       - nominatim_default
+      - osrm-au_default
       - twenty_default
       - graphhopper_default
 
 networks:
-  # All three are external — created by the respective stacks they
+  # All four are external — created by the respective stacks they
   # belong to. ptv-web only joins them to reach those services.
   nominatim_default:
+    external: true
+  osrm-au_default:
     external: true
   twenty_default:
     external: true
