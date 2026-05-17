@@ -58,6 +58,38 @@ describe('parseGhRoute()', () => {
     expect(out?.kmOnPath).toBeCloseTo(5, 5);
   });
 
+  it('computes kmOnPath in metres from haversine when geometry is present (ptv-aw2)', () => {
+    // 11 coords -> 10 segments. First 5 dense (~88m each at lat -37.78), last 5 sparse (~880m each).
+    // Total ~4840m. road_class assigns cycleway to the dense first half (indices 0..5) and primary to
+    // the sparse second half. By index span both are 50%; by metres path is only ~9%.
+    // Buggy formula:   km * pathIdx / totalRcIdx     = 4.84 * 5/10  = 2.42 km
+    // Correct formula: km * pathM   / totalRcM       = 4.84 * 440/4840 = 0.44 km
+    const points = {
+      type: 'LineString' as const,
+      coordinates: [
+        [144.96, -37.78], [144.961, -37.78], [144.962, -37.78], [144.963, -37.78],
+        [144.964, -37.78], [144.965, -37.78],
+        [144.975, -37.78], [144.985, -37.78], [144.995, -37.78], [145.005, -37.78],
+        [145.015, -37.78],
+      ],
+    };
+    const out = parseGhRoute([{
+      response: { paths: [{
+        distance: 4840, time: 600000,
+        details: {
+          road_class: [
+            [0, 5, 'cycleway'],
+            [5, 10, 'primary'],
+          ] as Array<[number, number, string]>,
+        },
+        points,
+      }] },
+    }]);
+    // Metres-based fraction puts kmOnPath near 0.44 km; index-span fraction puts it near 2.42 km.
+    expect(out?.kmOnPath).toBeGreaterThan(0.3);
+    expect(out?.kmOnPath).toBeLessThan(0.6);
+  });
+
   it('returns kmOnPath=0 when road_class is absent', () => {
     const out = parseGhRoute([{
       response: { paths: [{ distance: 5000, time: 600000 }] },

@@ -199,22 +199,46 @@ export function parseGhRoute(raw: unknown): ParsedGhRoute | null {
   const km = p.distance / 1000;
   const min = p.time / 60_000;
 
-  // road_class for kmOnPath
-  const rcSegments = p.details?.road_class ?? [];
-  let totalRcIdx = 0;
-  let pathIdx = 0;
-  for (const [from, to, cls] of rcSegments) {
-    const span = to - from;
-    totalRcIdx += span;
-    if (PATH_ROAD_CLASSES.has(cls)) pathIdx += span;
-  }
-  const kmOnPath = totalRcIdx > 0 ? km * (pathIdx / totalRcIdx) : 0;
-
   // Geometry (points is either GeoJsonLineString or absent for ghRouteBike)
   const geometry = p.points && typeof p.points === 'object'
     ? (p.points as GeoJsonLineString) : null;
 
-  // Slope analysis — compute per-segment distances from geometry, then aggregate
+  // Per-segment haversine distances, shared by kmOnPath and slope analysis.
+  // Falls back to empty when geometry is absent; the road_class branch below then
+  // uses an index-span approximation instead (less accurate; preserved for callers
+  // that don't pass geometry).
+  const segDistM: number[] = [];
+  if (geometry && geometry.coordinates.length > 1) {
+    const coords = geometry.coordinates;
+    for (let i = 0; i < coords.length - 1; i++) {
+      segDistM.push(haversineM(coords[i], coords[i + 1]));
+    }
+  }
+
+  // road_class for kmOnPath. Sum metres (not coordinate-index spans) when we have
+  // geometry — dense polyline points along path-class segments would otherwise
+  // inflate the path fraction (ptv-aw2).
+  const rcSegments = p.details?.road_class ?? [];
+  let totalRcM = 0;
+  let pathM = 0;
+  let totalRcIdx = 0;
+  let pathIdx = 0;
+  for (const [from, to, cls] of rcSegments) {
+    const idxSpan = to - from;
+    totalRcIdx += idxSpan;
+    if (PATH_ROAD_CLASSES.has(cls)) pathIdx += idxSpan;
+    if (segDistM.length > 0) {
+      let d = 0;
+      for (let i = from; i < to; i++) d += segDistM[i] ?? 0;
+      totalRcM += d;
+      if (PATH_ROAD_CLASSES.has(cls)) pathM += d;
+    }
+  }
+  const kmOnPath = segDistM.length > 0
+    ? (totalRcM > 0 ? km * (pathM / totalRcM) : 0)
+    : (totalRcIdx > 0 ? km * (pathIdx / totalRcIdx) : 0);
+
+  // Slope analysis — reuses segDistM from above
   const slopeSegments = p.details?.average_slope ?? [];
   let ascendM = typeof p.ascend === 'number' ? p.ascend : 0;
   let descendM = typeof p.descend === 'number' ? p.descend : 0;
@@ -223,12 +247,7 @@ export function parseGhRoute(raw: unknown): ParsedGhRoute | null {
   let maxSustainedGradePercent = 0;
   let maxSustainedGradeM = 0;
 
-  if (slopeSegments.length > 0 && geometry && geometry.coordinates.length > 1) {
-    const coords = geometry.coordinates;
-    const segDistM: number[] = [];
-    for (let i = 0; i < coords.length - 1; i++) {
-      segDistM.push(haversineM(coords[i], coords[i + 1]));
-    }
+  if (slopeSegments.length > 0 && segDistM.length > 0) {
     let totalSlopeD = 0;
     let flatD = 0;
     let steepD = 0;
