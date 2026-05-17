@@ -32,6 +32,10 @@ test.beforeAll(async () => {
 test.afterAll(() => proc?.kill('SIGTERM'));
 
 test('Atlas shell renders core structure', async ({ page }) => {
+  // Register before navigation so initial-document asset failures are captured.
+  const failedRequests: string[] = [];
+  page.on('requestfailed', (req) => failedRequests.push(req.url()));
+
   await page.goto(BASE);
 
   // Map container present.
@@ -47,8 +51,6 @@ test('Atlas shell renders core structure', async ({ page }) => {
   await expect(page.locator('button.btn--cta[type="submit"]')).toBeVisible();
 
   // Vendored assets actually load (no failed /static/ requests).
-  const failedRequests: string[] = [];
-  page.on('requestfailed', (req) => failedRequests.push(req.url()));
   await page.waitForLoadState('networkidle');
   expect(failedRequests.filter((u) => u.includes('/static/'))).toEqual([]);
 });
