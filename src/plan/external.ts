@@ -1,9 +1,6 @@
 import { spawnSync } from 'child_process';
 import { resolve } from 'path';
-import { homedir } from 'os';
 import type { LatLon, GeoJsonLineString, CustomModel } from './types';
-
-const OSRM_BIN = process.env.OSRM_AU_BIN ?? resolve(homedir(), 'bin/osrm-au');
 
 /**
  * Decode a Google polyline-encoded string into a GeoJsonLineString.
@@ -41,6 +38,24 @@ function decodePolyline(encoded: string, precision = 5): GeoJsonLineString {
   return { type: 'LineString', coordinates };
 }
 
+const OSRM_AU_HOST = process.env.OSRM_AU_HOST ?? 'totoro.magpie-inconnu.ts.net';
+const OSRM_PROFILE_PORT = { bicycle: 5002, foot: 5003 } as const;
+
+type OsrmProfile = keyof typeof OSRM_PROFILE_PORT;
+
+function osrmBase(profile: OsrmProfile): string {
+  const override =
+    profile === 'bicycle'
+      ? process.env.OSRM_AU_BICYCLE_URL
+      : process.env.OSRM_AU_FOOT_URL;
+  return override ?? `http://${OSRM_AU_HOST}:${OSRM_PROFILE_PORT[profile]}`;
+}
+
+function osrmCoordPath(points: LatLon[]): string {
+  // OSRM wire format is lon,lat — flip from our internal {lat, lon}.
+  return points.map((p) => `${p.lon},${p.lat}`).join(';');
+}
+
 const GH_BIN = process.env.GH_ROUTE_BIN
   ?? resolve(__dirname, '../../../grasshopper-bike-routing/bin/gh-route');
 
@@ -57,32 +72,29 @@ function runJson(cmd: string, args: string[]): unknown {
   return JSON.parse(result.stdout);
 }
 
-// osrm-au CLI (current) uses lat,lon order — matches gh-route and the project convention.
-// IMPORTANT: pass each point as `--point=lat,lon` (single argv entry with '=') so
-// argparse on the osrm-au side does NOT treat the leading '-' on negative
-// Melbourne latitudes as a flag. Passing '--point' and '-37.8,144.9' as two
-// separate argv entries WILL fail with argparse "unrecognized arguments".
-function osrmPointArg(p: LatLon): string {
-  return `--point=${p.lat},${p.lon}`;
-}
-
 export async function osrmTable(
-  profile: 'bicycle' | 'foot',
+  profile: OsrmProfile,
   source: LatLon,
   destinations: LatLon[],
 ): Promise<{ durations: number[]; distances: number[] }> {
   if (destinations.length === 0) return { durations: [], distances: [] };
-  const pointArgs = [source, ...destinations].map(osrmPointArg);
+  const coords = osrmCoordPath([source, ...destinations]);
   const destIdx = destinations.map((_, i) => String(i + 1)).join(';');
-  // --json returns native OSRM format: durations in seconds (s), distances in meters (m).
-  const data = runJson(OSRM_BIN, [
-    'table', '--profile', profile,
-    ...pointArgs,
-    '--sources', '0',
-    '--destinations', destIdx,
-    '--annotations', 'both',
-    '--json',
-  ]) as { durations?: number[][]; distances?: number[][] };
+  const qs = new URLSearchParams({
+    annotations: 'duration,distance',
+    sources: '0',
+    destinations: destIdx,
+  });
+  const url = `${osrmBase(profile)}/table/v1/driving/${coords}?${qs.toString()}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`OSRM ${profile} table HTTP ${r.status}`);
+  const data = (await r.json()) as {
+    code?: string; message?: string;
+    durations?: number[][]; distances?: number[][];
+  };
+  if (data.code && data.code !== 'Ok') {
+    throw new Error(`OSRM ${profile} table: ${data.code} - ${data.message ?? ''}`);
+  }
   if (!data.durations || !data.distances) {
     throw new Error('osrm-au table response missing durations/distances');
   }
@@ -93,25 +105,29 @@ export async function osrmTable(
 }
 
 export async function osrmRoute(
-  profile: 'bicycle' | 'foot',
+  profile: OsrmProfile,
   from: LatLon,
   to: LatLon,
 ): Promise<{ km: number; min: number; geometry: GeoJsonLineString | null }> {
-  // --overview full returns the full route shape as an encoded polyline string (precision 5).
-  // --json returns native OSRM format: routes[0].distance in meters, duration in seconds.
-  // Note: osrm-au does NOT support --geometries; geometry arrives as an encoded polyline
-  // which we decode via decodePolyline().
-  const data = runJson(OSRM_BIN, [
-    'route', '--profile', profile,
-    osrmPointArg(from),
-    osrmPointArg(to),
-    '--overview', 'full',
-    '--json',
-  ]) as { routes?: Array<{
-    distance?: number;
-    duration?: number;
-    geometry?: GeoJsonLineString | string;
-  }> };
+  const coords = osrmCoordPath([from, to]);
+  const qs = new URLSearchParams({
+    overview: 'full',
+    geometries: 'polyline',
+  });
+  const url = `${osrmBase(profile)}/route/v1/driving/${coords}?${qs.toString()}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`OSRM ${profile} route HTTP ${r.status}`);
+  const data = (await r.json()) as {
+    code?: string; message?: string;
+    routes?: Array<{
+      distance?: number;
+      duration?: number;
+      geometry?: GeoJsonLineString | string;
+    }>;
+  };
+  if (data.code && data.code !== 'Ok') {
+    throw new Error(`OSRM ${profile} route: ${data.code} - ${data.message ?? ''}`);
+  }
   const route = data.routes?.[0];
   if (route?.distance === undefined || route?.duration === undefined) {
     throw new Error('osrm-au route response missing distance/duration');
