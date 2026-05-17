@@ -1,7 +1,7 @@
 import { writeFileSync, existsSync } from 'fs';
 import { spawnSync } from 'child_process';
 import { resolve, dirname } from 'path';
-import type { PlanResult, Itinerary, BikeLeg, Leg } from './types';
+import type { PlanResult, Itinerary, BikeLeg, TrainLeg, Leg } from './types';
 
 function escapeXml(s: string): string {
   return s.replace(/[<>&"']/g, (c) => ({
@@ -26,9 +26,51 @@ function bikeTrksegFor(leg: BikeLeg): string {
   return `<trkseg>${pts}</trkseg>`;
 }
 
+function trainTrksegFor(leg: TrainLeg): string {
+  if (typeof leg.fromLat !== 'number' || typeof leg.fromLon !== 'number'
+      || typeof leg.toLat !== 'number' || typeof leg.toLon !== 'number') {
+    return '';
+  }
+  return `<trkseg>`
+    + `<trkpt lat="${coord(leg.fromLat)}" lon="${coord(leg.fromLon)}"/>`
+    + `<trkpt lat="${coord(leg.toLat)}" lon="${coord(leg.toLon)}"/>`
+    + `</trkseg>`;
+}
+
 function trksegFor(leg: Leg): string {
-  if (leg.mode === 'bike') return bikeTrksegFor(leg);
-  return ''; // train legs handled in Task 2
+  return leg.mode === 'bike' ? bikeTrksegFor(leg) : trainTrksegFor(leg);
+}
+
+type Waypoint = { lat: number; lon: number; name: string; desc: string };
+
+function collectWaypoints(itineraries: Itinerary[]): Waypoint[] {
+  const seen = new Set<string>();
+  const out: Waypoint[] = [];
+  for (const it of itineraries) {
+    for (const leg of it.legs) {
+      if (leg.mode !== 'train') continue;
+      const stops: Array<[number | undefined, number | undefined, string, 'board' | 'alight']> = [
+        [leg.fromLat, leg.fromLon, leg.fromStopName, 'board'],
+        [leg.toLat,   leg.toLon,   leg.toStopName,   'alight'],
+      ];
+      for (const [lat, lon, name, kind] of stops) {
+        if (typeof lat !== 'number' || typeof lon !== 'number') continue;
+        const key = `${coord(lat)}|${coord(lon)}|${name}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const stamp = kind === 'board' ? leg.departUtc : leg.arriveUtc;
+        out.push({ lat, lon, name, desc: `${leg.routeName} · ${kind} ${stamp}` });
+      }
+    }
+  }
+  return out;
+}
+
+function wptFor(w: Waypoint): string {
+  return `<wpt lat="${coord(w.lat)}" lon="${coord(w.lon)}">`
+    + `<name>${escapeXml(w.name)}</name>`
+    + `<desc>${escapeXml(w.desc)}</desc>`
+    + `</wpt>`;
 }
 
 function trkFor(it: Itinerary): string {
@@ -50,9 +92,11 @@ export function writeGpx(path: string, result: PlanResult): void {
   labeled.sort((a, b) => a.totalTimeMin - b.totalTimeMin);
   const time = metadataTimeFor(result);
   const trks = labeled.map(trkFor).join('');
+  const wpts = collectWaypoints(labeled).map(wptFor).join('');
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" creator="ptv plan" xmlns="http://www.topografix.com/GPX/1/1">
 <metadata><time>${time}</time></metadata>
+${wpts}
 ${trks}
 </gpx>`;
   writeFileSync(fullPath, xml, 'utf8');

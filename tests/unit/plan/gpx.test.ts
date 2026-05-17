@@ -98,4 +98,146 @@ describe('writeGpx()', () => {
     expect(() => writeGpx('/nonexistent-dir-aaa-bbb/trip.gpx', bikeOnlyResult()))
       .toThrow(/directory does not exist/);
   });
+
+  it('emits one <trkseg> per leg for bike-train-bike, with the train seg having 2 trkpts', () => {
+    const path = tmpGpxPath();
+    try {
+      const r: PlanResult = {
+        query: {
+          from: { lat: -37.78, lon: 144.96 },
+          to:   { lat: -37.65, lon: 144.95 },
+          minBikeKm: 0, maxBikeKm: 10, maxTransfers: 0,
+          enrich: false, preferBikePath: false,
+          hillWeight: 0, goal: 'commute', mode: 'bike-train',
+        },
+        itineraries: [{
+          labels: ['recommended'],
+          totalTimeMin: 60,
+          bikeKm: 4, bikeMin: 15,
+          trainKm: 10, trainMin: 20, waitMin: 5,
+          transfers: 0,
+          legs: [
+            {
+              mode: 'bike',
+              from: { lat: -37.78, lon: 144.96 }, to: { lat: -37.77, lon: 144.96 },
+              km: 2, min: 8,
+              geometry: { type: 'LineString',
+                coordinates: [[144.96, -37.78], [144.96, -37.77]] as [number, number][] },
+            },
+            {
+              mode: 'train',
+              routeId: 6, routeType: 0, routeName: 'Frankston',
+              fromStopId: 1, toStopId: 2,
+              fromStopName: 'Origin Station', toStopName: 'Destination Station',
+              fromLat: -37.77, fromLon: 144.96,
+              toLat: -37.65, toLon: 144.95,
+              departUtc: '2026-05-17T10:00:00Z', arriveUtc: '2026-05-17T10:20:00Z',
+              runRef: 'R1',
+            },
+            {
+              mode: 'bike',
+              from: { lat: -37.65, lon: 144.95 }, to: { lat: -37.65, lon: 144.95 },
+              km: 0, min: 0,
+              geometry: { type: 'LineString',
+                coordinates: [[144.95, -37.65], [144.95, -37.65]] as [number, number][] },
+            },
+          ],
+        }],
+      };
+      writeGpx(path, r);
+      const xml = readFileSync(path, 'utf8');
+      expect((xml.match(/<trk>/g) ?? []).length).toBe(1);
+      expect((xml.match(/<trkseg>/g) ?? []).length).toBe(3);
+      // 2 (bike 1) + 2 (train) + 2 (bike 2) = 6 trkpts total.
+      expect((xml.match(/<trkpt /g) ?? []).length).toBe(6);
+      // Two wpts (one per station).
+      expect((xml.match(/<wpt /g) ?? []).length).toBe(2);
+      expect(xml).toContain('<name>Origin Station</name>');
+      expect(xml).toContain('<name>Destination Station</name>');
+    } finally {
+      unlinkSync(path);
+    }
+  });
+
+  it('skips train <trkseg> when station coordinates are missing', () => {
+    const path = tmpGpxPath();
+    try {
+      const r: PlanResult = {
+        query: {
+          from: { lat: -37.78, lon: 144.96 }, to: { lat: -37.65, lon: 144.95 },
+          minBikeKm: 0, maxBikeKm: 10, maxTransfers: 0,
+          enrich: false, preferBikePath: false,
+          hillWeight: 0, goal: 'commute', mode: 'bike-train',
+        },
+        itineraries: [{
+          labels: ['recommended'],
+          totalTimeMin: 30, bikeKm: 0, bikeMin: 0,
+          trainKm: 10, trainMin: 20, waitMin: 5, transfers: 0,
+          legs: [{
+            mode: 'train',
+            routeId: 6, routeType: 0, routeName: 'X',
+            fromStopId: 1, toStopId: 2,
+            fromStopName: 'A', toStopName: 'B',
+            // fromLat/fromLon/toLat/toLon all undefined
+            departUtc: '2026-05-17T10:00:00Z', arriveUtc: '2026-05-17T10:20:00Z',
+            runRef: 'R1',
+          }],
+        }],
+      };
+      writeGpx(path, r);
+      const xml = readFileSync(path, 'utf8');
+      expect((xml.match(/<trkseg>/g) ?? []).length).toBe(0);
+      expect((xml.match(/<wpt /g) ?? []).length).toBe(0);
+      // The empty <trk> is still emitted; that's fine — GPX permits it.
+      expect(xml).toContain('<trk>');
+    } finally {
+      unlinkSync(path);
+    }
+  });
+
+  it('deduplicates <wpt> markers when multiple itineraries cross the same station', () => {
+    const trainLeg = {
+      mode: 'train' as const,
+      routeId: 6, routeType: 0 as const, routeName: 'X',
+      fromStopId: 1, toStopId: 2,
+      fromStopName: 'Hub Station', toStopName: 'Destination Station',
+      fromLat: -37.77, fromLon: 144.96,
+      toLat: -37.65, toLon: 144.95,
+      departUtc: '2026-05-17T10:00:00Z', arriveUtc: '2026-05-17T10:20:00Z',
+      runRef: 'R1',
+    };
+    const r: PlanResult = {
+      query: {
+        from: { lat: -37.78, lon: 144.96 }, to: { lat: -37.65, lon: 144.95 },
+        minBikeKm: 0, maxBikeKm: 10, maxTransfers: 0,
+        enrich: false, preferBikePath: false,
+        hillWeight: 0, goal: 'commute', mode: 'bike-train',
+      },
+      itineraries: [
+        {
+          labels: ['recommended'],
+          totalTimeMin: 60, bikeKm: 0, bikeMin: 0,
+          trainKm: 10, trainMin: 20, waitMin: 5, transfers: 0,
+          legs: [trainLeg],
+        },
+        {
+          labels: ['fastest'],
+          totalTimeMin: 55, bikeKm: 0, bikeMin: 0,
+          trainKm: 10, trainMin: 20, waitMin: 5, transfers: 0,
+          legs: [trainLeg],
+        },
+      ],
+    };
+    const path = tmpGpxPath();
+    try {
+      writeGpx(path, r);
+      const xml = readFileSync(path, 'utf8');
+      // Both itineraries crossed the same two stations; we want one <wpt> per station.
+      expect((xml.match(/<wpt /g) ?? []).length).toBe(2);
+      expect((xml.match(/<name>Hub Station<\/name>/g) ?? []).length).toBe(1);
+      expect((xml.match(/<name>Destination Station<\/name>/g) ?? []).length).toBe(1);
+    } finally {
+      unlinkSync(path);
+    }
+  });
 });
