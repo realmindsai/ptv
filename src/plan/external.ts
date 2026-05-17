@@ -96,7 +96,7 @@ export async function osrmTable(
     throw new Error(`OSRM ${profile} table: ${data.code} - ${data.message ?? ''}`);
   }
   if (!data.durations || !data.distances) {
-    throw new Error('osrm-au table response missing durations/distances');
+    throw new Error('OSRM table response missing durations/distances');
   }
   return {
     durations: data.durations[0] ?? [],
@@ -130,7 +130,7 @@ export async function osrmRoute(
   }
   const route = data.routes?.[0];
   if (route?.distance === undefined || route?.duration === undefined) {
-    throw new Error('osrm-au route response missing distance/duration');
+    throw new Error('OSRM route response missing distance/duration');
   }
   let geom: GeoJsonLineString | null = null;
   if (route.geometry) {

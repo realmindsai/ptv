@@ -53,16 +53,13 @@ export function registerPlan(
         result = await planFn(resolved);
         await deps.cache?.setex('plan', key, 600, result);
       } catch (e: unknown) {
-        const raw = e instanceof Error ? e.message : String(e);
-        const msg = raw.includes('osrm-au')
-          ? "bike-train mode isn't available in this deployment yet (osrm-au binary not bundled). try mode=bike-only and goal=day-ride or max-path."
-          : raw;
+        const msg = e instanceof Error ? e.message : String(e);
         reply.code(500);
         if ((req.headers.accept ?? '').includes('text/html')) {
           reply.type('text/html; charset=utf-8');
           return render('error.html', { message: msg });
         }
-        return { error: { code: 'PLAN_FAILED', message: msg, raw } };
+        return { error: { code: 'PLAN_FAILED', message: msg } };
       }
     }
 
