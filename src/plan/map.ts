@@ -36,8 +36,9 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
             : [[leg.from.lat, leg.from.lon], [leg.to.lat, leg.to.lon]];
           const line = L.polyline(coords, { color: '#2a7', weight: 4 });
           let popup = 'bike: ' + leg.km.toFixed(1) + ' km, ' + leg.min.toFixed(0) + ' min';
-          if (typeof leg.kmOnPath === 'number') {
-            popup += ' (' + leg.kmOnPath.toFixed(1) + ' on paths)';
+          if (typeof leg.kmOnPath === 'number' && leg.km > 0) {
+            const legPct = (100 * leg.kmOnPath / leg.km).toFixed(0);
+            popup += ' (' + leg.kmOnPath.toFixed(1) + ' km on paths, ' + legPct + '%)';
           }
           line.bindPopup(popup);
           group.addLayer(line);
@@ -68,7 +69,12 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
         .bindPopup('Destination').addTo(group);
 
       const label = it.labels.join(', ') || 'unlabeled';
-      layers[label + ' — ' + it.totalTimeMin.toFixed(0) + ' min'] = group;
+      let layerName = label + ' — ' + it.totalTimeMin.toFixed(0) + ' min';
+      if (typeof it.bikeKmOnPath === 'number' && it.bikeKm > 0) {
+        const pct = (100 * it.bikeKmOnPath / it.bikeKm).toFixed(0);
+        layerName += ' — ' + pct + '% path';
+      }
+      layers[layerName] = group;
     }
 
     const recommendedKey = Object.keys(layers).find(k => k.includes('recommended'));
