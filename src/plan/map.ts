@@ -124,6 +124,9 @@ export function writeMapHtml(path: string, result: PlanResult): void {
   </script>
 </body></html>`;
   writeFileSync(fullPath, html, 'utf8');
+  // Skip `open` under vitest: the test typically deletes the temp file in a finally,
+  // and macOS opens it asynchronously, producing a "file not found" browser tab.
+  if (process.env.VITEST || process.env.NODE_ENV === 'test') return;
   try {
     spawnSync('open', [fullPath], { stdio: 'ignore' });
   } catch {
