@@ -20,7 +20,7 @@ ptv plan <from-lat,lon> <to-lat,lon>
   [--min-bike-km <n>] [--max-bike-km <n>]
   [--max-transfers <n>]                          # default 1 (allows hub fallback)
   [--mode <bike-only|bike-train>]                # default bike-train
-  [--goal <commute|day-ride>]                    # default commute
+  [--goal <commute|day-ride|max-path>]           # default commute
   [--prefer-bike-path]                           # bias toward higher bikeKmOnPath
   [--hill-weight <n>]                            # signed bias: <0 flat, 0 neutral, >0 hills
   [--min-on-path-fraction <f>]                   # hard filter, f ∈ [0,1]
@@ -35,6 +35,7 @@ ptv plan <from-lat,lon> <to-lat,lon>
 - **`--depart 08:00`** is parsed as Melbourne local time (handles AEST/AEDT). Use ISO8601 with explicit offset to disambiguate during DST transitions.
 - **`--max-transfers`** defaults to 1, meaning the planner will fall back to a 2-train route via a known transfer hub (Flinders Street, Southern Cross, etc.; see `src/plan/hubs.ts` for the 13-station list) when no direct route exists. Pass `0` to force direct-only.
 - **`--goal day-ride`** switches the bike-routing engine from `osrm-au` to a GraphHopper REST `custom_model` request that prefers cycleways and quiet residential roads over busy roads. Probe results: Lilydale → Hurstbridge with `day-ride` = 52 km / 46 km on dedicated path / 0 km on busy roads, vs `commute` = 31 km / 1.2 km on path / 17 km on busy.
+- **`--goal max-path`** is more aggressive than `day-ride`. Uses `distance_influence: 10` and heavier residential penalty, accepting longer routes (often +10-40% distance) to maximize on-path mileage. Probe: Hurstbridge → Darebin at 98% on dedicated cycle paths (vs day-ride's 87%). Use when "best ride" is the goal, not "shortest reasonable."
 - **`--mode bike-only`** skips the K=1/K=2 transit search and returns a single bike leg. Use for short same-suburb trips.
 - **`--prefer-bike-path` and `--hill-weight`** modify the `recommended` label's cost function additively. `--hill-weight 0` (default) is neutral; `-1` mimics "prefer-flat"; `+1` rewards hilly routes (more ascend, less flat fraction).
 - **`--min-on-path-fraction 0.5`** drops itineraries with less than 50% of bike distance on cycleway/path/track. Falls back to a near-miss when all itineraries fail.

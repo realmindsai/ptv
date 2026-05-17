@@ -77,6 +77,25 @@ describe.skipIf(SKIP)('e2e: plan command', () => {
     expect(stderr).toMatch(/min-bike-km/);
   });
 
+  it('--goal max-path: exits 0 with valid JSON', () => {
+    const { stdout, code } = run([
+      'plan', '-37.7656,144.9614', '-37.648,144.946',
+      '--max-bike-km', '20', '--goal', 'max-path', '--no-enrich',
+    ]);
+    expect(code).toBe(0);
+    const json = JSON.parse(stdout) as { query: { goal: string } };
+    expect(json.query.goal).toBe('max-path');
+  });
+
+  it('--goal bogus: exits non-zero', () => {
+    const { stderr, code } = run([
+      'plan', '-37.7656,144.9614', '-37.648,144.946',
+      '--goal', 'bogus',
+    ]);
+    expect(code).not.toBe(0);
+    expect(stderr).toMatch(/goal must be/);
+  });
+
   it('--html writes a file containing Leaflet markup', () => {
     const fs = require('fs');
     const pathMod = require('path');

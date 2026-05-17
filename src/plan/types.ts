@@ -70,7 +70,7 @@ export type Itinerary = {
   constraintsViolated?: ConstraintViolation[];
 };
 
-export type PlanGoal = 'commute' | 'day-ride';
+export type PlanGoal = 'commute' | 'day-ride' | 'max-path';
 
 export type PlanMode = 'bike-only' | 'bike-train';
 
@@ -93,6 +93,17 @@ export const DAY_RIDE_CUSTOM_MODEL: CustomModel = {
     { if: 'road_class == RESIDENTIAL', multiply_by: 0.7 },
   ],
   distance_influence: 50,
+};
+
+export const MAX_PATH_CUSTOM_MODEL: CustomModel = {
+  priority: [
+    { if: 'road_class == SECONDARY',   multiply_by: 0.02 },
+    { if: 'road_class == PRIMARY',     multiply_by: 0.01 },
+    { if: 'road_class == TRUNK',       multiply_by: 0.01 },
+    { if: 'road_class == TERTIARY',    multiply_by: 0.1 },
+    { if: 'road_class == RESIDENTIAL', multiply_by: 0.3 },
+  ],
+  distance_influence: 10,
 };
 
 export type PlanRequest = {

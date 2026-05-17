@@ -73,7 +73,7 @@ export function planCommand(): Command {
     .option('--no-enrich', 'Skip gh-route enrichment (bike_km_on_path)')
     .option('--prefer-bike-path', 'Recommend itineraries with more bike-path km')
     .option('--hill-weight <n>', 'Signed elevation bias: negative=prefer flat, positive=prefer hills (default 0)', parseFloat, 0)
-    .option('--goal <type>', 'commute (default) or day-ride', 'commute')
+    .option('--goal <type>', 'commute (default), day-ride, or max-path', 'commute')
     .option('--mode <type>', 'bike-only or bike-train (default)', 'bike-train')
     .option('--min-on-path-fraction <n>', 'Require N fraction of bike distance on dedicated paths (0-1)', parseFloat)
     .option('--html <path>', 'Write a Leaflet HTML map to <path> and open it')
@@ -94,8 +94,8 @@ export function planCommand(): Command {
           throw new Error(`${name} must be >= 0 (got ${value})`);
         }
       }
-      if (opts.goal !== 'commute' && opts.goal !== 'day-ride') {
-        throw new Error(`--goal must be 'commute' or 'day-ride' (got ${opts.goal})`);
+      if (!['commute', 'day-ride', 'max-path'].includes(opts.goal)) {
+        throw new Error(`--goal must be 'commute', 'day-ride', or 'max-path' (got ${opts.goal})`);
       }
       if (opts.mode !== 'bike-only' && opts.mode !== 'bike-train') {
         throw new Error(`--mode must be 'bike-only' or 'bike-train' (got ${opts.mode})`);

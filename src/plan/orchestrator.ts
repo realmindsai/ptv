@@ -55,9 +55,10 @@ type SearchState = {
 async function bikeRouteCall(
   s: SearchState, from: LatLon, to: LatLon,
 ): Promise<RouteResult> {
-  if (s.req.goal === 'day-ride') {
-    const { DAY_RIDE_CUSTOM_MODEL } = await import('./types');
-    const r = await s.deps.external.ghRouteCustom(from, to, DAY_RIDE_CUSTOM_MODEL);
+  if (s.req.goal === 'day-ride' || s.req.goal === 'max-path') {
+    const { DAY_RIDE_CUSTOM_MODEL, MAX_PATH_CUSTOM_MODEL } = await import('./types');
+    const model = s.req.goal === 'max-path' ? MAX_PATH_CUSTOM_MODEL : DAY_RIDE_CUSTOM_MODEL;
+    const r = await s.deps.external.ghRouteCustom(from, to, model);
     if (r) {
       return { km: r.km, min: r.min, geometry: r.geometry };
     }
@@ -122,9 +123,10 @@ async function planBikeOnly(
                      kmOnPath?: number; ascendM?: number; descendM?: number;
                      maxSustainedGradePercent?: number; maxSustainedGradeM?: number;
                      flatFraction?: number; steepFraction?: number };
-  if (req.goal === 'day-ride') {
-    const { DAY_RIDE_CUSTOM_MODEL } = await import('./types');
-    const custom = await deps.external.ghRouteCustom(req.from, req.to, DAY_RIDE_CUSTOM_MODEL);
+  if (req.goal === 'day-ride' || req.goal === 'max-path') {
+    const { DAY_RIDE_CUSTOM_MODEL, MAX_PATH_CUSTOM_MODEL } = await import('./types');
+    const model = req.goal === 'max-path' ? MAX_PATH_CUSTOM_MODEL : DAY_RIDE_CUSTOM_MODEL;
+    const custom = await deps.external.ghRouteCustom(req.from, req.to, model);
     bikeRouting = custom ?? await deps.external.osrmRoute('bicycle', req.from, req.to);
   } else {
     bikeRouting = await deps.external.osrmRoute('bicycle', req.from, req.to);
@@ -132,7 +134,7 @@ async function planBikeOnly(
 
   // Enrichment for commute mode: gh-route call to get path/elevation if osrm-au was used
   let enrich: ParsedGhRoute | null = null;
-  if (req.enrich && req.goal !== 'day-ride') {
+  if (req.enrich && req.goal !== 'day-ride' && req.goal !== 'max-path') {
     enrich = await deps.external.ghRouteBike(req.from, req.to);
   }
 

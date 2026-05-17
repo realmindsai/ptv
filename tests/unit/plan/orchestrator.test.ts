@@ -420,4 +420,44 @@ describe('plan() — happy path', () => {
       }),
     ).rejects.toThrow(/bike-only.*max-transfers/);
   });
+
+  it('--goal max-path calls ghRouteCustom with MAX_PATH_CUSTOM_MODEL', async () => {
+    const { ptv } = fakePtvFactory();
+    const customSpy = vi.fn(async () => ({
+      km: 3, min: 12, kmOnPath: 2.9,
+      ascendM: 25, descendM: 20,
+      maxSustainedGradePercent: 4, maxSustainedGradeM: 80,
+      flatFraction: 0.85, steepFraction: 0.03,
+      geometry: null,
+    }));
+    const ext = {
+      osrmTable: vi.fn(async (_p: string, _s: never, dests: unknown[]) => ({
+        durations: dests.map(() => 600), distances: dests.map(() => 3000),
+      })),
+      osrmRoute: vi.fn(async () => ({ km: 3, min: 10, geometry: null })),
+      ghRouteBike: vi.fn(async () => null),
+      ghRouteCustom: customSpy,
+    };
+    await plan(makeReq({ goal: 'max-path' }), { ptv, external: ext as never });
+    expect(customSpy).toHaveBeenCalled();
+    // Verify the third argument (the custom model) has distance_influence: 10
+    const lastCall = customSpy.mock.calls[customSpy.mock.calls.length - 1];
+    expect(lastCall[2].distance_influence).toBe(10);
+  });
+
+  it('--goal max-path falls back to osrmRoute when ghRouteCustom returns null', async () => {
+    const { ptv } = fakePtvFactory();
+    const osrmSpy = vi.fn(async () => ({ km: 3, min: 10, geometry: null }));
+    const ext = {
+      osrmTable: vi.fn(async (_p: string, _s: never, dests: unknown[]) => ({
+        durations: dests.map(() => 600), distances: dests.map(() => 3000),
+      })),
+      osrmRoute: osrmSpy,
+      ghRouteBike: vi.fn(async () => null),
+      ghRouteCustom: vi.fn(async () => null),
+    };
+    const out = await plan(makeReq({ goal: 'max-path' }), { ptv, external: ext as never });
+    expect(out.itineraries.length).toBeGreaterThan(0);
+    expect(osrmSpy).toHaveBeenCalled();
+  });
 });

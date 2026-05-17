@@ -65,6 +65,26 @@ describe.skipIf(SKIP)('integration: plan command', () => {
     }
   }, 30_000);
 
+  it('--goal max-path Hurstbridge → Darebin reaches >=95% on dedicated bike paths', async () => {
+    const result = await plan({
+      from: { lat: -37.6394, lon: 145.192017 },   // Hurstbridge
+      to:   { lat: -37.7749634, lon: 145.038483 }, // Darebin
+      departUtc: undefined,
+      arriveByUtc: undefined,
+      minBikeKm: 0, maxBikeKm: 60,
+      maxTransfers: 0, enrich: true,
+      preferBikePath: false, goal: 'max-path',
+      mode: 'bike-only', hillWeight: 0,
+    });
+    expect(result.itineraries).toHaveLength(1);
+    const it = result.itineraries[0];
+    expect(it.bikeKm).toBeGreaterThan(30);  // longer than direct
+    if (typeof it.bikeKmOnPath === 'number' && it.bikeKm > 0) {
+      const pct = it.bikeKmOnPath / it.bikeKm;
+      expect(pct).toBeGreaterThanOrEqual(0.95);  // 95%+ on dedicated paths
+    }
+  }, 60_000);
+
   it('K=2 cross-line: Rosanna → Dandenong via a hub returns transfers=1 itinerary', async () => {
     const result = await plan({
       from: { lat: -37.7390, lon: 145.0682 },  // near Rosanna station

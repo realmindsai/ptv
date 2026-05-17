@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { parseGhRoute } from '../../../src/plan/external';
+import { MAX_PATH_CUSTOM_MODEL, DAY_RIDE_CUSTOM_MODEL } from '../../../src/plan/types';
 
 describe('parseGhRoute()', () => {
   it('returns null on missing distance', () => {
@@ -197,6 +198,19 @@ describe('ghRouteCustom()', () => {
     );
     expect(r).toBeNull();
     vi.unstubAllGlobals();
+  });
+});
+
+describe('MAX_PATH_CUSTOM_MODEL', () => {
+  it('uses distance_influence 10 (more aggressive than day-ride)', () => {
+    expect(MAX_PATH_CUSTOM_MODEL.distance_influence).toBe(10);
+    expect(DAY_RIDE_CUSTOM_MODEL.distance_influence).toBe(50);
+  });
+
+  it('has 5 priority rules including residential penalty', () => {
+    expect(MAX_PATH_CUSTOM_MODEL.priority).toHaveLength(5);
+    const resi = MAX_PATH_CUSTOM_MODEL.priority.find((r) => r.if.includes('RESIDENTIAL'));
+    expect(resi?.multiply_by).toBe(0.3);
   });
 });
 
