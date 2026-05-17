@@ -113,6 +113,36 @@ describe('url-state', () => {
     });
   });
 
+  describe('encodeUrlState — robustness', () => {
+    it('omits from when coords are non-finite (NaN, Infinity)', () => {
+      const a = encodeUrlState({
+        origin: { lat: NaN, lon: 144.96 },
+        destination: null,
+        params: { ...DEFAULTS },
+      });
+      expect(a).toBe('');
+
+      const b = encodeUrlState({
+        origin: { lat: Infinity, lon: 0 },
+        destination: { lat: -37.86, lon: 144.92 },
+        params: { ...DEFAULTS },
+      });
+      expect(b).toBe('to=-37.86,144.92');
+    });
+  });
+
+  describe('decodeUrlState — robustness', () => {
+    it('drops numeric params that fail to parse to a number', () => {
+      const r = decodeUrlState('?from=-37.78,144.96&minBikeKm=garbage&maxBikeKm=5');
+      expect(r).toEqual({
+        origin: { lat: -37.78, lon: 144.96 },
+        destination: null,
+        params: { maxBikeKm: 5 },
+      });
+      expect(r.params).not.toHaveProperty('minBikeKm');
+    });
+  });
+
   it('round-trips a fully-specified state', () => {
     const original = {
       origin: { lat: -37.78001, lon: 144.96302 },

@@ -50,8 +50,8 @@ function parseLatLon(s) {
 
 export function encodeUrlState(state) {
   const parts = [];
-  if (state.origin)      parts.push(`from=${fmt(state.origin.lat)},${fmt(state.origin.lon)}`);
-  if (state.destination) parts.push(`to=${fmt(state.destination.lat)},${fmt(state.destination.lon)}`);
+  if (state.origin      && Number.isFinite(state.origin.lat)      && Number.isFinite(state.origin.lon))      parts.push(`from=${fmt(state.origin.lat)},${fmt(state.origin.lon)}`);
+  if (state.destination && Number.isFinite(state.destination.lat) && Number.isFinite(state.destination.lon)) parts.push(`to=${fmt(state.destination.lat)},${fmt(state.destination.lon)}`);
   for (const spec of PARAM_SPEC) {
     const v = state.params?.[spec.key];
     if (v === undefined || v === null) continue;
@@ -78,6 +78,7 @@ export function decodeUrlState(search) {
     if (!usp.has(spec.key)) continue;
     const raw = usp.get(spec.key);
     const v = spec.parse(raw);
+    if (typeof v === 'number' && Number.isNaN(v)) continue;
     if (spec.isDefault(v)) continue;
     params[spec.key] = v;
   }
