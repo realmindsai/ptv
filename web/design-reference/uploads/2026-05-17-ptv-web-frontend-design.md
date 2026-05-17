@@ -216,29 +216,6 @@ Mirrors the existing layout (`tests/unit`, `tests/integration`, `tests/e2e`).
 
 Test output must stay pristine per global instructions (no Fastify "address in use" warnings, no unhandled-promise noise).
 
-## Visual direction (locked 2026-05-17)
-
-The design canvas in `web/design-reference/` (bundle hash `RaUbO4en-P_6Xv6RP9T2cw`) explored two takes, **Atlas** (map-first, soft, riderly) and **Console** (terminal-y). **Atlas is the chosen direction for Phase 1.** Console may return as an optional dense mode later (`?dense=1` or a Tweak), but is not in scope.
-
-Atlas hard rules, drawn from the canvas + notes:
-
-- **Layout:** mobile-first, full-bleed Leaflet map. Floating dual-row from/to pill at top. Drag-up bottom sheet with three peek heights (recents → results → advanced).
-- **Type:** Epilogue for prose; **JetBrains Mono for all numbers** (durations, km, coords, %). Vendor 400/500/600 weights only under `/static/`.
-- **Palette (3 colours, 3 jobs):**
-  - `#A77ACD` lilac — route lines, prompts, eyebrows
-  - `#1A1B25` ink — train segments, body type
-  - `#F26541` orange — CTA buttons only (Plan)
-  - `#22C55E` green — status + cache dots only
-  - `#EDEBE8` stone — neutral surfaces, wait segments
-  - `#F0EBF4` lavender — active states, accent backgrounds
-- **Voice:** all-lowercase; em-dash as connector; single green `●` for status; numbers always mono.
-- **Map style:** stone land, lavender water (Port Phillip + Yarra), ink train, lilac bike. No tech-blues.
-- **Hit targets:** ≥44 px (50 px field rows, 36 px icon buttons, 44 px sheet CTA).
-- **Itinerary card:** label eyebrow → mono-big total time → segment bar (lilac=bike, ink=train, stone=wait) → meta in mono.
-- **Desktop (≥1024 px):** 2-column — left rail form, right map with floating result cards.
-
-The React/JSX prototype in `web/design-reference/` is a **visual reference**, not a build target. Server-rendered HTML + HTMX with hand-written CSS reproduces the look without dragging React into production.
-
 ## Phasing — implementation cut-points
 
 The implementation plan will split this into Phase 1 (must-haves) and Phase 2 (additive). Sketch:

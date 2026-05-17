@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>bike-rail · ptv plan web frontend</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="app.css">
+<style>
+  html, body { margin: 0; padding: 0; background: #f0eee9; }
+  #root { width: 100vw; height: 100vh; }
+  /* canvas notes look */
+  .note {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: rgba(60,50,40,0.7); line-height: 1.55;
+    max-width: 360px;
+  }
+  .note b { color: rgba(40,30,20,0.95); font-weight: 600; }
+  .note .key { color: #8954B6; }
+  .note hr { border: 0; border-top: 1px solid rgba(60,50,40,0.15); margin: 8px 0; }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- Helpers + frames -->
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="browser-window.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<!-- App -->
+<script type="text/babel" src="shared.jsx"></script>
+<script type="text/babel" src="atlas.jsx"></script>
+<script type="text/babel" src="console.jsx"></script>
+
+<script type="text/babel" data-presets="env,react">
+function PhoneFrame({ children, dark }) {
+  // Wrap a screen in the iOS device frame at a fixed inner size (390×844).
+  return (
+    <IOSDevice width={390} height={844} dark={dark}>
+      <div style={{ position: 'absolute', inset: 0 }}>{children}</div>
+    </IOSDevice>
+  );
+}
+
+function DesktopFrame({ children, url }) {
+  return (
+    <ChromeWindow
+      width={1280} height={780}
+      url={url || 'ptv.magpie-inconnu.ts.net:8085'}
+      tabs={[{ title: 'ptv plan — bike-rail' }, { title: 'totoro · docker' }]}
+      activeIndex={0}
+    >
+      <div style={{ width: '100%', height: '100%' }}>{children}</div>
+    </ChromeWindow>
+  );
+}
+
+function Note({ children }) {
+  return <div className="note">{children}</div>;
+}
+
+function App() {
+  return (
+    <DesignCanvas>
+      {/* ═══════════ INTRO ═══════════ */}
+      <DCSection id="intro" title="bike-rail · ptv plan web frontend" subtitle="A personal trip planner for tailnet — Hurstbridge → Williamstown. Two design directions, mobile-first with a desktop comp each.">
+        <DCArtboard id="brief" label="brief · read me" width={520} height={460}>
+          <div style={{ padding: 28, background: '#FAFAFA', height: '100%', boxSizing: 'border-box', fontFamily: 'Epilogue, sans-serif' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#A77ACD' }}>— bike-rail · ptv plan</div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: '#1A1B25', lineHeight: 1.15, marginTop: 6, marginBottom: 14, letterSpacing: '-0.01em' }}>
+              a phone-first trip planner for the tailnet, with personality.
+            </div>
+            <div style={{ fontSize: 13, color: '#555', lineHeight: 1.55, marginBottom: 14 }}>
+              The PRD is design-free and the design doc spells out HTMX + Leaflet + Fastify. Both leave the visual feel open. So: two takes on the same single-user app, both built from the RMAI palette but loosened toward the riderly / terminal-y direction you asked for.
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+              <div style={{ padding: 14, border: '1px solid #E8E8EB', borderRadius: 10, background: 'white' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#A77ACD', letterSpacing: '0.12em', textTransform: 'uppercase' }}>A · Atlas</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#1A1B25', marginTop: 4 }}>map-first · bottom sheet</div>
+                <div style={{ fontSize: 12, color: '#555', marginTop: 6, lineHeight: 1.5 }}>
+                  Full-bleed map. From/To pill floats on top. Results live in a drag-up sheet. Soft, riderly, modern map-app shape — Epilogue for type, mono for numbers.
+                </div>
+              </div>
+              <div style={{ padding: 14, border: '1px solid #E8E8EB', borderRadius: 10, background: '#14151C', color: '#E8E6E1' }}>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, fontWeight: 700, color: '#A77ACD', letterSpacing: '0.12em', textTransform: 'uppercase' }}>B · Console</div>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 600, marginTop: 4 }}>~/ptv $ plan</div>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11.5, color: '#B8B5AD', marginTop: 6, lineHeight: 1.55 }}>
+                  Terminal/CLI inspired. <span style={{color:'#A77ACD'}}>from›</span> <span style={{color:'#E8E6E1'}}>hurstbridge_</span> · monospace tables · status footer. A power-user pocket tool.
+                </div>
+              </div>
+            </div>
+            <div style={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: '#8D8D92', letterSpacing: '0.04em' }}>
+              ● both use the same trip · hurstbridge → williamstown · 08:00 · bike-train · commute
+            </div>
+          </div>
+        </DCArtboard>
+
+        <DCArtboard id="states" label="states covered" width={360} height={460}>
+          <div style={{ padding: 24, background: 'white', height: '100%', boxSizing: 'border-box', fontFamily: 'Epilogue, sans-serif', overflow: 'hidden' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#A77ACD', marginBottom: 12 }}>— states · 6 per variation</div>
+            {[
+              ['01', 'Empty / fresh boot', 'No trip yet · recents or prompt'],
+              ['02', 'Typing autocomplete', 'Nominatim suggest, coord-fallback hint'],
+              ['03', 'Results loaded', '3 itineraries · active route on map'],
+              ['04', 'Advanced expanded', 'All planner flags · CLI equivalence'],
+              ['05', 'Map-click pin (P2)', 'Drag-to-refire · reverse geocode'],
+              ['06', 'Offline / Install (P2)', 'Service worker · PWA install'],
+              ['07', 'Desktop', '2-column on a browser frame'],
+            ].map(([n, t, sub]) => (
+              <div key={n} style={{ display: 'flex', alignItems: 'baseline', gap: 10, padding: '8px 0', borderBottom: '1px solid #E8E8EB', fontFamily: 'Epilogue, sans-serif' }}>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: '#8D8D92', width: 18 }}>{n}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#1A1B25' }}>{t}</div>
+                  <div style={{ fontSize: 11, color: '#8D8D92' }}>{sub}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DCArtboard>
+
+        <DCArtboard id="palette" label="palette + voice" width={360} height={460}>
+          <div style={{ padding: 24, background: 'white', height: '100%', boxSizing: 'border-box', fontFamily: 'Epilogue, sans-serif' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#A77ACD', marginBottom: 14 }}>— rmai · 3 colours, 3 jobs</div>
+            {[
+              ['#A77ACD', 'lilac · route lines, prompts, eyebrows'],
+              ['#1A1B25', 'ink · train segs, body, console bg(B)'],
+              ['#F26541', 'orange · CTA buttons only'],
+              ['#22C55E', 'green · status & cache dots only'],
+              ['#EDEBE8', 'stone · neutral surfaces, wait segs'],
+              ['#F0EBF4', 'lavender · active states, accent bg'],
+            ].map(([c, t]) => (
+              <div key={c} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0' }}>
+                <div style={{ width: 24, height: 24, borderRadius: 4, background: c, border: '1px solid rgba(0,0,0,0.06)' }}/>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: '#1A1B25', width: 80 }}>{c}</span>
+                <span style={{ fontSize: 12, color: '#555' }}>{t}</span>
+              </div>
+            ))}
+            <div style={{ height: 1, background: '#E8E8EB', margin: '14px 0' }}/>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#A77ACD', marginBottom: 6 }}>— voice</div>
+            <div style={{ fontSize: 12.5, color: '#555', lineHeight: 1.55 }}>
+              all lowercase · em-dash as connector · ● single green dot for status · numbers in <span style={{ fontFamily: 'JetBrains Mono, monospace', color: '#1A1B25' }}>JetBrains&nbsp;Mono</span>
+            </div>
+          </div>
+        </DCArtboard>
+      </DCSection>
+
+      {/* ═══════════ ATLAS ═══════════ */}
+      <DCSection id="atlas" title="A · Atlas" subtitle="Map-first, bottom-sheet, riderly. Hold a phone — you tap, drag, glance. Use the iOS frame to see hit targets at real scale.">
+        <DCArtboard id="atlas-01" label="01 · empty" width={430} height={895}>
+          <PhoneFrame><AtlasEmpty/></PhoneFrame>
+        </DCArtboard>
+        <DCArtboard id="atlas-02" label="02 · typing" width={430} height={895}>
+          <PhoneFrame><AtlasTyping/></PhoneFrame>
+        </DCArtboard>
+        <DCArtboard id="atlas-03" label="03 · results" width={430} height={895}>
+          <PhoneFrame><AtlasResults/></PhoneFrame>
+        </DCArtboard>
+        <DCArtboard id="atlas-04" label="04 · advanced" width={430} height={895}>
+          <PhoneFrame><AtlasAdvanced/></PhoneFrame>
+        </DCArtboard>
+        <DCArtboard id="atlas-05" label="05 · pin drag (p2)" width={430} height={895}>
+          <PhoneFrame><AtlasMapClick/></PhoneFrame>
+        </DCArtboard>
+        <DCArtboard id="atlas-06" label="06 · install (p2)" width={430} height={895}>
+          <PhoneFrame><AtlasInstall/></PhoneFrame>
+        </DCArtboard>
+        <DCArtboard id="atlas-notes" label="notes" width={380} height={895}>
+          <div style={{ padding: 28, background: '#fef4a8', height: '100%', boxSizing: 'border-box' }}>
+            <Note>
+              <b>Atlas — why map-first.</b>
+              <hr/>
+              The PRD's framing is <i>"standing at a station, deciding whether to ride."</i> Map dominates because that's the decision surface; the form fades to a pill on top and a draggable sheet below.
+              <br/><br/>
+              <b className="key">Pill</b> · floating dual-row from/to (top-pill component). Editorial caps + mono coords. The swap arrows are a single ↕ icon, not two buttons.
+              <br/><br/>
+              <b className="key">Bottom sheet</b> · grab handle, three peek heights (recents → results → advanced). Same component renders all three states.
+              <br/><br/>
+              <b className="key">Itinerary cards</b> · label eyebrow, total time mono-big, segment bar (purple=bike, ink=train, stone=wait), then meta in mono.
+              <br/><br/>
+              <b className="key">Map style</b> · stone land · lavender water (Port Phillip + Yarra) · ink train · lilac bike. No saturated tech-blues.
+              <br/><br/>
+              <b className="key">Phase 2</b> · top toast on map-click; pin drags re-fire plan (debounced 250ms); PWA install reuses the bottom-sheet pattern as an iOS-style share dialog.
+              <br/><br/>
+              <b className="key">Hit targets</b> · 50px field rows · 36px iconbuttons · 44px sheet CTA · all ≥44 per Apple HIG.
+            </Note>
+          </div>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="atlas-desk" title="A · Atlas · desktop" subtitle="Two-column: left rail form, right map with floating result cards. Browser frame at 1280×780.">
+        <DCArtboard id="atlas-desktop" label="desktop · 1280" width={1320} height={840}>
+          <DesktopFrame url="ptv.magpie-inconnu.ts.net:8085"><AtlasDesktop/></DesktopFrame>
+        </DCArtboard>
+      </DCSection>
+
+      {/* ═══════════ CONSOLE ═══════════ */}
+      <DCSection id="console" title="B · Console" subtitle="Terminal-y, riderly. Same trip, same data, very different feel — for the cyclist who lives in tmux.">
+        <DCArtboard id="cn-01" label="01 · empty" width={430} height={895}>
+          <PhoneFrame dark><ConsoleEmpty/></PhoneFrame>
+        </DCArtboard>
+        <DCArtboard id="cn-02" label="02 · typing" width={430} height={895}>
+          <PhoneFrame dark><ConsoleTyping/></PhoneFrame>
+        </DCArtboard>
+        <DCArtboard id="cn-03" label="03 · results" width={430} height={895}>
+          <PhoneFrame dark><ConsoleResults/></PhoneFrame>
+        </DCArtboard>
+        <DCArtboard id="cn-04" label="04 · advanced" width={430} height={895}>
+          <PhoneFrame dark><ConsoleAdvanced/></PhoneFrame>
+        </DCArtboard>
+        <DCArtboard id="cn-05" label="05 · map-click (p2)" width={430} height={895}>
+          <PhoneFrame dark><ConsoleMapClick/></PhoneFrame>
+        </DCArtboard>
+        <DCArtboard id="cn-06" label="06 · offline (p2)" width={430} height={895}>
+          <PhoneFrame dark><ConsoleOffline/></PhoneFrame>
+        </DCArtboard>
+        <DCArtboard id="cn-notes" label="notes" width={380} height={895}>
+          <div style={{ padding: 28, background: '#fef4a8', height: '100%', boxSizing: 'border-box' }}>
+            <Note>
+              <b>Console — why terminal-y.</b>
+              <hr/>
+              Doctor Dee is one user, a CLI user, building a tailnet tool. The web UI doesn't have to apologise for that — it can lean in. Voice this is a pocket tmux for the bike-train problem.
+              <br/><br/>
+              <b className="key">Top bar</b> · <code>~/ptv $ plan</code> always visible. Status dot + latency to the right. The whole screen is a long-running session.
+              <br/><br/>
+              <b className="key">Form</b> · fields are <code>from› hurstbridge_</code> rows with caret · autocomplete is a popup with row numbers, rank, coords. <code>↑↓↵esc</code> footer.
+              <br/><br/>
+              <b className="key">Results</b> · monospace table, segment bar same as Atlas (palette parity). Selected row gets a lilac leftbar. The <code>$ equiv</code> block shows the exact CLI invocation — bridges UI to CLI for power-user mental model.
+              <br/><br/>
+              <b className="key">Map</b> · same map svg, dark theme. Pins are tagged <code>[01]</code> / <code>[02]</code> with mono labels. URL hash is shown literally — it's an artifact, not chrome.
+              <br/><br/>
+              <b className="key">Offline</b> · service-worker cache shown as <code>ls</code>-style listing. The "shell still here" headline is the only display-type beat in the whole variation.
+              <br/><br/>
+              <b className="key">Risk</b> · denser, less obvious to a non-coder. That's the trade we asked for — keep the Atlas as the "polished" face if the dense version proves too much.
+            </Note>
+          </div>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="console-desk" title="B · Console · desktop" subtitle="Three-pane: flags + $ equiv on the left, results table + map on the right, status footer bottom.">
+        <DCArtboard id="cn-desktop" label="desktop · 1280" width={1320} height={840}>
+          <DesktopFrame url="ptv.magpie-inconnu.ts.net:8085"><ConsoleDesktop/></DesktopFrame>
+        </DCArtboard>
+      </DCSection>
+
+      {/* ═══════════ NEXT STEPS ═══════════ */}
+      <DCSection id="next" title="next" subtitle="What I'd lean toward, and what's still up for grabs.">
+        <DCArtboard id="next-notes" label="recommendations" width={520} height={420}>
+          <div style={{ padding: 28, background: '#FAFAFA', height: '100%', boxSizing: 'border-box', fontFamily: 'Epilogue, sans-serif' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#A77ACD', marginBottom: 10 }}>— recommendations</div>
+            <ol style={{ fontSize: 13, color: '#1A1B25', lineHeight: 1.6, paddingLeft: 18, margin: 0 }}>
+              <li><b>Pick Atlas as the daily driver.</b> Map-first is the right shape for "standing at the station." Phase 1 is genuinely shippable as-is.</li>
+              <li><b>Keep Console as a <code style={{fontFamily:'JetBrains Mono, monospace', fontSize: 11.5, background: '#EDEBE8', padding: '1px 5px', borderRadius: 3}}>?dense=1</code> mode.</b> Same HTML, swap a stylesheet. Same form, same routes — your URL state survives the switch.</li>
+              <li><b>Map tiles.</b> Both mocks use a simulated SVG. Real shipping needs a vector or raster tile source you control on totoro — vendor a tile cache, or use OSM tiles via the existing GraphHopper.</li>
+              <li><b>The segment bar is a real component.</b> Render it from <code style={{fontFamily:'JetBrains Mono, monospace', fontSize: 11.5}}>renderMapInit</code>'s itinerary structure so it lines up with Leaflet layer colours.</li>
+              <li><b>Mono font fallback.</b> JetBrains Mono is good but heavy — vendor only the weights you ship (400/500/600) under <code style={{fontFamily:'JetBrains Mono, monospace', fontSize: 11.5}}>/static/</code> for the no-egress promise.</li>
+            </ol>
+          </div>
+        </DCArtboard>
+        <DCArtboard id="next-questions" label="open questions" width={420} height={420}>
+          <div style={{ padding: 28, background: 'white', height: '100%', boxSizing: 'border-box', fontFamily: 'Epilogue, sans-serif' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#A77ACD', marginBottom: 12 }}>— open</div>
+            <ul style={{ fontSize: 12.5, color: '#1A1B25', lineHeight: 1.55, paddingLeft: 16, margin: 0 }}>
+              <li>Map tile provider on totoro?</li>
+              <li>Do you want a <i>command palette</i> (<code style={{fontFamily:'JetBrains Mono, monospace', fontSize: 11.5}}>⌘k</code>) in Atlas too?</li>
+              <li>Show <i>elevation profile</i> as a 4th itinerary view, or skip?</li>
+              <li>Should Console be opt-in via URL flag, or just a Tweak?</li>
+              <li>Do <i>recents</i> deserve P1, or are they a "round 3" thing?</li>
+              <li>Animation on segment bars when re-planning — yes/no?</li>
+            </ul>
+          </div>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
