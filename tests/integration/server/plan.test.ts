@@ -148,4 +148,42 @@ describe('POST /api/plan', () => {
     expect(planFn).not.toHaveBeenCalled();
     await app.close();
   });
+
+  it('parses arriveBy=HH:MM and passes only arriveByUtc to planFn', async () => {
+    const planFn = vi.fn(async (req) => ({ ...fakeResult, query: req }));
+    const app = createApp({ logger: false, planFn, cache: null, nominatimUrl: 'http://x' });
+    const res = await app.inject({
+      method: 'POST', url: '/api/plan',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      payload: { origin: { lat: -37.64, lon: 145.19 }, destination: { lat: -37.86, lon: 144.89 },
+                 mode: 'bike-only', goal: 'commute', arriveBy: '17:30' },
+    });
+    expect(res.statusCode).toBe(200);
+    const calledWith = planFn.mock.calls[0][0] as { departUtc?: Date; arriveByUtc?: Date };
+    expect(calledWith.departUtc).toBeUndefined();
+    expect(calledWith.arriveByUtc).toBeInstanceOf(Date);
+    const melHour = new Intl.DateTimeFormat('en-AU', {
+      timeZone: 'Australia/Melbourne',
+      hour: 'numeric', minute: 'numeric', hour12: false,
+    }).format(calledWith.arriveByUtc as Date);
+    // Allow both "17:30" and "17.30" locale variants — same as the unit test.
+    expect(melHour).toMatch(/^17[:.]30$/);
+    await app.close();
+  });
+
+  it('returns 400 with "arriveBy: invalid time" when arriveBy is malformed', async () => {
+    const planFn = vi.fn(async () => fakeResult);
+    const app = createApp({ logger: false, planFn, cache: null, nominatimUrl: 'http://x' });
+    const res = await app.inject({
+      method: 'POST', url: '/api/plan',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      payload: { origin: { lat: -37.64, lon: 145.19 }, destination: { lat: -37.86, lon: 144.89 },
+                 mode: 'bike-only', goal: 'commute', arriveBy: 'garbage' },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error.code).toBe('BAD_INPUT');
+    expect(res.json().error.message).toMatch(/arriveBy: invalid time/);
+    expect(planFn).not.toHaveBeenCalled();
+    await app.close();
+  });
 });
