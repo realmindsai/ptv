@@ -66,3 +66,45 @@ test('Atlas shell has no console errors on initial load', async ({ page }) => {
   // but no real JS errors.
   expect(consoleErrors.filter((e) => !/marker-icon|leaflet image/i.test(e))).toEqual([]);
 });
+
+test('geocode autocomplete fills hidden inputs and submits a plan', async ({ page }) => {
+  // Intercept geocode requests BEFORE navigation so the mock is active immediately.
+  await page.route('**/api/geocode**', async (route) => {
+    const html = [
+      '<ul class="geocode-list">',
+      '  <li class="geocode-item"',
+      '      data-lat="-37.64"',
+      '      data-lon="145.19"',
+      '      data-label="Hurstbridge VIC">',
+      '    <span class="geocode-label">Hurstbridge VIC</span>',
+      '    <span class="geocode-coord">-37.64, 145.19</span>',
+      '  </li>',
+      '</ul>',
+    ].join('\n');
+    await route.fulfill({ status: 200, contentType: 'text/html', body: html });
+  });
+
+  await page.goto(BASE);
+
+  // Use pressSequentially so real keyup events fire (page.fill skips keyboard events
+  // and HTMX would not trigger the hx-get autocomplete).
+  const fromInput = page.locator('input[name="from-query"]');
+  await fromInput.click();
+  await fromInput.pressSequentially('hurst', { delay: 50 });
+
+  // HTMX fires after its 300ms delay; wait for the injected suggestion to appear.
+  await expect(page.locator('#from-suggest .geocode-item')).toBeVisible({ timeout: 5000 });
+
+  // Click the suggestion.
+  await page.locator('#from-suggest .geocode-item').first().click();
+
+  // Hidden inputs must be populated by the click handler.
+  await expect(page.locator('input[name="from[lat]"]')).toHaveValue('-37.64');
+  await expect(page.locator('input[name="from[lon]"]')).toHaveValue('145.19');
+
+  // Visible text input must show the label.
+  await expect(page.locator('input[name="from-query"]')).toHaveValue('Hurstbridge VIC');
+
+  // Dropdown must be cleared after selection.
+  await expect(page.locator('#from-suggest .geocode-item')).toHaveCount(0);
+});

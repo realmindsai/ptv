@@ -49,8 +49,18 @@ export function registerPlan(
     const key = planCacheKey(resolved as unknown as Record<string, unknown>);
     let result = (await deps.cache?.get<PlanResult>('plan', key)) ?? null;
     if (!result) {
-      result = await planFn(resolved);
-      await deps.cache?.setex('plan', key, 600, result);
+      try {
+        result = await planFn(resolved);
+        await deps.cache?.setex('plan', key, 600, result);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        reply.code(500);
+        if ((req.headers.accept ?? '').includes('text/html')) {
+          reply.type('text/html; charset=utf-8');
+          return render('error.html', { message: msg });
+        }
+        return { error: { code: 'PLAN_FAILED', message: msg } };
+      }
     }
 
     if ((req.headers.accept ?? '').includes('text/html')) {

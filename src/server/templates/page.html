@@ -56,7 +56,7 @@
           hx-get="/api/geocode"
           hx-trigger="keyup changed delay:300ms"
           hx-target="#from-suggest"
-          hx-include="[name='from-query']"
+          hx-vals='js:{q: document.getElementById("from-query").value}'
           hx-headers='{"Accept":"text/html"}'
         >
         <input type="hidden" name="from[lat]" id="from-lat">
@@ -76,7 +76,7 @@
           hx-get="/api/geocode"
           hx-trigger="keyup changed delay:300ms"
           hx-target="#to-suggest"
-          hx-include="[name='to-query']"
+          hx-vals='js:{q: document.getElementById("to-query").value}'
           hx-headers='{"Accept":"text/html"}'
         >
         <input type="hidden" name="to[lat]" id="to-lat">
