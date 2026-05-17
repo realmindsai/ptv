@@ -3,22 +3,16 @@ import { spawnSync } from 'child_process';
 import { resolve, dirname } from 'path';
 import type { PlanResult } from './types';
 
-const HTML_TEMPLATE = `<!DOCTYPE html>
-<html><head>
-  <meta charset="utf-8">
-  <title>ptv plan</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <style>
-    html,body,#map { height: 100%; margin: 0; }
+const CSS_BODY = `html,body,#map { height: 100%; margin: 0; }
     .legend { background: white; padding: 6px 10px; font: 12px sans-serif; }
     .legend .bike  { color: #2a7; }
-    .legend .train { color: #c33; }
-  </style>
-</head><body>
-  <div id="map"></div>
-  <script>
-    const data = __INJECT_DATA__;
+    .legend .train { color: #c33; }`;
+
+function scriptBodyFor(result: PlanResult): string {
+  const labeled = result.itineraries.filter((i) => i.labels.length > 0);
+  labeled.sort((a, b) => a.totalTimeMin - b.totalTimeMin);
+  const data = { query: result.query, itineraries: labeled };
+  return `const data = ${JSON.stringify(data)};
     const map = L.map('map');
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap'
@@ -100,9 +94,12 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
         + '<span class="train">┄┄</span> train<br>';
       return div;
     };
-    legend.addTo(map);
-  </script>
-</body></html>`;
+    legend.addTo(map);`;
+}
+
+export function renderMapInit(result: PlanResult): { scriptBody: string; cssBody: string } {
+  return { scriptBody: scriptBodyFor(result), cssBody: CSS_BODY };
+}
 
 export function writeMapHtml(path: string, result: PlanResult): void {
   const fullPath = resolve(path);
@@ -110,10 +107,22 @@ export function writeMapHtml(path: string, result: PlanResult): void {
   if (!existsSync(dir)) {
     throw new Error(`cannot write to ${path}: directory does not exist`);
   }
-  const labeled = result.itineraries.filter((i) => i.labels.length > 0);
-  labeled.sort((a, b) => a.totalTimeMin - b.totalTimeMin);
-  const data = { query: result.query, itineraries: labeled };
-  const html = HTML_TEMPLATE.replace('__INJECT_DATA__', JSON.stringify(data));
+  const { scriptBody, cssBody } = renderMapInit(result);
+  const html = `<!DOCTYPE html>
+<html><head>
+  <meta charset="utf-8">
+  <title>ptv plan</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    ${cssBody}
+  </style>
+</head><body>
+  <div id="map"></div>
+  <script>
+    ${scriptBody}
+  </script>
+</body></html>`;
   writeFileSync(fullPath, html, 'utf8');
   try {
     spawnSync('open', [fullPath], { stdio: 'ignore' });
