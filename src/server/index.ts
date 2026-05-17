@@ -1,9 +1,12 @@
-import Fastify, { FastifyInstance } from 'fastify';
+import Fastify, { FastifyBaseLogger, FastifyInstance } from 'fastify';
 
-export function createApp(): FastifyInstance {
-  const isTest = process.env.VITEST === 'true' || process.env.NODE_ENV === 'test';
+export type AppOptions = {
+  logger?: FastifyBaseLogger | boolean;
+};
+
+export function createApp(opts: AppOptions = {}): FastifyInstance {
   const app = Fastify({
-    logger: isTest ? false : { level: process.env.LOG_LEVEL ?? 'info' },
+    logger: opts.logger ?? { level: process.env.LOG_LEVEL ?? 'info' },
   });
   return app;
 }
