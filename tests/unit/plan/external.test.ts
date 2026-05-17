@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { parseGhRoute } from '../../../src/plan/external';
 import { MAX_PATH_CUSTOM_MODEL, DAY_RIDE_CUSTOM_MODEL } from '../../../src/plan/types';
 
@@ -215,71 +215,194 @@ describe('MAX_PATH_CUSTOM_MODEL', () => {
 });
 
 describe('osrmRoute()', () => {
-  beforeEach(() => { vi.resetModules(); });
+  beforeEach(() => {
+    vi.resetModules();
+    delete process.env.OSRM_AU_HOST;
+    delete process.env.OSRM_AU_BICYCLE_URL;
+    delete process.env.OSRM_AU_FOOT_URL;
+  });
+  afterEach(() => { vi.unstubAllGlobals(); });
 
-  it('returns geometry as a GeoJSON LineString object when osrm-au includes it', async () => {
-    vi.doMock('child_process', () => ({
-      spawnSync: () => ({
-        status: 0,
-        stdout: JSON.stringify({
-          routes: [{
-            distance: 1500,
-            duration: 360,
-            geometry: { type: 'LineString', coordinates: [[144.96, -37.78], [144.97, -37.79]] },
-          }],
-        }),
-        stderr: '',
+  it('hits /route/v1/driving with lon,lat order (NOT lat,lon)', async () => {
+    process.env.OSRM_AU_HOST = 'osrm.example';
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        code: 'Ok',
+        routes: [{ distance: 1500, duration: 360, geometry: '~{qeF_owsZn}@o}@' }],
       }),
     }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { osrmRoute } = await import('../../../src/plan/external');
+    await osrmRoute('bicycle', { lat: -37.78, lon: 144.96 }, { lat: -37.79, lon: 144.97 });
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const url = String(fetchMock.mock.calls[0][0]);
+    expect(url).toContain('http://osrm.example:5002/route/v1/driving/');
+    // lon,lat;lon,lat — note the order flip vs internal LatLon
+    expect(url).toContain('144.96,-37.78;144.97,-37.79');
+    expect(url).toContain('overview=full');
+    expect(url).toContain('geometries=polyline');
+  });
+
+  it('uses port 5003 for the foot profile', async () => {
+    process.env.OSRM_AU_HOST = 'osrm.example';
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        code: 'Ok',
+        routes: [{ distance: 100, duration: 120, geometry: '_p~iF~ps|U' }],
+      }),
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { osrmRoute } = await import('../../../src/plan/external');
+    await osrmRoute('foot', { lat: -37.78, lon: 144.96 }, { lat: -37.79, lon: 144.97 });
+    expect(String(fetchMock.mock.calls[0][0])).toContain('http://osrm.example:5003/route/v1/driving/');
+  });
+
+  it('honours OSRM_AU_BICYCLE_URL override (container case)', async () => {
+    process.env.OSRM_AU_BICYCLE_URL = 'http://osrm-au-bicycle:5000';
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        code: 'Ok',
+        routes: [{ distance: 1500, duration: 360, geometry: '~{qeF_owsZn}@o}@' }],
+      }),
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { osrmRoute } = await import('../../../src/plan/external');
+    await osrmRoute('bicycle', { lat: -37.78, lon: 144.96 }, { lat: -37.79, lon: 144.97 });
+    expect(String(fetchMock.mock.calls[0][0])).toContain('http://osrm-au-bicycle:5000/route/v1/driving/');
+  });
+
+  it('returns km and min computed from native units', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        code: 'Ok',
+        routes: [{ distance: 1500, duration: 360, geometry: '~{qeF_owsZn}@o}@' }],
+      }),
+    })));
     const { osrmRoute } = await import('../../../src/plan/external');
     const r = await osrmRoute('bicycle', { lat: -37.78, lon: 144.96 }, { lat: -37.79, lon: 144.97 });
     expect(r.km).toBeCloseTo(1.5);
     expect(r.min).toBeCloseTo(6);
-    expect(r.geometry).toEqual({
-      type: 'LineString',
-      coordinates: [[144.96, -37.78], [144.97, -37.79]],
-    });
   });
 
-  it('decodes osrm-au encoded polyline geometry to a GeoJSON LineString', async () => {
-    // '~{qeF_owsZn}@o}@' is the Google polyline (precision 5) encoding of
-    // (-37.78, 144.96) → (-37.79, 144.97) — verified via manual encode/decode.
-    vi.doMock('child_process', () => ({
-      spawnSync: () => ({
-        status: 0,
-        stdout: JSON.stringify({
-          routes: [{
-            distance: 1500,
-            duration: 360,
-            geometry: '~{qeF_owsZn}@o}@',
-          }],
-        }),
-        stderr: '',
+  it('decodes the encoded polyline into a GeoJSON LineString', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        code: 'Ok',
+        routes: [{ distance: 1500, duration: 360, geometry: '~{qeF_owsZn}@o}@' }],
       }),
-    }));
+    })));
     const { osrmRoute } = await import('../../../src/plan/external');
     const r = await osrmRoute('bicycle', { lat: -37.78, lon: 144.96 }, { lat: -37.79, lon: 144.97 });
     expect(r.geometry).not.toBeNull();
     expect(r.geometry!.type).toBe('LineString');
     expect(r.geometry!.coordinates).toHaveLength(2);
-    // Decoded coords should be close to the input lat/lon (within ~0.01 deg)
     const [lon1, lat1] = r.geometry!.coordinates[0];
     expect(lon1).toBeCloseTo(144.96, 1);
     expect(lat1).toBeCloseTo(-37.78, 1);
   });
 
-  it('returns geometry: null when osrm-au omits the geometry field', async () => {
-    vi.doMock('child_process', () => ({
-      spawnSync: () => ({
-        status: 0,
-        stdout: JSON.stringify({
-          routes: [{ distance: 1500, duration: 360 }],
-        }),
-        stderr: '',
+  it('throws when OSRM responds with code !== "Ok"', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ code: 'NoRoute', message: 'Impossible route' }),
+    })));
+    const { osrmRoute } = await import('../../../src/plan/external');
+    await expect(
+      osrmRoute('bicycle', { lat: -37.78, lon: 144.96 }, { lat: -37.79, lon: 144.97 }),
+    ).rejects.toThrow(/NoRoute/);
+  });
+
+  it('throws when HTTP status is not ok', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 502, json: async () => ({}) })));
+    const { osrmRoute } = await import('../../../src/plan/external');
+    await expect(
+      osrmRoute('bicycle', { lat: -37.78, lon: 144.96 }, { lat: -37.79, lon: 144.97 }),
+    ).rejects.toThrow(/502/);
+  });
+});
+
+describe('osrmTable()', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    delete process.env.OSRM_AU_HOST;
+    delete process.env.OSRM_AU_BICYCLE_URL;
+    delete process.env.OSRM_AU_FOOT_URL;
+  });
+  afterEach(() => { vi.unstubAllGlobals(); });
+
+  it('returns empty arrays when destinations list is empty (no fetch call)', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const { osrmTable } = await import('../../../src/plan/external');
+    const r = await osrmTable('bicycle', { lat: -37.78, lon: 144.96 }, []);
+    expect(r).toEqual({ durations: [], distances: [] });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('hits /table/v1/driving with source then destinations in lon,lat order', async () => {
+    process.env.OSRM_AU_HOST = 'osrm.example';
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        code: 'Ok',
+        durations: [[0, 120, 240]],
+        distances: [[0, 1000, 2000]],
       }),
     }));
-    const { osrmRoute } = await import('../../../src/plan/external');
-    const r = await osrmRoute('bicycle', { lat: -37.78, lon: 144.96 }, { lat: -37.79, lon: 144.97 });
-    expect(r.geometry).toBeNull();
+    vi.stubGlobal('fetch', fetchMock);
+    const { osrmTable } = await import('../../../src/plan/external');
+    await osrmTable('bicycle', { lat: -37.78, lon: 144.96 }, [
+      { lat: -37.79, lon: 144.97 },
+      { lat: -37.80, lon: 144.98 },
+    ]);
+    const url = String(fetchMock.mock.calls[0][0]);
+    expect(url).toContain('http://osrm.example:5002/table/v1/driving/');
+    // Three semicolon-separated lon,lat pairs (source + 2 destinations)
+    expect(url).toContain('144.96,-37.78;144.97,-37.79;144.98,-37.8');
+    expect(url).toContain('annotations=duration%2Cdistance');
+    expect(url).toContain('sources=0');
+    expect(url).toContain('destinations=1%3B2');
+  });
+
+  it('returns row 0 of the durations/distances matrices', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        code: 'Ok',
+        durations: [[0, 120, 240]],
+        distances: [[0, 1000, 2000]],
+      }),
+    })));
+    const { osrmTable } = await import('../../../src/plan/external');
+    const r = await osrmTable('bicycle', { lat: -37.78, lon: 144.96 }, [
+      { lat: -37.79, lon: 144.97 },
+      { lat: -37.80, lon: 144.98 },
+    ]);
+    expect(r.durations).toEqual([0, 120, 240]);
+    expect(r.distances).toEqual([0, 1000, 2000]);
+  });
+
+  it('throws when OSRM responds with code !== "Ok"', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ code: 'InvalidQuery', message: 'bad' }),
+    })));
+    const { osrmTable } = await import('../../../src/plan/external');
+    await expect(
+      osrmTable('bicycle', { lat: -37.78, lon: 144.96 }, [{ lat: -37.79, lon: 144.97 }]),
+    ).rejects.toThrow(/InvalidQuery/);
+  });
+
+  it('throws when HTTP status is not ok', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 503, json: async () => ({}) })));
+    const { osrmTable } = await import('../../../src/plan/external');
+    await expect(
+      osrmTable('bicycle', { lat: -37.78, lon: 144.96 }, [{ lat: -37.79, lon: 144.97 }]),
+    ).rejects.toThrow(/503/);
   });
 });
