@@ -1,6 +1,7 @@
 import Fastify, { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import fastifyFormbody from '@fastify/formbody';
 import qs from 'qs';
+import { registerStatic } from './routes/static';
 import { registerHealth } from './routes/health';
 import { registerGeocode } from './routes/geocode';
 import { registerPlan, type PlanFn } from './routes/plan';
@@ -30,6 +31,7 @@ export function createApp(opts: AppOptions = {}): FastifyInstance {
         return c ? new Cache(c) : null;
       })();
 
+  registerStatic(app);
   registerHealth(app);
   registerGeocode(app, { nominatim, cache });
   registerPlan(app, { planFn: opts.planFn, nominatim, cache });

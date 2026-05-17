@@ -8,7 +8,10 @@
   <link rel="stylesheet" href="/static/app.css">
   <script src="/static/htmx.min.js" defer></script>
   <style>
-    /* atlas palette tokens — inline so the shell works before /static/ is wired */
+    /* Atlas palette tokens — kept inline intentionally (defensive redundancy).
+       /static/app.css also declares these; the inline copy ensures the shell
+       renders correctly even if app.css 404s. The page.test.ts asserts on
+       '#A77ACD' from this block — do not remove. */
     :root {
       --rmai-purple:   #A77ACD;
       --rmai-purple-d: #8954B6;
