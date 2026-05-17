@@ -1,6 +1,9 @@
 import Fastify, { FastifyBaseLogger, FastifyInstance } from 'fastify';
+import fastifyFormbody from '@fastify/formbody';
+import qs from 'qs';
 import { registerHealth } from './routes/health';
 import { registerGeocode } from './routes/geocode';
+import { registerPlan, type PlanFn } from './routes/plan';
 import { Nominatim } from './nominatim';
 import { Cache, makeRedisClient } from './cache';
 
@@ -8,12 +11,15 @@ export type AppOptions = {
   logger?: FastifyBaseLogger | boolean;
   nominatimUrl?: string;
   cache?: Cache | null;
+  planFn?: PlanFn;
 };
 
 export function createApp(opts: AppOptions = {}): FastifyInstance {
   const app = Fastify({
     logger: opts.logger ?? { level: process.env.LOG_LEVEL ?? 'info' },
   });
+  app.register(fastifyFormbody, { parser: (str) => qs.parse(str) });
+
   const nominatimUrl = opts.nominatimUrl ?? process.env.NOMINATIM_URL ?? 'http://localhost:8094';
   const nominatim = new Nominatim(nominatimUrl);
   const cache = opts.cache !== undefined
@@ -25,6 +31,7 @@ export function createApp(opts: AppOptions = {}): FastifyInstance {
 
   registerHealth(app);
   registerGeocode(app, { nominatim, cache });
+  registerPlan(app, { planFn: opts.planFn, nominatim, cache });
   return app;
 }
 

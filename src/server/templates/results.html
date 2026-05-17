@@ -1,0 +1,15 @@
+<div id="results-inner">
+  {{#each itineraries}}
+  <article class="itinerary-card">
+    <header class="itinerary-card__label">{{labels}}</header>
+    <div class="itinerary-card__time"><span class="mono">{{totalTimeMin}}</span> min</div>
+    <div class="itinerary-card__meta">
+      <span class="mono">{{bikeKm}}</span> km bike ·
+      <span class="mono">{{transfers}}</span> transfers ·
+      <span class="mono">{{trainMin}}</span> min train
+    </div>
+  </article>
+  {{/each}}
+</div>
+<style>{{{mapCss}}}</style>
+<script>(function(){ {{{mapScript}}} })();</script>

@@ -14,12 +14,15 @@
     "test:e2e": "vitest run tests/e2e"
   },
   "dependencies": {
+    "@fastify/formbody": "^8.0.2",
     "commander": "^14.0.3",
     "fastify": "^5.8.5",
-    "ioredis": "^5.10.1"
+    "ioredis": "^5.10.1",
+    "qs": "^6.15.2"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/qs": "^6.15.1",
     "cheerio": "^1.2.0",
     "ioredis-mock": "^8.13.1",
     "typescript": "^5.3.0",
