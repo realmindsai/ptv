@@ -83,15 +83,21 @@
 
       <!-- quick options -->
       <div class="quick-row">
-        <select name="mode" title="mode">
-          <option value="bike-train" selected>bike-train</option>
-          <option value="bike-only">bike-only</option>
-        </select>
-        <select name="goal" title="goal">
-          <option value="commute" selected>commute</option>
-          <option value="day-ride">day-ride</option>
-          <option value="max-path">max-path</option>
-        </select>
+        <label class="quick-label">
+          <span class="quick-label__text">mode</span>
+          <select name="mode">
+            <option value="bike-train" selected>bike-train</option>
+            <option value="bike-only">bike-only</option>
+          </select>
+        </label>
+        <label class="quick-label">
+          <span class="quick-label__text">goal</span>
+          <select name="goal">
+            <option value="commute" selected>commute</option>
+            <option value="day-ride">day-ride</option>
+            <option value="max-path">max-path</option>
+          </select>
+        </label>
       </div>
 
       <!-- advanced -->

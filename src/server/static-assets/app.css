@@ -24,6 +24,7 @@
   --rmai-purple:   #A77ACD;
   --rmai-purple-d: #8954B6;
   --rmai-orange:   #F26541;
+  --rmai-orange-d: #e05532;
   --rmai-green:    #22C55E;
   --rmai-fg-1:     #1A1B25;
   --rmai-fg-2:     #555555;
@@ -145,6 +146,21 @@ body {
   align-items: center;
 }
 
+.quick-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.quick-label__text {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rmai-fg-mut);
+  white-space: nowrap;
+}
+
 .quick-row select {
   font-family: var(--sans);
   font-size: 13px;
@@ -179,7 +195,7 @@ body {
   transition: background 180ms ease;
 }
 
-.btn--cta:hover { background: #e05532; }
+.btn--cta:hover { background: var(--rmai-orange-d); }
 
 /* ─── Advanced details ─── */
 details { padding: 4px 12px; }
