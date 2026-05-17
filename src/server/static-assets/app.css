@@ -366,3 +366,50 @@ summary::-webkit-details-marker { display: none; }
   padding: 12px 16px;
   margin: 8px 0;
 }
+
+/* ─── HTMX progress indicator — visible only while a request is in flight ─── */
+.sheet__indicator {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--rmai-fg-2);
+}
+.sheet__indicator .dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--rmai-purple);
+  animation: pulse 1s ease-in-out infinite;
+}
+.sheet__indicator.htmx-request,
+.htmx-request .sheet__indicator {
+  display: flex;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.9); }
+  50%      { opacity: 1;   transform: scale(1.1); }
+}
+
+/* ─── CTA button spinner ─── */
+.btn--cta .btn-spinner {
+  display: none;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+  margin-left: 8px;
+}
+.btn--cta.htmx-request .btn-spinner { display: inline-block; }
+.btn--cta.htmx-request .btn-label   { opacity: 0.7; }
+.btn--cta[disabled], .btn--cta.htmx-request { cursor: progress; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Small footnote under the form selects ─── */
+.form-note {
+  margin: 4px 12px 0;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--rmai-fg-mut);
+}

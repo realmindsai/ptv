@@ -42,6 +42,8 @@
       hx-post="/api/plan"
       hx-target="#results"
       hx-swap="innerHTML"
+      hx-indicator="#results-sheet"
+      hx-disabled-elt="find button[type='submit']"
       hx-headers='{"Accept":"text/html"}'
     >
       <!-- from row -->
@@ -89,19 +91,20 @@
         <label class="quick-label">
           <span class="quick-label__text">mode</span>
           <select name="mode">
-            <option value="bike-train" selected>bike-train</option>
-            <option value="bike-only">bike-only</option>
+            <option value="bike-only" selected>bike-only</option>
+            <option value="bike-train">bike-train</option>
           </select>
         </label>
         <label class="quick-label">
           <span class="quick-label__text">goal</span>
           <select name="goal">
-            <option value="commute" selected>commute</option>
-            <option value="day-ride">day-ride</option>
+            <option value="day-ride" selected>day-ride</option>
+            <option value="commute">commute</option>
             <option value="max-path">max-path</option>
           </select>
         </label>
       </div>
+      <p class="form-note">bike-train mode is currently unavailable in this build (osrm-au caveat — see web/README.md)</p>
 
       <!-- advanced -->
       <details>
@@ -136,7 +139,10 @@
       </details>
 
       <div style="padding:6px 12px 10px;">
-        <button class="btn--cta" type="submit">plan</button>
+        <button class="btn--cta" type="submit">
+          <span class="btn-label">plan</span>
+          <span class="btn-spinner" aria-hidden="true"></span>
+        </button>
       </div>
     </form>
   </div>
@@ -144,6 +150,10 @@
   <!-- bottom sheet — results -->
   <div class="sheet sheet--peek" id="results-sheet">
     <div class="sheet__handle"></div>
+    <div class="sheet__indicator" aria-live="polite">
+      <span class="dot"></span>
+      <span>planning… (this can take 10–30 s the first time)</span>
+    </div>
     <div id="results"></div>
   </div>
 
