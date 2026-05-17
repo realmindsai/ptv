@@ -112,4 +112,22 @@ describe.skipIf(SKIP)('e2e: plan command', () => {
     expect(contents).toContain('data');
     fs.unlinkSync(htmlPath);
   }, 60_000);
+
+  it('--gpx writes a file containing a GPX track', () => {
+    const fs = require('fs');
+    const pathMod = require('path');
+    const os = require('os');
+    const tmpDir = fs.mkdtempSync(pathMod.join(os.tmpdir(), 'ptv-e2e-'));
+    const gpxPath = pathMod.join(tmpDir, 'trip.gpx');
+    const { code } = run([
+      'plan', '-37.7656,144.9614', '-37.648,144.946',
+      '--max-bike-km', '8', '--no-enrich', '--gpx', gpxPath,
+    ]);
+    expect(code).toBe(0);
+    const contents = fs.readFileSync(gpxPath, 'utf8');
+    expect(contents).toMatch(/^<\?xml/);
+    expect(contents).toContain('<gpx version="1.1"');
+    expect(contents).toMatch(/<trk>[\s\S]*<\/trk>/);
+    fs.unlinkSync(gpxPath);
+  }, 60_000);
 });
