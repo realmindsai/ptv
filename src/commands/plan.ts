@@ -36,6 +36,7 @@ export function planCommand(): Command {
     .option('--mode <type>', 'bike-only or bike-train (default)', 'bike-train')
     .option('--min-on-path-fraction <n>', 'Require N fraction of bike distance on dedicated paths (0-1)', parseFloat)
     .option('--html <path>', 'Write a Leaflet HTML map to <path> and open it')
+    .option('--gpx <path>', 'Write a GPX track to <path> and open it')
     .option('--raw', 'Reserved; no-op in v1')
     .action(async (fromStr: string, toStr: string, opts) => {
       if (opts.depart && opts.arriveBy) {
@@ -90,6 +91,10 @@ export function planCommand(): Command {
       if (opts.html) {
         const { writeMapHtml } = await import('../plan/map');
         writeMapHtml(opts.html, result);
+      }
+      if (opts.gpx) {
+        const { writeGpx } = await import('../plan/gpx');
+        writeGpx(opts.gpx, result);
       }
     });
 }
