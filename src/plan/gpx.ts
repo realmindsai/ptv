@@ -14,11 +14,8 @@ function coord(n: number): string {
 }
 
 function metadataTimeFor(result: PlanResult): string {
-  const q = result.query as { departUtc?: Date | string; arriveByUtc?: Date | string };
-  const t = q.departUtc ?? q.arriveByUtc;
-  if (t instanceof Date) return t.toISOString();
-  if (typeof t === 'string') return t;
-  return new Date().toISOString();
+  const t = result.query.departUtc ?? result.query.arriveByUtc;
+  return t ? t.toISOString() : new Date().toISOString();
 }
 
 function bikeTrksegFor(leg: BikeLeg): string {

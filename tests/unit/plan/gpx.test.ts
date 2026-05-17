@@ -48,41 +48,50 @@ function bikeOnlyResult(): PlanResult {
 describe('writeGpx()', () => {
   it('writes a valid GPX with one <trk> and one <trkseg> for a bike-only itinerary', () => {
     const path = tmpGpxPath();
-    writeGpx(path, bikeOnlyResult());
-    const xml = readFileSync(path, 'utf8');
-    expect(xml).toMatch(/^<\?xml/);
-    expect(xml).toContain('<gpx version="1.1"');
-    expect(xml).toContain('<trk>');
-    expect(xml).toContain('<name>recommended</name>');
-    // One trkseg with three trkpts (matches the 3-coord geometry).
-    expect((xml.match(/<trkseg>/g) ?? []).length).toBe(1);
-    expect((xml.match(/<trkpt /g) ?? []).length).toBe(3);
-    unlinkSync(path);
+    try {
+      writeGpx(path, bikeOnlyResult());
+      const xml = readFileSync(path, 'utf8');
+      expect(xml).toMatch(/^<\?xml/);
+      expect(xml).toContain('<gpx version="1.1"');
+      expect(xml).toContain('<trk>');
+      expect(xml).toContain('<name>recommended</name>');
+      // One trkseg with three trkpts (matches the 3-coord geometry).
+      expect((xml.match(/<trkseg>/g) ?? []).length).toBe(1);
+      expect((xml.match(/<trkpt /g) ?? []).length).toBe(3);
+    } finally {
+      unlinkSync(path);
+    }
   });
 
   it('falls back to a 2-point seg when bike-leg geometry is missing', () => {
     const r = bikeOnlyResult();
     (r.itineraries[0].legs[0] as { geometry: null }).geometry = null;
     const path = tmpGpxPath();
-    writeGpx(path, r);
-    const xml = readFileSync(path, 'utf8');
-    expect((xml.match(/<trkseg>/g) ?? []).length).toBe(1);
-    // Two trkpts: from and to.
-    expect((xml.match(/<trkpt /g) ?? []).length).toBe(2);
-    expect(xml).toContain('lat="-37.780000"');
-    expect(xml).toContain('lat="-37.770000"');
-    unlinkSync(path);
+    try {
+      writeGpx(path, r);
+      const xml = readFileSync(path, 'utf8');
+      expect((xml.match(/<trkseg>/g) ?? []).length).toBe(1);
+      // Two trkpts: from and to.
+      expect((xml.match(/<trkpt /g) ?? []).length).toBe(2);
+      expect(xml).toContain('lat="-37.780000"');
+      expect(xml).toContain('lat="-37.770000"');
+    } finally {
+      unlinkSync(path);
+    }
   });
 
   it('writes valid GPX with no <trk> when all itineraries are unlabeled or none exist', () => {
     const path = tmpGpxPath();
-    writeGpx(path, { query: bikeOnlyResult().query, itineraries: [] });
-    const xml = readFileSync(path, 'utf8');
-    expect(xml).toMatch(/^<\?xml/);
-    expect(xml).toContain('<gpx version="1.1"');
-    expect(xml).toContain('<metadata>');
-    expect(xml).not.toContain('<trk>');
-    unlinkSync(path);
+    try {
+      writeGpx(path, { query: bikeOnlyResult().query, itineraries: [] });
+      const xml = readFileSync(path, 'utf8');
+      expect(xml).toMatch(/^<\?xml/);
+      expect(xml).toContain('<gpx version="1.1"');
+      expect(xml).toContain('<metadata>');
+      expect(xml).not.toContain('<trk>');
+    } finally {
+      unlinkSync(path);
+    }
   });
 
   it('throws when target directory does not exist', () => {
