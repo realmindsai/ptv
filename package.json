@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
-    "test:e2e": "vitest run tests/e2e"
+    "test:e2e": "vitest run tests/e2e",
+    "test:e2e:browser": "playwright test"
   },
   "dependencies": {
     "@fastify/formbody": "^8.0.2",
@@ -22,6 +23,7 @@
     "qs": "^6.15.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/node": "^20.0.0",
     "@types/qs": "^6.15.1",
     "cheerio": "^1.2.0",
