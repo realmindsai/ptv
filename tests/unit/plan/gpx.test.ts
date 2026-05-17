@@ -195,6 +195,100 @@ describe('writeGpx()', () => {
     }
   });
 
+  it('XML-escapes station names containing ampersand', () => {
+    const path = tmpGpxPath();
+    try {
+      const r: PlanResult = {
+        query: {
+          from: { lat: -37.78, lon: 144.96 }, to: { lat: -37.65, lon: 144.95 },
+          minBikeKm: 0, maxBikeKm: 10, maxTransfers: 0,
+          enrich: false, preferBikePath: false,
+          hillWeight: 0, goal: 'commute', mode: 'bike-train',
+        },
+        itineraries: [{
+          labels: ['recommended'],
+          totalTimeMin: 30, bikeKm: 0, bikeMin: 0,
+          trainKm: 10, trainMin: 20, waitMin: 5, transfers: 0,
+          legs: [{
+            mode: 'train',
+            routeId: 6, routeType: 0, routeName: 'Lilydale & Belgrave',
+            fromStopId: 1, toStopId: 2,
+            fromStopName: 'Mont Albert & Mont Albert North', toStopName: 'Flinders',
+            fromLat: -37.77, fromLon: 144.96,
+            toLat: -37.65, toLon: 144.95,
+            departUtc: '2026-05-17T10:00:00Z', arriveUtc: '2026-05-17T10:20:00Z',
+            runRef: 'R1',
+          }],
+        }],
+      };
+      writeGpx(path, r);
+      const xml = readFileSync(path, 'utf8');
+      expect(xml).toContain('Mont Albert &amp; Mont Albert North');
+      expect(xml).toContain('Lilydale &amp; Belgrave');
+      // The raw '&' must not appear adjacent to a literal name fragment.
+      expect(xml).not.toMatch(/Mont Albert & Mont Albert/);
+    } finally {
+      unlinkSync(path);
+    }
+  });
+
+  it('emits two <trk> blocks for two labeled itineraries, names from labels', () => {
+    const baseLeg = {
+      mode: 'bike' as const,
+      from: { lat: -37.78, lon: 144.96 }, to: { lat: -37.77, lon: 144.97 },
+      km: 1, min: 5,
+      geometry: { type: 'LineString' as const,
+        coordinates: [[144.96, -37.78], [144.97, -37.77]] as [number, number][] },
+    };
+    const r: PlanResult = {
+      query: {
+        from: { lat: -37.78, lon: 144.96 }, to: { lat: -37.77, lon: 144.97 },
+        minBikeKm: 0, maxBikeKm: 10, maxTransfers: 0,
+        enrich: false, preferBikePath: false,
+        hillWeight: 0, goal: 'commute', mode: 'bike-only',
+      },
+      itineraries: [
+        // Note: fastest is faster (15 min < 20 min), so it should sort first in output.
+        {
+          labels: ['recommended'], totalTimeMin: 20,
+          bikeKm: 1, bikeMin: 5, trainKm: 0, trainMin: 0, waitMin: 0, transfers: 0,
+          legs: [baseLeg],
+        },
+        {
+          labels: ['fastest'], totalTimeMin: 15,
+          bikeKm: 1, bikeMin: 5, trainKm: 0, trainMin: 0, waitMin: 0, transfers: 0,
+          legs: [baseLeg],
+        },
+      ],
+    };
+    const path = tmpGpxPath();
+    try {
+      writeGpx(path, r);
+      const xml = readFileSync(path, 'utf8');
+      expect((xml.match(/<trk>/g) ?? []).length).toBe(2);
+      expect(xml).toContain('<name>fastest</name>');
+      expect(xml).toContain('<name>recommended</name>');
+      // Sort order: fastest (15 min) appears before recommended (20 min).
+      expect(xml.indexOf('<name>fastest</name>'))
+        .toBeLessThan(xml.indexOf('<name>recommended</name>'));
+    } finally {
+      unlinkSync(path);
+    }
+  });
+
+  it('uses query.departUtc as the metadata <time> when set', () => {
+    const r = bikeOnlyResult();
+    r.query.departUtc = new Date('2026-05-18T08:00:00Z');
+    const path = tmpGpxPath();
+    try {
+      writeGpx(path, r);
+      const xml = readFileSync(path, 'utf8');
+      expect(xml).toContain('<time>2026-05-18T08:00:00.000Z</time>');
+    } finally {
+      unlinkSync(path);
+    }
+  });
+
   it('deduplicates <wpt> markers when multiple itineraries cross the same station', () => {
     const trainLeg = {
       mode: 'train' as const,
