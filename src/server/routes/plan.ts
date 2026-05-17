@@ -6,6 +6,7 @@ import { render } from '../render';
 import { Cache } from '../cache';
 import { Nominatim } from '../nominatim';
 import { planCacheKey } from '../plan-cache-key';
+import { parseTime } from '../../plan/parse_time';
 
 type Point = { lat: number; lon: number } | { query: string };
 type PlanBody = {
@@ -90,11 +91,12 @@ async function resolveRequest(body: PlanBody, nom: Nominatim): Promise<PlanReque
   // to transfer between). Coerce rather than error so the form can default to
   // bike-only without the user knowing about the invariant.
   const maxTransfers = mode === 'bike-only' ? 0 : toNumber(body.maxTransfers, 1);
+  const departUtc   = parseOptionalTime(body.depart,   'depart');
+  const arriveByUtc = parseOptionalTime(body.arriveBy, 'arriveBy');
   return {
     from, to,
-    // depart/arriveBy parsing is deferred — see Out of scope in the plan doc
-    departUtc: undefined,
-    arriveByUtc: undefined,
+    departUtc,
+    arriveByUtc,
     minBikeKm: toNumber(body.minBikeKm, 0),
     maxBikeKm: toNumber(body.maxBikeKm, 20),
     maxTransfers,
@@ -133,4 +135,12 @@ function toNumber(v: unknown, fallback: number): number {
     return Number.isFinite(n) ? n : fallback;
   }
   return fallback;
+}
+
+function parseOptionalTime(raw: unknown, field: string): Date | undefined {
+  if (typeof raw !== 'string') return undefined;
+  const s = raw.trim();
+  if (s === '') return undefined;
+  try { return parseTime(s); }
+  catch { throw new Error(`${field}: invalid time (use HH:MM or ISO8601)`); }
 }

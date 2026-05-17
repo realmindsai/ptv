@@ -96,4 +96,56 @@ describe('POST /api/plan', () => {
     expect(calledWith.maxTransfers).toBe(0);
     await app.close();
   });
+
+  it('parses depart=HH:MM as Melbourne local time and passes it to planFn', async () => {
+    const planFn = vi.fn(async (req) => ({ ...fakeResult, query: req }));
+    const app = createApp({ logger: false, planFn, cache: null, nominatimUrl: 'http://x' });
+    const res = await app.inject({
+      method: 'POST', url: '/api/plan',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      payload: { origin: { lat: -37.64, lon: 145.19 }, destination: { lat: -37.86, lon: 144.89 },
+                 mode: 'bike-only', goal: 'commute', depart: '08:00' },
+    });
+    expect(res.statusCode).toBe(200);
+    const calledWith = planFn.mock.calls[0][0] as { departUtc?: Date; arriveByUtc?: Date };
+    expect(calledWith.departUtc).toBeInstanceOf(Date);
+    expect(calledWith.arriveByUtc).toBeUndefined();
+    const melHour = new Intl.DateTimeFormat('en-AU', {
+      timeZone: 'Australia/Melbourne', hour: 'numeric', hour12: false,
+    }).format(calledWith.departUtc as Date);
+    expect(parseInt(melHour, 10)).toBe(8);
+    await app.close();
+  });
+
+  it('treats depart="" (empty string from form) as undefined, not as an error', async () => {
+    const planFn = vi.fn(async (req) => ({ ...fakeResult, query: req }));
+    const app = createApp({ logger: false, planFn, cache: null, nominatimUrl: 'http://x' });
+    const res = await app.inject({
+      method: 'POST', url: '/api/plan',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      payload: { origin: { lat: -37.64, lon: 145.19 }, destination: { lat: -37.86, lon: 144.89 },
+                 mode: 'bike-only', goal: 'commute', depart: '', arriveBy: '' },
+    });
+    expect(res.statusCode).toBe(200);
+    const calledWith = planFn.mock.calls[0][0] as { departUtc?: Date; arriveByUtc?: Date };
+    expect(calledWith.departUtc).toBeUndefined();
+    expect(calledWith.arriveByUtc).toBeUndefined();
+    await app.close();
+  });
+
+  it('returns 400 with "invalid time" when depart is malformed', async () => {
+    const planFn = vi.fn(async () => fakeResult);
+    const app = createApp({ logger: false, planFn, cache: null, nominatimUrl: 'http://x' });
+    const res = await app.inject({
+      method: 'POST', url: '/api/plan',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      payload: { origin: { lat: -37.64, lon: 145.19 }, destination: { lat: -37.86, lon: 144.89 },
+                 mode: 'bike-only', goal: 'commute', depart: 'garbage' },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error.code).toBe('BAD_INPUT');
+    expect(res.json().error.message).toMatch(/depart: invalid time/);
+    expect(planFn).not.toHaveBeenCalled();
+    await app.close();
+  });
 });
