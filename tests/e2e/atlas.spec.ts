@@ -185,7 +185,7 @@ test('form submits depart=HH:MM through to /api/plan', async ({ page }) => {
   });
 
   // The depart input lives inside a <details> element; open it first.
-  await page.locator('details summary').click();
+  await page.locator('form details summary').click();
 
   // Type a depart value through the actual input the user would use.
   await page.locator('input[name="depart"]').fill('08:00');
