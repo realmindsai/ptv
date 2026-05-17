@@ -76,4 +76,24 @@ describe('POST /api/plan', () => {
     expect(planFn).toHaveBeenCalledOnce();
     await app.close();
   });
+
+  it('coerces maxTransfers to 0 when mode is bike-only (orchestrator invariant)', async () => {
+    // The orchestrator throws "--mode bike-only is incompatible with --max-transfers > 0".
+    // The route must respect that invariant by coercing the value rather than passing
+    // through a client-supplied (or default) non-zero maxTransfers.
+    const planFn = vi.fn(async (req) => ({ ...fakeResult, query: req }));
+    const app = createApp({ logger: false, planFn, cache: null, nominatimUrl: 'http://x' });
+    const res = await app.inject({
+      method: 'POST', url: '/api/plan',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      payload: { origin: { lat: -37.64, lon: 145.19 }, destination: { lat: -37.86, lon: 144.89 },
+                 mode: 'bike-only', goal: 'day-ride', maxTransfers: 1 },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(planFn).toHaveBeenCalledOnce();
+    const calledWith = planFn.mock.calls[0][0] as { mode: string; maxTransfers: number };
+    expect(calledWith.mode).toBe('bike-only');
+    expect(calledWith.maxTransfers).toBe(0);
+    await app.close();
+  });
 });

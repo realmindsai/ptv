@@ -85,6 +85,11 @@ export function registerPlan(
 async function resolveRequest(body: PlanBody, nom: Nominatim): Promise<PlanRequest> {
   const from = await resolvePoint(body.origin,      nom, 'origin');
   const to   = await resolvePoint(body.destination, nom, 'destination');
+  const mode = body.mode ?? 'bike-train';
+  // The orchestrator forbids maxTransfers > 0 in bike-only mode (there are no trains
+  // to transfer between). Coerce rather than error so the form can default to
+  // bike-only without the user knowing about the invariant.
+  const maxTransfers = mode === 'bike-only' ? 0 : toNumber(body.maxTransfers, 1);
   return {
     from, to,
     // depart/arriveBy parsing is deferred — see Out of scope in the plan doc
@@ -92,12 +97,12 @@ async function resolveRequest(body: PlanBody, nom: Nominatim): Promise<PlanReque
     arriveByUtc: undefined,
     minBikeKm: toNumber(body.minBikeKm, 0),
     maxBikeKm: toNumber(body.maxBikeKm, 20),
-    maxTransfers: toNumber(body.maxTransfers, 1),
+    maxTransfers,
     enrich: body.enrich ?? true,
     preferBikePath: body.preferBikePath ?? false,
     hillWeight: toNumber(body.hillWeight, 0),
     goal: (body.goal ?? 'commute'),
-    mode: (body.mode ?? 'bike-train'),
+    mode,
     minOnPathFraction: body.minOnPathFraction !== undefined
       ? toNumber(body.minOnPathFraction, 0)
       : undefined,
