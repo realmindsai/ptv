@@ -108,3 +108,31 @@ test('geocode autocomplete fills hidden inputs and submits a plan', async ({ pag
   // Dropdown must be cleared after selection.
   await expect(page.locator('#origin-suggest .geocode-item')).toHaveCount(0);
 });
+
+test('typing in autocomplete does not throw and does not flash plan indicator', async ({ page }) => {
+  // Regression for two bugs:
+  //  A) hx-disabled-elt="find ..." used HTMX 2.x syntax under HTMX 1.9.12; every keyup
+  //     threw "Cannot read properties of null (reading 'htmx-internal-data')".
+  //  B) hx-indicator on <form> was inherited by descendant inputs; the planning indicator
+  //     on #results-sheet activated on every keystroke.
+  const pageErrors: string[] = [];
+  page.on('pageerror', (e) => pageErrors.push(e.message));
+
+  await page.route('**/api/geocode**', async (route) => {
+    await route.fulfill({
+      status: 200, contentType: 'text/html',
+      body: '<ul class="geocode-list"><li class="geocode-item" data-lat="-37.64" data-lon="145.19" data-label="x">x</li></ul>',
+    });
+  });
+
+  await page.goto(BASE);
+  await page.locator('input[name="origin-query"]').pressSequentially('hurst', { delay: 50 });
+
+  // Bug A: no page errors must surface during typing.
+  expect(pageErrors).toEqual([]);
+
+  // Bug B: the planning indicator (the sheet) must NOT be in htmx-request state
+  // while the autocomplete is what's firing.
+  const sheetClass = await page.evaluate(() => document.getElementById('results-sheet')?.className ?? '');
+  expect(sheetClass).not.toContain('htmx-request');
+});

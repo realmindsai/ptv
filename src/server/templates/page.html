@@ -43,7 +43,8 @@
       hx-target="#results"
       hx-swap="innerHTML"
       hx-indicator="#results-sheet"
-      hx-disabled-elt="find button[type='submit']"
+      hx-disinherit="hx-indicator hx-disabled-elt"
+      hx-disabled-elt="#plan-btn"
       hx-headers='{"Accept":"text/html"}'
     >
       <!-- from row -->
@@ -139,7 +140,7 @@
       </details>
 
       <div style="padding:6px 12px 10px;">
-        <button class="btn--cta" type="submit">
+        <button id="plan-btn" class="btn--cta" type="submit">
           <span class="btn-label">plan</span>
           <span class="btn-spinner" aria-hidden="true"></span>
         </button>
