@@ -50,6 +50,20 @@ describe('POST /api/plan', () => {
     await app.close();
   });
 
+  it('returns 400 with "invalid coordinates" when lat is non-numeric', async () => {
+    const planFn = vi.fn(async () => fakeResult);
+    const app = createApp({ logger: false, planFn, cache: null, nominatimUrl: 'http://x' });
+    const res = await app.inject({
+      method: 'POST', url: '/api/plan',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      payload: { from: { lat: 'abc', lon: 0 }, to: { lat: 0, lon: 0 } },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error.message).toMatch(/invalid coordinates/);
+    expect(planFn).not.toHaveBeenCalled();
+    await app.close();
+  });
+
   it('parses form-encoded body (HTMX style)', async () => {
     const planFn = vi.fn(async () => fakeResult);
     const app = createApp({ logger: false, planFn, cache: null, nominatimUrl: 'http://x' });

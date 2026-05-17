@@ -77,6 +77,7 @@ async function resolveRequest(body: PlanBody, nom: Nominatim): Promise<PlanReque
   const to   = await resolvePoint(body.to,   nom, 'to');
   return {
     from, to,
+    // depart/arriveBy parsing is deferred — see Out of scope in the plan doc
     departUtc: undefined,
     arriveByUtc: undefined,
     minBikeKm: toNumber(body.minBikeKm, 0),
@@ -95,7 +96,12 @@ async function resolveRequest(body: PlanBody, nom: Nominatim): Promise<PlanReque
 
 async function resolvePoint(p: Point, nom: Nominatim, label: string): Promise<{ lat: number; lon: number }> {
   if ('lat' in p && 'lon' in p) {
-    return { lat: toNumber(p.lat, NaN), lon: toNumber(p.lon, NaN) };
+    const lat = toNumber(p.lat, NaN);
+    const lon = toNumber(p.lon, NaN);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      throw new Error(`${label}: invalid coordinates`);
+    }
+    return { lat, lon };
   }
   if ('query' in p && p.query) {
     const rows = await nom.search(p.query, 1);
