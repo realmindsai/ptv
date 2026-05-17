@@ -178,6 +178,17 @@
         suggest.innerHTML = '';
       }
       document.addEventListener('click', onGeocodeClick);
+
+      // HTMX 1.x silently drops non-2xx responses by default. Our /api/plan
+      // returns a friendly error fragment with status 4xx/5xx, so opt into
+      // swapping those too — without it the user sees nothing on error.
+      document.body.addEventListener('htmx:beforeSwap', function (e) {
+        var s = e.detail.xhr.status;
+        if (s >= 400 && s < 600) {
+          e.detail.shouldSwap = true;
+          e.detail.isError = false;
+        }
+      });
     })();
   </script>
 

@@ -109,6 +109,31 @@ test('geocode autocomplete fills hidden inputs and submits a plan', async ({ pag
   await expect(page.locator('#origin-suggest .geocode-item')).toHaveCount(0);
 });
 
+test('plan error responses are swapped into #results (HTMX swap-on-error)', async ({ page }) => {
+  // Regression: HTMX 1.x by default does NOT swap non-2xx responses. Our /api/plan
+  // returns 4xx/5xx with a friendly error fragment; without an htmx:beforeSwap
+  // listener the user sees an empty #results and no error.
+  await page.route('**/api/plan', async (route) => {
+    await route.fulfill({
+      status: 500, contentType: 'text/html',
+      body: '<div id="results-inner" class="error-banner" role="alert"><strong>error:</strong> simulated planner failure</div>',
+    });
+  });
+
+  await page.goto(BASE);
+  // The form has required hidden lat/lon; populate them directly so submit fires.
+  await page.evaluate(() => {
+    (document.getElementById('origin-lat') as HTMLInputElement).value = '-37.64';
+    (document.getElementById('origin-lon') as HTMLInputElement).value = '145.19';
+    (document.getElementById('destination-lat') as HTMLInputElement).value = '-37.86';
+    (document.getElementById('destination-lon') as HTMLInputElement).value = '144.89';
+  });
+  await page.locator('#plan-btn').click();
+
+  await expect(page.locator('#results .error-banner')).toBeVisible({ timeout: 3000 });
+  await expect(page.locator('#results .error-banner')).toContainText('simulated planner failure');
+});
+
 test('typing in autocomplete does not throw and does not flash plan indicator', async ({ page }) => {
   // Regression for two bugs:
   //  A) hx-disabled-elt="find ..." used HTMX 2.x syntax under HTMX 1.9.12; every keyup
