@@ -4,6 +4,7 @@ import qs from 'qs';
 import { registerHealth } from './routes/health';
 import { registerGeocode } from './routes/geocode';
 import { registerPlan, type PlanFn } from './routes/plan';
+import { registerPage } from './routes/page';
 import { Nominatim } from './nominatim';
 import { Cache, makeRedisClient } from './cache';
 
@@ -32,6 +33,7 @@ export function createApp(opts: AppOptions = {}): FastifyInstance {
   registerHealth(app);
   registerGeocode(app, { nominatim, cache });
   registerPlan(app, { planFn: opts.planFn, nominatim, cache });
+  registerPage(app);
   return app;
 }
 

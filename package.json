@@ -6,7 +6,7 @@
     "ptv": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc && node -e \"require('fs').cpSync('src/server/templates','dist/server/templates',{recursive:true})\"",
+    "build": "tsc && node -e \"const f=require('fs'); f.cpSync('src/server/templates','dist/server/templates',{recursive:true}); f.cpSync('src/server/static-assets','dist/server/static-assets',{recursive:true})\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:unit": "vitest run tests/unit",

@@ -1,0 +1,352 @@
+/* ptv plan — Atlas visual direction, hand-written subset.
+   No tech-blues. No design-canvas-only styles. Hit targets ≥44px.
+   Vendored fonts arrive in T10; @font-face rules here ensure graceful
+   fallback to system fonts until then. */
+
+/* ─── Fonts ─── */
+@font-face {
+  font-family: 'Epilogue';
+  src: url('/static/epilogue.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/static/jetbrains-mono.woff2') format('woff2');
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ─── Tokens ─── */
+:root {
+  --rmai-purple:   #A77ACD;
+  --rmai-purple-d: #8954B6;
+  --rmai-orange:   #F26541;
+  --rmai-green:    #22C55E;
+  --rmai-fg-1:     #1A1B25;
+  --rmai-fg-2:     #555555;
+  --rmai-fg-mut:   #8D8D92;
+  --rmai-stone:    #EDEBE8;
+  --rmai-lavender: #F0EBF4;
+  --rmai-white:    #FFFFFF;
+  --rmai-border:   #E8E8EB;
+  --rmai-bg:       #FAFAFA;
+
+  --sans: 'Epilogue', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ─── Resets ─── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  background: var(--rmai-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── App shell ─── */
+.app {
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* ─── Map (full-bleed Leaflet target) ─── */
+.map {
+  position: absolute;
+  inset: 0;
+  background: #EFEDE8; /* stone land fallback until tiles load */
+  z-index: 0;
+}
+
+/* ─── Floating from/to pill ─── */
+.from-to-pill {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  right: 12px;
+  background: var(--rmai-white);
+  border-radius: 16px;
+  border: 1px solid var(--rmai-border);
+  box-shadow: 0 4px 18px rgba(26,27,37,0.08);
+  padding: 4px;
+  z-index: 10;
+}
+
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  min-height: 50px; /* hit-target */
+  position: relative;
+}
+
+.field-row--from {
+  border-radius: 12px 12px 0 0;
+  border-bottom: 1px solid var(--rmai-border);
+  background: var(--rmai-white);
+}
+
+.field-row--to {
+  border-radius: 0 0 12px 12px;
+  background: var(--rmai-white);
+}
+
+.field-row label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rmai-fg-mut);
+  white-space: nowrap;
+  line-height: 1;
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.field-row input[type="text"] {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--rmai-fg-1);
+  background: transparent;
+  padding: 0;
+  min-height: 44px; /* hit-target */
+}
+
+.field-row input[type="text"]::placeholder {
+  color: var(--rmai-fg-mut);
+  font-weight: 400;
+}
+
+.geocode-suggest {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 20;
+}
+
+/* ─── Quick options row ─── */
+.quick-row {
+  display: flex;
+  gap: 8px;
+  padding: 6px 12px;
+  align-items: center;
+}
+
+.quick-row select {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rmai-fg-1);
+  background: var(--rmai-stone);
+  border: none;
+  border-radius: 7px;
+  padding: 6px 10px;
+  cursor: pointer;
+  appearance: none;
+  min-height: 36px;
+}
+
+/* ─── Plan button ─── */
+.btn--cta {
+  background: var(--rmai-orange);
+  color: #fff;
+  border: 0;
+  padding: 11px 16px;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 14px;
+  min-height: 44px;
+  width: 100%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 180ms ease;
+}
+
+.btn--cta:hover { background: #e05532; }
+
+/* ─── Advanced details ─── */
+details { padding: 4px 12px; }
+summary {
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--rmai-purple);
+  list-style: none;
+  padding: 4px 0;
+}
+summary::-webkit-details-marker { display: none; }
+
+.adv-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.adv-grid label {
+  font-size: 11px;
+  color: var(--rmai-fg-2);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: auto;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+.adv-grid input, .adv-grid select {
+  font-family: var(--mono);
+  font-size: 13px;
+  border: 1px solid var(--rmai-border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  background: var(--rmai-white);
+  min-height: 36px;
+}
+
+/* ─── Bottom sheet ─── */
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--rmai-white);
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -8px 32px rgba(26,27,37,0.10), 0 -1px 0 var(--rmai-border);
+  padding: 8px 0 28px;
+  z-index: 10;
+}
+
+.sheet--peek    { height: 200px; }
+.sheet--results { height: 380px; }
+.sheet--advanced { height: 100%; }
+
+.sheet__handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: #D9D7D2;
+  margin: 6px auto 12px;
+}
+
+#results {
+  padding: 0 16px;
+  overflow-y: auto;
+}
+
+/* ─── Geocode dropdown ─── */
+.geocode-list {
+  background: var(--rmai-white);
+  border: 1px solid var(--rmai-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(26,27,37,0.08);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.geocode-item {
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--rmai-border);
+  cursor: pointer;
+}
+
+.geocode-item:last-child { border-bottom: 0; }
+.geocode-item:hover { background: var(--rmai-lavender); }
+
+.geocode-label {
+  flex: 1;
+  font-size: 14px;
+  color: var(--rmai-fg-1);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.geocode-coord {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--rmai-fg-mut);
+  flex-shrink: 0;
+}
+
+/* ─── Itinerary cards ─── */
+.itinerary-card {
+  background: var(--rmai-white);
+  border: 1px solid var(--rmai-border);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+
+.itinerary-card--active {
+  border-color: var(--rmai-purple);
+  background: #FBF8FC;
+}
+
+.itinerary-card__label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rmai-purple);
+  margin-bottom: 4px;
+}
+
+.itinerary-card__time {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--rmai-fg-1);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.itinerary-card__meta {
+  display: flex;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--rmai-fg-2);
+  font-variant-numeric: tabular-nums;
+  margin-top: 8px;
+}
+
+/* ─── Mono numbers ─── */
+.mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Error banner ─── */
+.error-banner {
+  background: #FEE2E2;
+  border: 1px solid #FECACA;
+  border-radius: 10px;
+  color: #B91C1C;
+  font-size: 14px;
+  padding: 12px 16px;
+  margin: 8px 0;
+}

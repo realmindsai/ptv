@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+  <title>ptv plan</title>
+  <link rel="stylesheet" href="/static/leaflet.css">
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/htmx.min.js" defer></script>
+  <style>
+    /* atlas palette tokens — inline so the shell works before /static/ is wired */
+    :root {
+      --rmai-purple:   #A77ACD;
+      --rmai-purple-d: #8954B6;
+      --rmai-orange:   #F26541;
+      --rmai-green:    #22C55E;
+      --rmai-fg-1:     #1A1B25;
+      --rmai-fg-2:     #555555;
+      --rmai-fg-mut:   #8D8D92;
+      --rmai-stone:    #EDEBE8;
+      --rmai-lavender: #F0EBF4;
+      --rmai-white:    #FFFFFF;
+      --rmai-border:   #E8E8EB;
+      --rmai-bg:       #FAFAFA;
+      --sans: 'Epilogue', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+  </style>
+</head>
+<body class="app">
+
+  <!-- full-bleed leaflet target -->
+  <div class="map" id="map"></div>
+
+  <!-- floating from/to pill -->
+  <div class="from-to-pill" role="form">
+    <form
+      id="plan-form"
+      hx-post="/api/plan"
+      hx-target="#results"
+      hx-swap="innerHTML"
+      hx-headers='{"Accept":"text/html"}'
+    >
+      <!-- from row -->
+      <div class="field-row field-row--from">
+        <label for="from-query">from</label>
+        <input
+          id="from-query"
+          name="from-query"
+          type="text"
+          autocomplete="off"
+          placeholder="suburb, station, or -lat,lon"
+          hx-get="/api/geocode"
+          hx-trigger="keyup changed delay:300ms"
+          hx-target="#from-suggest"
+          hx-include="[name='from-query']"
+          hx-headers='{"Accept":"text/html"}'
+        >
+        <input type="hidden" name="from[lat]" id="from-lat">
+        <input type="hidden" name="from[lon]" id="from-lon">
+        <div id="from-suggest" class="geocode-suggest"></div>
+      </div>
+
+      <!-- to row -->
+      <div class="field-row field-row--to">
+        <label for="to-query">to</label>
+        <input
+          id="to-query"
+          name="to-query"
+          type="text"
+          autocomplete="off"
+          placeholder="suburb, station, or -lat,lon"
+          hx-get="/api/geocode"
+          hx-trigger="keyup changed delay:300ms"
+          hx-target="#to-suggest"
+          hx-include="[name='to-query']"
+          hx-headers='{"Accept":"text/html"}'
+        >
+        <input type="hidden" name="to[lat]" id="to-lat">
+        <input type="hidden" name="to[lon]" id="to-lon">
+        <div id="to-suggest" class="geocode-suggest"></div>
+      </div>
+
+      <!-- quick options -->
+      <div class="quick-row">
+        <select name="mode" title="mode">
+          <option value="bike-train" selected>bike-train</option>
+          <option value="bike-only">bike-only</option>
+        </select>
+        <select name="goal" title="goal">
+          <option value="commute" selected>commute</option>
+          <option value="day-ride">day-ride</option>
+          <option value="max-path">max-path</option>
+        </select>
+      </div>
+
+      <!-- advanced -->
+      <details>
+        <summary>&#9658; advanced</summary>
+        <div class="adv-grid">
+          <label>depart
+            <input type="text" name="depart" placeholder="08:00" pattern="\d{2}:\d{2}">
+          </label>
+          <label>arrive-by
+            <input type="text" name="arriveBy" placeholder="--:--" pattern="\d{2}:\d{2}">
+          </label>
+          <label>min bike km
+            <input type="number" name="minBikeKm" value="0" min="0" step="1">
+          </label>
+          <label>max bike km
+            <input type="number" name="maxBikeKm" value="20" min="0" step="1">
+          </label>
+          <label>max transfers
+            <input type="number" name="maxTransfers" value="1" min="0" max="5" step="1">
+          </label>
+          <label>hill weight
+            <input type="range" name="hillWeight" value="0" min="-2" max="2" step="0.5">
+          </label>
+          <label>min on-path
+            <input type="number" name="minOnPathFraction" placeholder="0.5" min="0" max="1" step="0.05">
+          </label>
+          <label style="align-items:center;flex-direction:row;gap:6px;">
+            <input type="checkbox" name="preferBikePath" value="true">
+            prefer-bike-path
+          </label>
+        </div>
+      </details>
+
+      <div style="padding:6px 12px 10px;">
+        <button class="btn--cta" type="submit">plan</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- bottom sheet — results -->
+  <div class="sheet sheet--peek" id="results-sheet">
+    <div class="sheet__handle"></div>
+    <div id="results"></div>
+  </div>
+
+  <!-- geocode item click handler — fills hidden lat/lon inputs and the visible text input -->
+  <script>
+    (function () {
+      function onGeocodeClick(e) {
+        var item = e.target.closest('[data-lat][data-lon][data-label]');
+        if (!item) return;
+        var lat = item.dataset.lat;
+        var lon = item.dataset.lon;
+        var label = item.dataset.label;
+        // determine which field this suggestion belongs to
+        var suggest = item.closest('.geocode-suggest');
+        if (!suggest) return;
+        var parentRow = suggest.closest('.field-row');
+        if (!parentRow) return;
+        var prefix = parentRow.classList.contains('field-row--from') ? 'from' : 'to';
+        document.getElementById(prefix + '-lat').value = lat;
+        document.getElementById(prefix + '-lon').value = lon;
+        document.getElementById(prefix + '-query').value = label;
+        suggest.innerHTML = '';
+      }
+      document.addEventListener('click', onGeocodeClick);
+    })();
+  </script>
+
+</body>
+</html>
