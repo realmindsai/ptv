@@ -15,8 +15,8 @@ describe('GET /', () => {
     expect($('link[href*="app.css"]').length).toBeGreaterThan(0);
     expect($('#map').length).toBe(1);
     expect($('.from-to-pill').length).toBe(1);
-    expect($('input[name="from-query"]').length).toBe(1);
-    expect($('input[name="to-query"]').length).toBe(1);
+    expect($('input[name="origin-query"]').length).toBe(1);
+    expect($('input[name="destination-query"]').length).toBe(1);
     expect($('.sheet').length).toBe(1);            // bottom sheet
     expect($('#results').length).toBe(1);          // results swap target
     expect($('form[hx-post*="/api/plan"]').length).toBe(1);

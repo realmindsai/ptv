@@ -25,7 +25,7 @@ describe('POST /api/plan', () => {
     const res = await app.inject({
       method: 'POST', url: '/api/plan',
       headers: { 'content-type': 'application/json', accept: 'application/json' },
-      payload: { from: { lat: -37.64, lon: 145.19 }, to: { lat: -37.86, lon: 144.89 },
+      payload: { origin: { lat: -37.64, lon: 145.19 }, destination: { lat: -37.86, lon: 144.89 },
                  mode: 'bike-only', goal: 'commute' },
     });
     expect(res.statusCode).toBe(200);
@@ -40,7 +40,7 @@ describe('POST /api/plan', () => {
     const res = await app.inject({
       method: 'POST', url: '/api/plan',
       headers: { 'content-type': 'application/json', accept: 'text/html' },
-      payload: { from: { lat: -37.64, lon: 145.19 }, to: { lat: -37.86, lon: 144.89 },
+      payload: { origin: { lat: -37.64, lon: 145.19 }, destination: { lat: -37.86, lon: 144.89 },
                  mode: 'bike-only', goal: 'commute' },
     });
     expect(res.headers['content-type']).toMatch(/text\/html/);
@@ -56,7 +56,7 @@ describe('POST /api/plan', () => {
     const res = await app.inject({
       method: 'POST', url: '/api/plan',
       headers: { 'content-type': 'application/json', accept: 'application/json' },
-      payload: { from: { lat: 'abc', lon: 0 }, to: { lat: 0, lon: 0 } },
+      payload: { origin: { lat: 'abc', lon: 0 }, destination: { lat: 0, lon: 0 } },
     });
     expect(res.statusCode).toBe(400);
     expect(res.json().error.message).toMatch(/invalid coordinates/);
@@ -70,7 +70,7 @@ describe('POST /api/plan', () => {
     const res = await app.inject({
       method: 'POST', url: '/api/plan',
       headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
-      payload: 'from%5Blat%5D=-37.64&from%5Blon%5D=145.19&to%5Blat%5D=-37.86&to%5Blon%5D=144.89&mode=bike-only&goal=commute',
+      payload: 'origin%5Blat%5D=-37.64&origin%5Blon%5D=145.19&destination%5Blat%5D=-37.86&destination%5Blon%5D=144.89&mode=bike-only&goal=commute',
     });
     expect(res.statusCode).toBe(200);
     expect(planFn).toHaveBeenCalledOnce();

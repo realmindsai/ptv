@@ -89,13 +89,13 @@ body {
   position: relative;
 }
 
-.field-row--from {
+.field-row--origin {
   border-radius: 12px 12px 0 0;
   border-bottom: 1px solid var(--rmai-border);
   background: var(--rmai-white);
 }
 
-.field-row--to {
+.field-row--destination {
   border-radius: 0 0 12px 12px;
   background: var(--rmai-white);
 }

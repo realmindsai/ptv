@@ -9,8 +9,8 @@ import { planCacheKey } from '../plan-cache-key';
 
 type Point = { lat: number; lon: number } | { query: string };
 type PlanBody = {
-  from: Point;
-  to: Point;
+  origin: Point;
+  destination: Point;
   depart?: string;
   arriveBy?: string;
   mode?: 'bike-only' | 'bike-train';
@@ -86,8 +86,8 @@ export function registerPlan(
 }
 
 async function resolveRequest(body: PlanBody, nom: Nominatim): Promise<PlanRequest> {
-  const from = await resolvePoint(body.from, nom, 'from');
-  const to   = await resolvePoint(body.to,   nom, 'to');
+  const from = await resolvePoint(body.origin,      nom, 'origin');
+  const to   = await resolvePoint(body.destination, nom, 'destination');
   return {
     from, to,
     // depart/arriveBy parsing is deferred — see Out of scope in the plan doc

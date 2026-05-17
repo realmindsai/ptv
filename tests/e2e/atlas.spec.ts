@@ -43,8 +43,8 @@ test('Atlas shell renders core structure', async ({ page }) => {
 
   // Floating from/to pill present with inputs.
   await expect(page.locator('.from-to-pill')).toBeVisible();
-  await expect(page.locator('input[name="from-query"]')).toBeVisible();
-  await expect(page.locator('input[name="to-query"]')).toBeVisible();
+  await expect(page.locator('input[name="origin-query"]')).toBeVisible();
+  await expect(page.locator('input[name="destination-query"]')).toBeVisible();
 
   // Bottom sheet + Plan button.
   await expect(page.locator('.sheet')).toBeVisible();
@@ -88,23 +88,23 @@ test('geocode autocomplete fills hidden inputs and submits a plan', async ({ pag
 
   // Use pressSequentially so real keyup events fire (page.fill skips keyboard events
   // and HTMX would not trigger the hx-get autocomplete).
-  const fromInput = page.locator('input[name="from-query"]');
+  const fromInput = page.locator('input[name="origin-query"]');
   await fromInput.click();
   await fromInput.pressSequentially('hurst', { delay: 50 });
 
   // HTMX fires after its 300ms delay; wait for the injected suggestion to appear.
-  await expect(page.locator('#from-suggest .geocode-item')).toBeVisible({ timeout: 5000 });
+  await expect(page.locator('#origin-suggest .geocode-item')).toBeVisible({ timeout: 5000 });
 
   // Click the suggestion.
-  await page.locator('#from-suggest .geocode-item').first().click();
+  await page.locator('#origin-suggest .geocode-item').first().click();
 
   // Hidden inputs must be populated by the click handler.
-  await expect(page.locator('input[name="from[lat]"]')).toHaveValue('-37.64');
-  await expect(page.locator('input[name="from[lon]"]')).toHaveValue('145.19');
+  await expect(page.locator('input[name="origin[lat]"]')).toHaveValue('-37.64');
+  await expect(page.locator('input[name="origin[lon]"]')).toHaveValue('145.19');
 
   // Visible text input must show the label.
-  await expect(page.locator('input[name="from-query"]')).toHaveValue('Hurstbridge VIC');
+  await expect(page.locator('input[name="origin-query"]')).toHaveValue('Hurstbridge VIC');
 
   // Dropdown must be cleared after selection.
-  await expect(page.locator('#from-suggest .geocode-item')).toHaveCount(0);
+  await expect(page.locator('#origin-suggest .geocode-item')).toHaveCount(0);
 });

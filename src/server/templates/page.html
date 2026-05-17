@@ -47,43 +47,43 @@
       hx-headers='{"Accept":"text/html"}'
     >
       <!-- from row -->
-      <div class="field-row field-row--from">
-        <label for="from-query">from</label>
+      <div class="field-row field-row--origin">
+        <label for="origin-query">from</label>
         <input
-          id="from-query"
-          name="from-query"
+          id="origin-query"
+          name="origin-query"
           type="text"
           autocomplete="off"
           placeholder="suburb, station, or -lat,lon"
           hx-get="/api/geocode"
           hx-trigger="keyup changed delay:300ms"
-          hx-target="#from-suggest"
-          hx-vals='js:{q: document.getElementById("from-query").value}'
+          hx-target="#origin-suggest"
+          hx-vals='js:{q: document.getElementById("origin-query").value}'
           hx-headers='{"Accept":"text/html"}'
         >
-        <input type="hidden" name="from[lat]" id="from-lat">
-        <input type="hidden" name="from[lon]" id="from-lon">
-        <div id="from-suggest" class="geocode-suggest"></div>
+        <input type="hidden" name="origin[lat]" id="origin-lat">
+        <input type="hidden" name="origin[lon]" id="origin-lon">
+        <div id="origin-suggest" class="geocode-suggest"></div>
       </div>
 
       <!-- to row -->
-      <div class="field-row field-row--to">
-        <label for="to-query">to</label>
+      <div class="field-row field-row--destination">
+        <label for="destination-query">to</label>
         <input
-          id="to-query"
-          name="to-query"
+          id="destination-query"
+          name="destination-query"
           type="text"
           autocomplete="off"
           placeholder="suburb, station, or -lat,lon"
           hx-get="/api/geocode"
           hx-trigger="keyup changed delay:300ms"
-          hx-target="#to-suggest"
-          hx-vals='js:{q: document.getElementById("to-query").value}'
+          hx-target="#destination-suggest"
+          hx-vals='js:{q: document.getElementById("destination-query").value}'
           hx-headers='{"Accept":"text/html"}'
         >
-        <input type="hidden" name="to[lat]" id="to-lat">
-        <input type="hidden" name="to[lon]" id="to-lon">
-        <div id="to-suggest" class="geocode-suggest"></div>
+        <input type="hidden" name="destination[lat]" id="destination-lat">
+        <input type="hidden" name="destination[lon]" id="destination-lon">
+        <div id="destination-suggest" class="geocode-suggest"></div>
       </div>
 
       <!-- quick options -->
@@ -171,7 +171,7 @@
         if (!suggest) return;
         var parentRow = suggest.closest('.field-row');
         if (!parentRow) return;
-        var prefix = parentRow.classList.contains('field-row--from') ? 'from' : 'to';
+        var prefix = parentRow.classList.contains('field-row--origin') ? 'origin' : 'destination';
         document.getElementById(prefix + '-lat').value = lat;
         document.getElementById(prefix + '-lon').value = lon;
         document.getElementById(prefix + '-query').value = label;
