@@ -43,25 +43,19 @@ curl http://localhost:8085/healthz
 Once the magic-DNS alias is wired (Tailscale sidecar config), reach it at
 `http://ptv.magpie-inconnu.ts.net:8085`.
 
-## Known caveat: `osrm-au` subprocess
-
-The orchestrator uses `osrm-au` (a local subprocess) for the default `--goal commute` bike-routing path. That binary is NOT in the container image. Inside the container, `--goal commute` plans will fail with `ENOENT: osrm-au`.
-
-Workarounds for v1:
-- Use `--goal day-ride` or `--goal max-path` exclusively; both go through GraphHopper REST (`GH_REST_URL`), which already runs on totoro as `graphhopper-vic-bike`.
-- Or set `OSRM_AU_BIN` to a path that mounts an `osrm-au` binary into the container (volume bind).
-- Tracking issue: cut a `bd` bead titled "migrate `osrm-au` subprocess to LAN REST" — gating issue for clean container deploy. The design spec already names this in its `Open follow-ups`.
-
 ## Network plumbing
 
-The container needs to reach three peer services on totoro:
-| Service | Docker network | Hostname |
+The container needs to reach four peer services on totoro:
+| Service | Docker network | Hostname(s) |
 |---|---|---|
 | Nominatim | `nominatim_default` | `nominatim` |
 | Redis (shared with Twenty) | `twenty_default` | `twenty-twenty-redis-1` |
 | GraphHopper | `graphhopper_default` | `graphhopper-vic-bike` |
+| OSRM AU | `osrm-au_default` | `osrm-au-bicycle`, `osrm-au-foot` (port 5000 in-network) |
 
-The compose snippet joins all three external networks. If the network names on your totoro differ, `docker network ls` will reveal the actual names; edit accordingly.
+The compose snippet joins all four external networks. If the network names on your totoro differ, `docker network ls` will reveal the actual names; edit accordingly.
+
+The OSRM services use per-profile URL overrides (`OSRM_AU_BICYCLE_URL`, `OSRM_AU_FOOT_URL`) so the container talks directly to the in-network hostnames on port 5000, bypassing the tailnet path. Outside the container the CLI falls back to `OSRM_AU_HOST` (default `totoro.magpie-inconnu.ts.net`) with profiles on ports 5002/bicycle, 5003/foot.
 
 ## What's deployed
 
