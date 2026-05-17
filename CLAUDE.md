@@ -54,7 +54,9 @@ PTV_API_KEY=<your-api-key>
 Register at: https://www.ptv.vic.gov.au/footer/data-and-reporting/datasets/ptv-timetable-api/
 
 Optional environment overrides:
-- `OSRM_AU_BIN` — path to the `osrm-au` binary (default `~/bin/osrm-au`)
+- `OSRM_AU_HOST` — host for LAN OSRM REST services (default `totoro.magpie-inconnu.ts.net`; profiles on ports 5002/bicycle, 5003/foot)
+- `OSRM_AU_BICYCLE_URL` — full base URL override for the bicycle profile (e.g. `http://osrm-au-bicycle:5000` inside the `osrm-au_default` docker network)
+- `OSRM_AU_FOOT_URL` — full base URL override for the foot profile
 - `GH_ROUTE_BIN` — path to the `gh-route` binary (default `../grasshopper-bike-routing/bin/gh-route`)
 - `GH_REST_URL` — GraphHopper REST endpoint for `--goal day-ride` custom_model requests (default `http://graphhopper.magpie-inconnu.ts.net:8989/route`)
 
