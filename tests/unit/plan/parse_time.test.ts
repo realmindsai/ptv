@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTime } from '../../../src/commands/plan';
+import { parseTime } from '../../../src/plan/parse_time';
 
 describe('parseTime()', () => {
   it('returns undefined for undefined', () => {
