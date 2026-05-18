@@ -277,3 +277,65 @@ export function renderPlanOnMap(result) {
     map.fitBounds(allBounds, { padding: [40, 40] });
   }
 }
+
+function escHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  })[c]);
+}
+
+export function renderResultsSheet(result) {
+  const root = document.getElementById('results');
+  if (!root) return;
+  const cards = result.itineraries.filter((i) => i.labels.length > 0).map((it) => {
+    const labels = escHtml(it.labels.join(', '));
+    return `<article class="itinerary-card">
+      <header class="itinerary-card__label">${labels}</header>
+      <div class="itinerary-card__time"><span class="mono">${it.totalTimeMin.toFixed(0)}</span> min</div>
+      <div class="itinerary-card__meta">
+        <span class="mono">${it.bikeKm.toFixed(1)}</span> km bike ·
+        <span class="mono">${it.transfers}</span> transfers ·
+        <span class="mono">${it.trainMin.toFixed(0)}</span> min train
+      </div>
+    </article>`;
+  }).join('');
+  root.innerHTML = `<div id="results-inner">${cards}</div>`;
+}
+
+export function renderResultsError(message) {
+  const root = document.getElementById('results');
+  if (!root) return;
+  root.innerHTML = `<div class="error"><strong>plan failed:</strong> ${escHtml(message)}</div>`;
+}
+
+// --- actions ---
+
+export async function firePlan(sm, opts = {}) {
+  // Mark history-boundary on this projection cycle so projectToUrl uses pushState.
+  sm.setState({ pendingPlan: true, __pushHistory: !opts.fromPopstate });
+  try {
+    const body = encodePlanBody(sm.state);
+    const res = await fetch('/api/plan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      let msg = `${res.status} ${res.statusText}`;
+      try {
+        const err = await res.json();
+        if (err?.error?.message) msg = err.error.message;
+      } catch { /* ignore body-parse failure */ }
+      sm.setState({ pendingPlan: false });
+      renderResultsError(msg);
+      return;
+    }
+    const result = await res.json();
+    sm.setState({ pendingPlan: false, lastResult: result });
+    renderPlanOnMap(result);
+    renderResultsSheet(result);
+  } catch (e) {
+    sm.setState({ pendingPlan: false });
+    renderResultsError(e instanceof Error ? e.message : String(e));
+  }
+}
