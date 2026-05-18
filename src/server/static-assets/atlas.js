@@ -873,10 +873,9 @@ export function init() {
 
   // Initialize the map.
   const map = L.map('map', { zoomControl: true });
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap',
-    maxZoom: 19,
-  }).addTo(map);
+  const TILE_URL  = 'https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}.png';
+  const TILE_ATTR = '&copy; <a href="https://stadiamaps.com/">Stadia</a> &copy; <a href="https://stamen.com/">Stamen</a> &copy; <a href="https://openmaptiles.org/">OMT</a> &copy; OSM';
+  L.tileLayer(TILE_URL, { attribution: TILE_ATTR, maxZoom: 19 }).addTo(map);
   map.setView([MELBOURNE_CENTER.lat, MELBOURNE_CENTER.lon], MELBOURNE_ZOOM);
   window.__atlasMap = map;
   window.__atlasMarkerLayer = L.layerGroup().addTo(map);
