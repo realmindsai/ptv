@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 // @ts-expect-error - importing untyped JS module
-import { formatCoord, parseDecimalCoord, isValidLatLon, debounce, encodePlanBody, DEFAULTS } from '../../../src/server/static-assets/atlas.js';
+import { formatCoord, parseDecimalCoord, isValidLatLon, debounce, encodePlanBody, DEFAULTS, createStateMachine } from '../../../src/server/static-assets/atlas.js';
 
 describe('atlas helpers', () => {
   describe('formatCoord', () => {
@@ -95,5 +95,64 @@ describe('atlas helpers', () => {
       expect(() => encodePlanBody({ origin: { lat: -37.78, lon: 144.96 }, destination: null, params: DEFAULTS }))
         .toThrow(/destination/);
     });
+  });
+});
+
+describe('state machine', () => {
+  it('starts with null endpoints and DEFAULTS params', () => {
+    const sm = createStateMachine();
+    expect(sm.state.origin).toBeNull();
+    expect(sm.state.destination).toBeNull();
+    expect(sm.state.params).toEqual(DEFAULTS);
+    expect(sm.state.lastResult).toBeNull();
+    expect(sm.state.pendingPlan).toBe(false);
+  });
+
+  it('setState merges patches', () => {
+    const sm = createStateMachine();
+    sm.setState({ origin: { lat: -37.78, lon: 144.96 } });
+    expect(sm.state.origin).toEqual({ lat: -37.78, lon: 144.96 });
+    expect(sm.state.destination).toBeNull();
+    sm.setState({ destination: { lat: -37.86, lon: 144.92 } });
+    expect(sm.state.origin).toEqual({ lat: -37.78, lon: 144.96 });
+    expect(sm.state.destination).toEqual({ lat: -37.86, lon: 144.92 });
+  });
+
+  it('setState merges params shallowly', () => {
+    const sm = createStateMachine();
+    sm.setState({ params: { goal: 'max-path' } });
+    expect(sm.state.params).toEqual({ ...DEFAULTS, goal: 'max-path' });
+    sm.setState({ params: { hillWeight: -1 } });
+    expect(sm.state.params).toEqual({ ...DEFAULTS, goal: 'max-path', hillWeight: -1 });
+  });
+
+  it('calls every registered projector after each mutation', () => {
+    const sm = createStateMachine();
+    const a = vi.fn();
+    const b = vi.fn();
+    sm.registerProjector(a);
+    sm.registerProjector(b);
+    sm.setState({ origin: { lat: -37.78, lon: 144.96 } });
+    expect(a).toHaveBeenCalledTimes(1);
+    expect(b).toHaveBeenCalledTimes(1);
+    expect(a).toHaveBeenCalledWith(sm.state, expect.objectContaining({ origin: { lat: -37.78, lon: 144.96 } }));
+  });
+
+  it('does not call projectors during construction', () => {
+    const a = vi.fn();
+    const sm = createStateMachine();
+    sm.registerProjector(a);
+    expect(a).not.toHaveBeenCalled();
+  });
+
+  it('does not merge __pushHistory sentinel into state', () => {
+    const sm = createStateMachine();
+    const a = vi.fn();
+    sm.registerProjector(a);
+    sm.setState({ origin: { lat: -37.78, lon: 144.96 }, __pushHistory: true });
+    expect(sm.state.origin).toEqual({ lat: -37.78, lon: 144.96 });
+    expect(sm.state).not.toHaveProperty('__pushHistory');
+    // Projector still sees it on the patch:
+    expect(a).toHaveBeenCalledWith(sm.state, expect.objectContaining({ __pushHistory: true }));
   });
 });

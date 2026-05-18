@@ -82,3 +82,34 @@ export function encodePlanBody(state) {
   }
   return body;
 }
+
+// --- state machine ---
+
+export function createStateMachine() {
+  const state = {
+    origin:      null,
+    destination: null,
+    params:      { ...DEFAULTS },
+    pendingPlan: false,
+    lastResult:  null,
+  };
+  const projectors = [];
+
+  function setState(patch) {
+    if (patch.params) {
+      state.params = { ...state.params, ...patch.params };
+    }
+    for (const k of Object.keys(patch)) {
+      if (k === 'params') continue;
+      if (k === '__pushHistory') continue;  // sentinel, not state
+      state[k] = patch[k];
+    }
+    for (const p of projectors) p(state, patch);
+  }
+
+  function registerProjector(fn) {
+    projectors.push(fn);
+  }
+
+  return { state, setState, registerProjector };
+}
