@@ -35,10 +35,27 @@ describe('GET /api/geocode', () => {
     await app.close();
   });
 
-  it('rejects q shorter than 3 chars with 400', async () => {
+  it('returns empty results (200) for q shorter than 3 chars', async () => {
+    // Was previously a 400 with Q_TOO_SHORT — that error fragment was sticky in
+    // the suggest box on every keypress while typing/deleting under HTMX. Empty
+    // 200 lets the dropdown clear cleanly instead.
     const app = createApp({ logger: false, nominatimUrl: 'http://x', cache: null });
     const res = await app.inject({ method: 'GET', url: '/api/geocode?q=hu' });
-    expect(res.statusCode).toBe(400);
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ results: [] });
+    await app.close();
+  });
+
+  it('returns empty HTML fragment (200) for short q when Accept: text/html', async () => {
+    const app = createApp({ logger: false, nominatimUrl: 'http://x', cache: null });
+    const res = await app.inject({
+      method: 'GET', url: '/api/geocode?q=h',
+      headers: { accept: 'text/html' },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-type']).toMatch(/text\/html/);
+    expect(res.body).toContain('<ul class="geocode-list"');
+    expect(res.body).not.toContain('Q_TOO_SHORT');
     await app.close();
   });
 });

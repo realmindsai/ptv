@@ -382,10 +382,22 @@ body {
 .dot--origin      { background: var(--rmai-fg-1); }
 .dot--destination { background: var(--rmai-purple); }
 
-/* ─── Collapsed pill ─── */
+/* ─── Collapsed pill — whole row is tappable to revert to edit (see wirePillEdit). ─── */
 .pill-collapsed {
   display: flex; align-items: center; gap: 10px; padding: 10px 12px; min-height: 56px;
+  cursor: pointer;
+  border-radius: 16px;
+  transition: background 120ms ease;
+  position: relative;
 }
+.pill-collapsed:hover { background: var(--rmai-lavender); }
+/* Make children inert to clicks so any tap on the row triggers the row's handler
+   — except for the icon buttons (swap/clear) which take their own clicks. */
+.pill-collapsed__dots,
+.pill-collapsed__labels,
+.pill-collapsed__labels * { pointer-events: none; }
+.pill-collapsed__icons,
+.pill-collapsed__icons * { pointer-events: auto; }
 .pill-collapsed__dots { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .pill-collapsed__connector {
   width: 2px; height: 10px; background: var(--rmai-border); border-radius: 1px;
@@ -394,7 +406,7 @@ body {
 .pill-collapsed__btn {
   background: transparent; border: 0; padding: 4px 0; text-align: left;
   font: 600 14px var(--sans); color: var(--rmai-fg-1);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   min-height: 22px;
 }
 .pill-collapsed__icons { display: flex; flex-direction: column; gap: 4px; }
@@ -496,17 +508,24 @@ body {
 /* ─── Recents (empty-state, last 3 trips) ─── */
 .recents { padding: 8px 16px; }
 .recent-row {
-  display: flex; align-items: center; gap: 10px; width: 100%;
-  padding: 12px; border: 1px solid var(--rmai-border); border-radius: 12px;
+  display: flex; align-items: stretch; gap: 12px; width: 100%;
+  padding: 12px 14px; border: 1px solid var(--rmai-border); border-radius: 12px;
   background: var(--rmai-white); margin-bottom: 8px; cursor: pointer;
   text-align: left; font-family: var(--sans);
 }
-.recent-row:hover { background: var(--rmai-lavender); }
+.recent-row:hover { background: var(--rmai-lavender); border-color: var(--rmai-purple); }
+.recent-row__dots { display: flex; flex-direction: column; align-items: center; gap: 2px; padding-top: 2px; }
+.recent-row__connector { width: 2px; flex: 1; min-height: 12px; background: var(--rmai-border); border-radius: 1px; }
+.recent-row__labels { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; justify-content: space-between; }
 .recent-row__label {
-  flex: 1; min-width: 0; font: 600 13px var(--sans); color: var(--rmai-fg-1);
+  font: 600 13px var(--sans); color: var(--rmai-fg-1);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  line-height: 1.3;
 }
-.recent-row__min { font-size: 14px; color: var(--rmai-fg-1); flex-shrink: 0; }
+.recent-row__stats { flex-shrink: 0; text-align: right; display: flex; flex-direction: column; gap: 2px; justify-content: center; }
+.recent-row__min { font-size: 18px; font-weight: 600; color: var(--rmai-fg-1); line-height: 1; }
+.recent-row__unit { font-size: 10px; color: var(--rmai-fg-mut); font-weight: 500; }
+.recent-row__sub { font-size: 10px; color: var(--rmai-fg-mut); }
 
 /* ─── Plan-result empty state + warnings ─── */
 .no-results {
@@ -527,3 +546,11 @@ body {
   font: 500 11.5px var(--sans); color: #6B4A00;
 }
 .result-warnings__row + .result-warnings__row { margin-top: 4px; }
+
+/* Itinerary card label — primary headline + small secondary tags */
+.itinerary-card__tags { display: inline-flex; gap: 4px; margin-left: 6px; }
+.itinerary-card__tag {
+  font: 600 9px var(--mono); color: var(--rmai-fg-mut);
+  background: var(--rmai-stone); border-radius: 4px; padding: 1px 5px;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}

@@ -9,9 +9,15 @@ export function registerGeocode(
 ): void {
   app.get<{ Querystring: { q?: string; limit?: string } }>('/api/geocode', async (req, reply) => {
     const q = (req.query.q ?? '').trim();
+    const accept = req.headers.accept ?? '';
+    // Too-short queries should clear the suggest box, not surface an error
+    // banner that sticks until the next valid response. Return an empty list.
     if (q.length < 3) {
-      reply.code(400);
-      return { error: { code: 'Q_TOO_SHORT', message: 'q must be at least 3 characters' } };
+      if (accept.includes('text/html')) {
+        reply.type('text/html; charset=utf-8');
+        return render('geocode-suggest.html', { results: [] });
+      }
+      return { results: [] };
     }
     const limit = Math.min(20, parseInt(req.query.limit ?? '8', 10) || 8);
 
@@ -22,7 +28,6 @@ export function registerGeocode(
       await deps.cache?.setex('geocode', cacheKey, 86400, results);
     }
 
-    const accept = req.headers.accept ?? '';
     if (accept.includes('text/html')) {
       reply.type('text/html; charset=utf-8');
       return render('geocode-suggest.html', { results });

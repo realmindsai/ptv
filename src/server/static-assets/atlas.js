@@ -8,7 +8,7 @@
 
 // Query strings bypass Cloudflare's cached stale copies of these files.
 // Bump on each change (the fastifyStatic handler ignores the query).
-import { encodeUrlState, decodeUrlState, shareUrlFor } from './url-state.js?v=v2-1';
+import { encodeUrlState, decodeUrlState, shareUrlFor } from './url-state.js?v=v2-2';
 import { segmentBarHtml, segmentsFromItinerary } from './segment-bar.js';
 import { addRecent, listRecents } from './recents.js';
 
@@ -133,7 +133,9 @@ export function projectToForm(state) {
     const lonEl   = document.getElementById(`${prefix}-lon`);
     if (!queryEl || !latEl || !lonEl) return;
     if (point) {
-      queryEl.value = formatCoord(point);
+      // Prefer the human-readable label (set by geocode-suggest click or geolocate);
+      // fall back to coords for raw map-click / drag points where no label exists.
+      queryEl.value = point._label || formatCoord(point);
       latEl.value   = String(point.lat);
       lonEl.value   = String(point.lon);
     } else {
@@ -450,8 +452,17 @@ export function renderResultsSheet(result) {
     </div></div>`;
     return;
   }
+  // "recommended" is the headline label if present; otherwise the first label wins.
+  // The data-label still uses the full joined string (for compatibility with
+  // activateItinerary / wireItineraryActivation which match on the layer key).
+  const PRIMARY_PRIORITY = ['recommended', 'fastest', 'fewest-transfers', 'most-bike', 'most-bike-path'];
   const cards = labeled.map((it) => {
-    const labels = escHtml(it.labels.join(', '));
+    const dataLabel = escHtml(it.labels.join(', '));
+    const primary = PRIMARY_PRIORITY.find((p) => it.labels.includes(p)) || it.labels[0];
+    const others = it.labels.filter((l) => l !== primary);
+    const othersHtml = others.length
+      ? `<span class="itinerary-card__tags">${others.map((l) => `<span class="itinerary-card__tag">${escHtml(l)}</span>`).join('')}</span>`
+      : '';
     const segs = segmentsFromItinerary(it);
     const trainLegs = it.legs.filter((l) => l.mode === 'train');
     const firstTrain = trainLegs[0];
@@ -466,9 +477,9 @@ export function renderResultsSheet(result) {
       (ascendM != null   ? ` · <span class="mono">${ascendM}</span> m ↑` : '') +
       (onPathPct != null ? ` · <span class="mono">${onPathPct}%</span> path` : '');
     const legendHtml = segs.map((s) => `<span class="seg-legend"><span class="seg-legend__chip seg-legend__chip--${s.kind}"></span>${escHtml(s.label)}</span>`).join('');
-    return `<article class="itinerary-card" data-label="${labels}">
+    return `<article class="itinerary-card" data-label="${dataLabel}">
       <header class="itinerary-card__head">
-        <span class="itinerary-card__label">${labels}</span>
+        <span class="itinerary-card__label">${escHtml(primary)}${othersHtml}</span>
         <span class="itinerary-card__time"><span class="mono">${it.totalTimeMin.toFixed(0)}</span> min</span>
       </header>
       ${headTimes}
@@ -480,10 +491,10 @@ export function renderResultsSheet(result) {
         <span class="mono">${it.trainMin.toFixed(0)}</span> min train${metaTail}
       </div>
       <div class="itinerary-card__actions">
-        <button type="button" class="action-btn" data-action="share" data-label="${labels}">↗ share</button>
-        <button type="button" class="action-btn" data-action="gpx" data-label="${labels}">⤓ gpx</button>
-        <button type="button" class="action-btn" data-action="osmand" data-label="${labels}">◐ osmand</button>
-        <button type="button" class="action-btn action-btn--mono" data-action="equiv" data-label="${labels}">$ equiv</button>
+        <button type="button" class="action-btn" data-action="share" data-label="${dataLabel}">↗ share</button>
+        <button type="button" class="action-btn" data-action="gpx" data-label="${dataLabel}">⤓ gpx</button>
+        <button type="button" class="action-btn" data-action="osmand" data-label="${dataLabel}">◐ osmand</button>
+        <button type="button" class="action-btn action-btn--mono" data-action="equiv" data-label="${dataLabel}">$ equiv</button>
       </div>
     </article>`;
   }).join('');
@@ -502,18 +513,28 @@ export function renderRecentsIfEmpty(sm) {
   const recents = listRecents().slice(0, 3);
   if (recents.length === 0) return;
   const rowsHtml = recents.map((r, i) => {
-    const oLabel = escHtml(r.origin.label || `${r.origin.lat.toFixed(3)},${r.origin.lon.toFixed(3)}`);
-    const dLabel = escHtml(r.destination.label || `${r.destination.lat.toFixed(3)},${r.destination.lon.toFixed(3)}`);
+    const oLabel = escHtml(r.origin.label || `${r.origin.lat.toFixed(3)}, ${r.origin.lon.toFixed(3)}`);
+    const dLabel = escHtml(r.destination.label || `${r.destination.lat.toFixed(3)}, ${r.destination.lon.toFixed(3)}`);
     const mins = Math.round(r.totalTimeMin || 0);
+    const km = typeof r.bikeKm === 'number' ? r.bikeKm.toFixed(1) : '?';
     return `<button type="button" class="recent-row" data-i="${i}">
-      <span class="dot dot--origin">A</span>
-      <span class="dot dot--destination">B</span>
-      <span class="recent-row__label">${oLabel} → ${dLabel}</span>
-      <span class="mono recent-row__min">${mins}m</span>
+      <div class="recent-row__dots">
+        <span class="dot dot--origin">A</span>
+        <div class="recent-row__connector"></div>
+        <span class="dot dot--destination">B</span>
+      </div>
+      <div class="recent-row__labels">
+        <div class="recent-row__label">${oLabel}</div>
+        <div class="recent-row__label">${dLabel}</div>
+      </div>
+      <div class="recent-row__stats">
+        <div class="mono recent-row__min">${mins} <span class="recent-row__unit">min</span></div>
+        <div class="mono recent-row__sub">${km} km bike</div>
+      </div>
     </button>`;
   }).join('');
   root.innerHTML = `<div class="recents">
-    <div class="eyebrow">— recents</div>
+    <div class="eyebrow">— recents · tap to re-plan</div>
     ${rowsHtml}
   </div>`;
   root.querySelectorAll('.recent-row').forEach((btn) => {
@@ -651,8 +672,23 @@ export function wireClear(sm) {
  * the edit view and focuses that field for re-entry.
  */
 export function wirePillEdit() {
+  // The dot/labels rows are pointer-events:none so any click on the collapsed pill
+  // (excluding the swap/clear icon buttons) reverts to edit mode. The buttons
+  // re-enable pointer-events on themselves.
+  const collapsed = document.querySelector('#from-to-pill .pill-collapsed');
+  if (collapsed) {
+    collapsed.addEventListener('click', () => {
+      const pill = document.getElementById('from-to-pill');
+      if (!pill) return;
+      pill.dataset.state = 'edit';
+      const origin = document.getElementById('origin-query');
+      if (origin) origin.focus();
+    });
+  }
+  // Per-label buttons stay wired in case CSS/JS regressions block the row click.
   document.querySelectorAll('[data-edit]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       const which = btn.getAttribute('data-edit');
       const pill = document.getElementById('from-to-pill');
       if (!pill) return;

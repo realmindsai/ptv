@@ -5,8 +5,9 @@ export type GeocodeResult = {
   rank: number;
 };
 
-// Melbourne metro viewbox (lon_w, lat_n, lon_e, lat_s). Biases ranking; does not exclude.
-const MELBOURNE_VIEWBOX = '144.5,-37.5,145.6,-38.3';
+// Victoria viewbox (lon_w, lat_n, lon_e, lat_s). With bounded=1 below, results
+// are HARD-CONSTRAINED to this box — no all-of-Australia suggestions leaking in.
+const VICTORIA_VIEWBOX = '140.96,-33.98,149.98,-39.16';
 
 export class Nominatim {
   constructor(private readonly baseUrl: string) {}
@@ -17,8 +18,9 @@ export class Nominatim {
     u.searchParams.set('format', 'jsonv2');
     u.searchParams.set('limit', String(limit));
     u.searchParams.set('countrycodes', 'au');
-    u.searchParams.set('viewbox', MELBOURNE_VIEWBOX);
-    u.searchParams.set('bounded', '0');
+    u.searchParams.set('viewbox', VICTORIA_VIEWBOX);
+    u.searchParams.set('bounded', '1');
+    u.searchParams.set('dedupe', '1');
     try {
       const res = await fetch(u.toString(), { headers: { 'User-Agent': 'ptv-web/1.0' } });
       if (!res.ok) return [];

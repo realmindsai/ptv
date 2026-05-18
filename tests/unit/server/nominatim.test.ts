@@ -4,7 +4,7 @@ import { Nominatim, type GeocodeResult } from '../../../src/server/nominatim';
 describe('Nominatim', () => {
   beforeEach(() => vi.restoreAllMocks());
 
-  it('search() hits /search with countrycodes=au + Melbourne viewbox', async () => {
+  it('search() hits /search with countrycodes=au + Victoria viewbox (bounded)', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => [{
@@ -25,6 +25,8 @@ describe('Nominatim', () => {
     expect(url.searchParams.get('format')).toBe('jsonv2');
     expect(url.searchParams.get('limit')).toBe('5');
     expect(url.searchParams.get('viewbox')).toBeTruthy();
+    expect(url.searchParams.get('bounded')).toBe('1');
+    expect(url.searchParams.get('dedupe')).toBe('1');
     expect(results[0]).toEqual({
       label: 'Hurstbridge, Shire of Nillumbik, Victoria',
       lat: -37.64, lon: 145.19, rank: 18,
