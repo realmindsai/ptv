@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
 // @ts-expect-error - importing untyped JS module
-import { formatCoord, parseDecimalCoord, isValidLatLon, debounce, encodePlanBody, DEFAULTS, createStateMachine, projectToPill } from '../../../src/server/static-assets/atlas.js';
+import { formatCoord, parseDecimalCoord, isValidLatLon, debounce, encodePlanBody, DEFAULTS, createStateMachine, projectToPill, activateItinerary } from '../../../src/server/static-assets/atlas.js';
 
 describe('atlas helpers', () => {
   describe('formatCoord', () => {
@@ -155,6 +155,31 @@ describe('state machine', () => {
     expect(sm.state).not.toHaveProperty('__pushHistory');
     // Projector still sees it on the patch:
     expect(a).toHaveBeenCalledWith(sm.state, expect.objectContaining({ __pushHistory: true }));
+  });
+});
+
+describe('activateItinerary', () => {
+  it('adds the target layer, removes others, and toggles .itinerary-card--active', () => {
+    const layerA = { __isOn: false, addTo: (m: any) => { m.addLayer(layerA); return layerA; } };
+    const layerB = { __isOn: true,  addTo: (m: any) => { m.addLayer(layerB); return layerB; } };
+    const fakeMap = {
+      hasLayer:    (g: any) => g.__isOn === true,
+      addLayer:    (g: any) => { g.__isOn = true; },
+      removeLayer: (g: any) => { g.__isOn = false; },
+    };
+    (window as any).__atlasMap          = fakeMap;
+    (window as any).__atlasRouteLayers  = { recommended: layerA, fastest: layerB };
+    document.body.innerHTML = `
+      <div id="results">
+        <article class="itinerary-card" data-label="recommended"></article>
+        <article class="itinerary-card itinerary-card--active" data-label="fastest"></article>
+      </div>`;
+    activateItinerary('recommended');
+    expect(layerA.__isOn).toBe(true);
+    expect(layerB.__isOn).toBe(false);
+    const cards = document.querySelectorAll('.itinerary-card');
+    expect(cards[0].classList.contains('itinerary-card--active')).toBe(true);
+    expect(cards[1].classList.contains('itinerary-card--active')).toBe(false);
   });
 });
 

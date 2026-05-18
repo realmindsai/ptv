@@ -224,13 +224,9 @@ export function renderPlanOnMap(result) {
   if (!map) return;
   const L = window.L;
 
-  // Tear down any previous route layers + layer control.
+  // Tear down any previous route layers.
   if (window.__atlasRouteLayers) {
     for (const g of Object.values(window.__atlasRouteLayers)) map.removeLayer(g);
-  }
-  if (window.__atlasLayerControl) {
-    map.removeControl(window.__atlasLayerControl);
-    window.__atlasLayerControl = null;
   }
 
   // Resolve palette colors from CSS custom properties.
@@ -277,27 +273,51 @@ export function renderPlanOnMap(result) {
       }
     }
     const label = it.labels.join(', ') || 'unlabeled';
-    let layerName = `${label} — ${it.totalTimeMin.toFixed(0)} min`;
-    if (typeof it.bikeKmOnPath === 'number' && it.bikeKm > 0) {
-      const pct = (100 * it.bikeKmOnPath / it.bikeKm).toFixed(0);
-      layerName += ` — ${pct}% path`;
-    }
-    layers[layerName] = group;
+    layers[label] = group;
   }
-
-  // Add the "recommended" layer (or the first) to the map by default.
-  const recommendedKey = Object.keys(layers).find((k) => k.includes('recommended'));
-  const defaultKey = recommendedKey || Object.keys(layers)[0];
-  if (defaultKey) layers[defaultKey].addTo(map);
 
   window.__atlasRouteLayers = layers;
-  if (Object.keys(layers).length > 0) {
-    window.__atlasLayerControl = L.control.layers(null, layers, { collapsed: false }).addTo(map);
-  }
+  const labels = Object.keys(layers);
+  const defaultLabel = labels.find((k) => k.includes('recommended')) || labels[0];
+  if (defaultLabel) activateItinerary(defaultLabel);
 
   if (allBounds.length > 0) {
     map.fitBounds(allBounds, { padding: [40, 40] });
   }
+}
+
+/**
+ * Activate one itinerary: add its polyline group to the map, remove the rest,
+ * and toggle the .itinerary-card--active class on result cards.
+ */
+export function activateItinerary(label) {
+  const layers = window.__atlasRouteLayers || {};
+  const map = window.__atlasMap;
+  if (!map) return;
+  for (const [k, g] of Object.entries(layers)) {
+    const active = k === label;
+    if (active && !map.hasLayer(g)) g.addTo(map);
+    if (!active && map.hasLayer(g))  map.removeLayer(g);
+  }
+  document.querySelectorAll('.itinerary-card').forEach((card) => {
+    card.classList.toggle('itinerary-card--active', card.dataset.label === label);
+  });
+}
+
+/**
+ * Delegated click handler on #results: clicking an itinerary card activates it
+ * (switches the active polyline + active-card highlight). Skip clicks inside
+ * .action-btn — Task 4.3 wires those separately.
+ */
+export function wireItineraryActivation() {
+  const root = document.getElementById('results');
+  if (!root) return;
+  root.addEventListener('click', (e) => {
+    if (e.target.closest('.action-btn')) return;
+    const card = e.target.closest('.itinerary-card[data-label]');
+    if (!card) return;
+    activateItinerary(card.dataset.label);
+  });
 }
 
 function escHtml(s) {
@@ -445,10 +465,6 @@ export function wireClear(sm) {
     if (window.__atlasRouteLayers) {
       for (const g of Object.values(window.__atlasRouteLayers)) window.__atlasMap?.removeLayer(g);
       window.__atlasRouteLayers = null;
-    }
-    if (window.__atlasLayerControl) {
-      window.__atlasMap?.removeControl(window.__atlasLayerControl);
-      window.__atlasLayerControl = null;
     }
     const results = document.getElementById('results');
     if (results) results.innerHTML = '';
@@ -798,6 +814,7 @@ export function init() {
   wireFormSubmitGuard();
   wirePillEdit();
   wireTripChips(sm);
+  wireItineraryActivation();
   refreshChipLabels();
   wireGeocodeSuggest(sm);
   wirePopstate(sm);
