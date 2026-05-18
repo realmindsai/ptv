@@ -113,3 +113,47 @@ export function createStateMachine() {
 
   return { state, setState, registerProjector };
 }
+
+// --- projectors ---
+
+/**
+ * Sync the form pill's visible coord text inputs and hidden lat/lon inputs
+ * from state.origin / state.destination. Param fields are NOT projected from
+ * state (the form is the source-of-truth for them; state mirrors form on submit).
+ */
+export function projectToForm(state) {
+  const setPair = (prefix, point) => {
+    const queryEl = document.getElementById(`${prefix}-query`);
+    const latEl   = document.getElementById(`${prefix}-lat`);
+    const lonEl   = document.getElementById(`${prefix}-lon`);
+    if (!queryEl || !latEl || !lonEl) return;
+    if (point) {
+      queryEl.value = formatCoord(point);
+      latEl.value   = String(point.lat);
+      lonEl.value   = String(point.lon);
+    } else {
+      queryEl.value = '';
+      latEl.value   = '';
+      lonEl.value   = '';
+    }
+  };
+  setPair('origin',      state.origin);
+  setPair('destination', state.destination);
+}
+
+/**
+ * Sync the browser URL's query string from state.
+ *
+ * Uses replaceState for in-progress edits (first pin, drag-in-progress) and
+ * pushState when the plan fires (transition to a "completed trip" history entry).
+ * Distinction is signaled via patch.__pushHistory in the projector call.
+ */
+export function projectToUrl(state, patch) {
+  const search = encodeUrlState(state);
+  const url = search ? `${window.location.pathname}?${search}` : window.location.pathname;
+  if (patch && patch.__pushHistory) {
+    window.history.pushState(null, '', url);
+  } else {
+    window.history.replaceState(null, '', url);
+  }
+}
