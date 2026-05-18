@@ -1,0 +1,55 @@
+<section class="ps-section" data-section="when">
+  <div class="eyebrow">— when</div>
+  <div class="seg-buttons">
+    <button type="button" class="seg-btn" data-when="now">now</button>
+    <button type="button" class="seg-btn is-active" data-when="depart">depart at</button>
+    <button type="button" class="seg-btn" data-when="arriveBy">arrive by</button>
+  </div>
+  <div class="time-input">
+    <input type="text" id="ps-time" inputmode="numeric" pattern="\d{2}:\d{2}" placeholder="HH:MM">
+  </div>
+</section>
+<section class="ps-section" data-section="goal">
+  <div class="eyebrow">— goal</div>
+  <div class="goal-cards">
+    <label class="goal-card"><input type="radio" name="ps-goal" value="commute"><div><b>commute</b><small>shortest reasonable time door-to-door</small></div></label>
+    <label class="goal-card"><input type="radio" name="ps-goal" value="day-ride"><div><b>day-ride</b><small>prefer dedicated cycleways, accept longer routes</small></div></label>
+    <label class="goal-card"><input type="radio" name="ps-goal" value="max-path"><div><b>max-path</b><small>maximise on-path mileage at any cost</small></div></label>
+  </div>
+</section>
+<section class="ps-section" data-section="mode">
+  <div class="eyebrow">— mode</div>
+  <div class="seg-buttons">
+    <button type="button" class="seg-btn" data-mode="bike-only">bike-only</button>
+    <button type="button" class="seg-btn is-active" data-mode="bike-train">bike-train</button>
+  </div>
+</section>
+<section class="ps-section" data-section="flags">
+  <div class="eyebrow">— hill weight · -2 flat · +2 hilly</div>
+  <input type="range" id="ps-hillWeight" min="-2" max="2" step="0.5" value="0">
+  <output id="ps-hillWeight-out" class="mono">0</output>
+
+  <div class="eyebrow">— min on-path fraction</div>
+  <input type="range" id="ps-minOnPath" min="0" max="1" step="0.05" value="0">
+  <output id="ps-minOnPath-out" class="mono">0%</output>
+
+  <div class="eyebrow">— bike km range</div>
+  <div class="range-row">
+    <input type="number" id="ps-minBikeKm" min="0" max="50" step="1" value="0" class="mono">
+    <span>—</span>
+    <input type="number" id="ps-maxBikeKm" min="0" max="50" step="1" value="20" class="mono">
+    <span class="mono">km</span>
+  </div>
+
+  <div class="eyebrow">— max transfers</div>
+  <div class="seg-buttons" id="ps-maxTransfers">
+    <button type="button" class="seg-btn" data-transfers="0">0</button>
+    <button type="button" class="seg-btn is-active" data-transfers="1">1</button>
+    <button type="button" class="seg-btn" data-transfers="2">2</button>
+    <button type="button" class="seg-btn" data-transfers="3">3</button>
+  </div>
+
+  <label class="check-row">
+    <input type="checkbox" id="ps-preferBikePath"> prefer-bike-path
+  </label>
+</section>

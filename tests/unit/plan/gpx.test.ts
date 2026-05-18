@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { writeGpx } from '../../../src/plan/gpx';
+import { writeGpx, buildGpxXml } from '../../../src/plan/gpx';
 import { readFileSync, unlinkSync, mkdtempSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -333,5 +333,63 @@ describe('writeGpx()', () => {
     } finally {
       unlinkSync(path);
     }
+  });
+});
+
+describe('buildGpxXml()', () => {
+  it('returns a well-formed GPX string with one <trk> per labeled itinerary', () => {
+    const result = bikeOnlyResult();
+    const xml = buildGpxXml(result);
+    expect(xml.startsWith('<?xml ')).toBe(true);
+    expect(xml).toContain('<gpx version="1.1"');
+    expect(xml).toContain('<metadata><time>');
+    const trkCount = (xml.match(/<trk>/g) || []).length;
+    const labeledCount = result.itineraries.filter((i) => i.labels.length > 0).length;
+    expect(trkCount).toBe(labeledCount);
+  });
+
+  it('returns a well-formed GPX string with no <trk> when all itineraries are unlabeled', () => {
+    const xml = buildGpxXml({ query: bikeOnlyResult().query, itineraries: [] });
+    expect(xml.startsWith('<?xml ')).toBe(true);
+    expect(xml).toContain('<gpx version="1.1"');
+    expect(xml).toContain('<metadata><time>');
+    expect(xml).not.toContain('<trk>');
+  });
+
+  it('returns a GPX string with multiple <trk> blocks for multiple labeled itineraries', () => {
+    const baseLeg = {
+      mode: 'bike' as const,
+      from: { lat: -37.78, lon: 144.96 }, to: { lat: -37.77, lon: 144.97 },
+      km: 1, min: 5,
+      geometry: { type: 'LineString' as const,
+        coordinates: [[144.96, -37.78], [144.97, -37.77]] as [number, number][] },
+    };
+    const r: PlanResult = {
+      query: {
+        from: { lat: -37.78, lon: 144.96 }, to: { lat: -37.77, lon: 144.97 },
+        minBikeKm: 0, maxBikeKm: 10, maxTransfers: 0,
+        enrich: false, preferBikePath: false,
+        hillWeight: 0, goal: 'commute', mode: 'bike-only',
+      },
+      itineraries: [
+        {
+          labels: ['recommended'], totalTimeMin: 20,
+          bikeKm: 1, bikeMin: 5, trainKm: 0, trainMin: 0, waitMin: 0, transfers: 0,
+          legs: [baseLeg],
+        },
+        {
+          labels: ['fastest'], totalTimeMin: 15,
+          bikeKm: 1, bikeMin: 5, trainKm: 0, trainMin: 0, waitMin: 0, transfers: 0,
+          legs: [baseLeg],
+        },
+      ],
+    };
+    const xml = buildGpxXml(r);
+    expect((xml.match(/<trk>/g) || []).length).toBe(2);
+    expect(xml).toContain('<name>fastest</name>');
+    expect(xml).toContain('<name>recommended</name>');
+    // Verify sort order: fastest (15 min) before recommended (20 min).
+    expect(xml.indexOf('<name>fastest</name>'))
+      .toBeLessThan(xml.indexOf('<name>recommended</name>'));
   });
 });

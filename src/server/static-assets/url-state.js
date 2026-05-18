@@ -7,8 +7,8 @@
  */
 
 export const DEFAULTS = Object.freeze({
-  mode: 'bike-only',
-  goal: 'day-ride',
+  mode: 'bike-train',
+  goal: 'commute',
   depart: '',
   arriveBy: '',
   minBikeKm: 0,
@@ -60,6 +60,11 @@ export function encodeUrlState(state) {
     parts.push(`${spec.key}=${encodeURIComponent(enc)}`);
   }
   return parts.join('&');
+}
+
+export function shareUrlFor(state) {
+  const q = encodeUrlState(state);
+  return `${window.location.origin}${window.location.pathname}${q ? '?' + q : ''}`;
 }
 
 export function decodeUrlState(search) {

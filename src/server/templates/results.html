@@ -1,12 +1,23 @@
 <div id="results-inner">
   {{#each itineraries}}
-  <article class="itinerary-card">
-    <header class="itinerary-card__label">{{labels}}</header>
-    <div class="itinerary-card__time"><span class="mono">{{totalTimeMin}}</span> min</div>
+  <article class="itinerary-card" data-label="{{labels}}">
+    <header class="itinerary-card__head">
+      <span class="itinerary-card__label">{{labels}}</span>
+      <span class="itinerary-card__time"><span class="mono">{{totalTimeMin}}</span> min</span>
+    </header>
+    {{{headTimesHtml}}}
+    {{{segBarHtml}}}
+    {{{segLegendHtml}}}
     <div class="itinerary-card__meta">
       <span class="mono">{{bikeKm}}</span> km bike ·
       <span class="mono">{{transfers}}</span> transfers ·
-      <span class="mono">{{trainMin}}</span> min train
+      <span class="mono">{{trainMin}}</span> min train{{{metaTailHtml}}}
+    </div>
+    <div class="itinerary-card__actions">
+      <button type="button" class="action-btn" data-action="share" data-label="{{labels}}">↗ share</button>
+      <button type="button" class="action-btn" data-action="gpx" data-label="{{labels}}">⤓ gpx</button>
+      <button type="button" class="action-btn" data-action="osmand" data-label="{{labels}}">◐ osmand</button>
+      <button type="button" class="action-btn action-btn--mono" data-action="equiv" data-label="{{labels}}">$ equiv</button>
     </div>
   </article>
   {{/each}}

@@ -1,6 +1,7 @@
+// @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
 // @ts-expect-error - importing untyped JS module
-import { formatCoord, parseDecimalCoord, isValidLatLon, debounce, encodePlanBody, DEFAULTS, createStateMachine } from '../../../src/server/static-assets/atlas.js';
+import { formatCoord, parseDecimalCoord, isValidLatLon, debounce, encodePlanBody, DEFAULTS, createStateMachine, projectToPill, activateItinerary } from '../../../src/server/static-assets/atlas.js';
 
 describe('atlas helpers', () => {
   describe('formatCoord', () => {
@@ -154,5 +155,101 @@ describe('state machine', () => {
     expect(sm.state).not.toHaveProperty('__pushHistory');
     // Projector still sees it on the patch:
     expect(a).toHaveBeenCalledWith(sm.state, expect.objectContaining({ __pushHistory: true }));
+  });
+});
+
+describe('activateItinerary', () => {
+  it('adds the target layer, removes others, and toggles .itinerary-card--active', () => {
+    const layerA = { __isOn: false, addTo: (m: any) => { m.addLayer(layerA); return layerA; } };
+    const layerB = { __isOn: true,  addTo: (m: any) => { m.addLayer(layerB); return layerB; } };
+    const fakeMap = {
+      hasLayer:    (g: any) => g.__isOn === true,
+      addLayer:    (g: any) => { g.__isOn = true; },
+      removeLayer: (g: any) => { g.__isOn = false; },
+    };
+    (window as any).__atlasMap          = fakeMap;
+    (window as any).__atlasRouteLayers  = { recommended: layerA, fastest: layerB };
+    document.body.innerHTML = `
+      <div id="results">
+        <article class="itinerary-card" data-label="recommended"></article>
+        <article class="itinerary-card itinerary-card--active" data-label="fastest"></article>
+      </div>`;
+    activateItinerary('recommended');
+    expect(layerA.__isOn).toBe(true);
+    expect(layerB.__isOn).toBe(false);
+    const cards = document.querySelectorAll('.itinerary-card');
+    expect(cards[0].classList.contains('itinerary-card--active')).toBe(true);
+    expect(cards[1].classList.contains('itinerary-card--active')).toBe(false);
+  });
+});
+
+describe('projectToPill', () => {
+  it('switches data-state and updates label spans', async () => {
+    document.body.innerHTML = `
+      <div id="from-to-pill" data-state="empty"></div>
+      <span id="origin-label-collapsed"></span>
+      <span id="destination-label-collapsed"></span>`;
+    projectToPill({ origin: null, destination: null });
+    expect(document.getElementById('from-to-pill').dataset.state).toBe('edit');
+    projectToPill({
+      origin: { lat: -37.64, lon: 145.19, _label: 'Hurstbridge' },
+      destination: { lat: -37.86, lon: 144.89 },
+    });
+    expect(document.getElementById('from-to-pill').dataset.state).toBe('set');
+    expect(document.getElementById('origin-label-collapsed').textContent).toBe('Hurstbridge');
+    expect(document.getElementById('destination-label-collapsed').textContent).toContain('-37.86');
+  });
+});
+
+describe('buildCliEquivalent', () => {
+  it('emits minimal invocation for defaults', async () => {
+    const mod = await import('../../../src/server/static-assets/atlas.js');
+    const cmd = mod.buildCliEquivalent({
+      origin: { lat: -37.640, lon: 145.190 },
+      destination: { lat: -37.871, lon: 144.892 },
+      params: {
+        mode: 'bike-train', goal: 'commute', depart: '', arriveBy: '',
+        minBikeKm: 0, maxBikeKm: 20, maxTransfers: 1, hillWeight: 0,
+        minOnPathFraction: '', preferBikePath: false,
+      },
+    });
+    expect(cmd).toBe('ptv plan -37.64000,145.19000 -37.87100,144.89200');
+  });
+
+  it('includes only non-default flags', async () => {
+    const mod = await import('../../../src/server/static-assets/atlas.js');
+    const cmd = mod.buildCliEquivalent({
+      origin: { lat: -37.640, lon: 145.190 },
+      destination: { lat: -37.871, lon: 144.892 },
+      params: {
+        mode: 'bike-train', goal: 'day-ride', depart: '08:00', arriveBy: '',
+        minBikeKm: 0, maxBikeKm: 20, maxTransfers: 1, hillWeight: 0,
+        minOnPathFraction: '', preferBikePath: false,
+      },
+    });
+    expect(cmd).toContain('--depart 08:00');
+    expect(cmd).toContain('--goal day-ride');
+    expect(cmd).not.toContain('--min-bike-km');
+    expect(cmd).not.toContain('--max-bike-km');
+    expect(cmd).not.toContain('--max-transfers');
+    expect(cmd).not.toContain('--mode');
+  });
+
+  it('includes --mode and --max-transfers when set', async () => {
+    const mod = await import('../../../src/server/static-assets/atlas.js');
+    const cmd = mod.buildCliEquivalent({
+      origin: { lat: -37.640, lon: 145.190 },
+      destination: { lat: -37.871, lon: 144.892 },
+      params: {
+        mode: 'bike-only', goal: 'day-ride', depart: '', arriveBy: '',
+        minBikeKm: 0, maxBikeKm: 20, maxTransfers: 2, hillWeight: -1,
+        minOnPathFraction: 0.5, preferBikePath: true,
+      },
+    });
+    expect(cmd).toContain('--mode bike-only');
+    expect(cmd).toContain('--max-transfers 2');
+    expect(cmd).toContain('--hill-weight -1');
+    expect(cmd).toContain('--min-on-path-fraction 0.5');
+    expect(cmd).toContain('--prefer-bike-path');
   });
 });
