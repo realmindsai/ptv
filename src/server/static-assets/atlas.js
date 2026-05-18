@@ -439,11 +439,15 @@ export function wireForm(sm) {
       // Block the submit entirely and show an inline error. The HTMX fallback only
       // helps when a request reaches the server — with no coords we have nothing to send.
       e.preventDefault();
+      e.stopImmediatePropagation();
       showInlineError('origin', 'pick a from and to first (click the map or type a place)');
       return;
     }
 
+    // stopImmediatePropagation blocks HTMX's own submit listener — without it
+    // HTMX fires its form-encoded /api/plan request in parallel with our JSON one.
     e.preventDefault();
+    e.stopImmediatePropagation();
     sm.setState({ origin, destination, params });
     firePlan(sm);
   });
