@@ -50,21 +50,25 @@
       <!-- from row -->
       <div class="field-row field-row--origin">
         <label for="origin-query">from</label>
-        <input
-          id="origin-query"
-          name="origin-query"
-          type="text"
-          autocomplete="off"
-          placeholder="suburb, station, or -lat,lon"
-          hx-get="/api/geocode"
-          hx-trigger="keyup changed delay:300ms"
-          hx-target="#origin-suggest"
-          hx-vals='js:{q: document.getElementById("origin-query").value}'
-          hx-headers='{"Accept":"text/html"}'
-        >
+        <div class="field-row__input-with-button">
+          <input
+            id="origin-query"
+            name="origin-query"
+            type="text"
+            autocomplete="off"
+            placeholder="suburb, station, or -lat,lon"
+            hx-get="/api/geocode"
+            hx-trigger="keyup changed delay:300ms"
+            hx-target="#origin-suggest"
+            hx-vals='js:{q: document.getElementById("origin-query").value}'
+            hx-headers='{"Accept":"text/html"}'
+          >
+          <button type="button" id="geolocate-from" class="btn--icon" title="use my current location" aria-label="use my current location">⌖</button>
+        </div>
         <input type="hidden" name="origin[lat]" id="origin-lat">
         <input type="hidden" name="origin[lon]" id="origin-lon">
         <div id="origin-suggest" class="geocode-suggest"></div>
+        <div id="origin-error" class="inline-error" aria-live="polite"></div>
       </div>
 
       <!-- to row -->
@@ -138,11 +142,12 @@
         </div>
       </details>
 
-      <div style="padding:6px 12px 10px;">
+      <div class="form-actions">
         <button id="plan-btn" class="btn--cta" type="submit">
           <span class="btn-label">plan</span>
           <span class="btn-spinner" aria-hidden="true"></span>
         </button>
+        <button id="clear-trip" type="button" class="btn--secondary" title="clear trip" aria-label="clear trip">×</button>
       </div>
     </form>
   </div>
@@ -157,40 +162,22 @@
     <div id="results"></div>
   </div>
 
-  <!-- geocode item click handler — fills hidden lat/lon inputs and the visible text input -->
+  <!-- HTMX 1.x silently drops non-2xx responses by default. Our /api/plan
+       returns a friendly error fragment with status 4xx/5xx, so opt into
+       swapping those too — without it the user sees nothing on error.
+       (geocode-click handler moved to atlas.js) -->
   <script>
-    (function () {
-      function onGeocodeClick(e) {
-        var item = e.target.closest('[data-lat][data-lon][data-label]');
-        if (!item) return;
-        var lat = item.dataset.lat;
-        var lon = item.dataset.lon;
-        var label = item.dataset.label;
-        // determine which field this suggestion belongs to
-        var suggest = item.closest('.geocode-suggest');
-        if (!suggest) return;
-        var parentRow = suggest.closest('.field-row');
-        if (!parentRow) return;
-        var prefix = parentRow.classList.contains('field-row--origin') ? 'origin' : 'destination';
-        document.getElementById(prefix + '-lat').value = lat;
-        document.getElementById(prefix + '-lon').value = lon;
-        document.getElementById(prefix + '-query').value = label;
-        suggest.innerHTML = '';
+    document.body.addEventListener('htmx:beforeSwap', function (e) {
+      var s = e.detail.xhr.status;
+      if (s >= 400 && s < 600) {
+        e.detail.shouldSwap = true;
+        e.detail.isError = false;
       }
-      document.addEventListener('click', onGeocodeClick);
-
-      // HTMX 1.x silently drops non-2xx responses by default. Our /api/plan
-      // returns a friendly error fragment with status 4xx/5xx, so opt into
-      // swapping those too — without it the user sees nothing on error.
-      document.body.addEventListener('htmx:beforeSwap', function (e) {
-        var s = e.detail.xhr.status;
-        if (s >= 400 && s < 600) {
-          e.detail.shouldSwap = true;
-          e.detail.isError = false;
-        }
-      });
-    })();
+    });
   </script>
+
+  <!-- Phase 2 client: state machine, click-to-route, URL state, geolocation -->
+  <script type="module" src="/static/atlas.js"></script>
 
 </body>
 </html>
