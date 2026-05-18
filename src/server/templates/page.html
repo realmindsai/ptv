@@ -143,8 +143,13 @@
   <div class="sheet sheet--peek" id="results-sheet">
     <div class="sheet__handle"></div>
     <div class="sheet__indicator" aria-live="polite">
-      <span class="dot"></span>
-      <span>planning… (this can take 10–30 s the first time)</span>
+      <div class="stages">
+        <div class="stage" data-stage="geocode"><span class="stage__dot"></span> geocode</div>
+        <div class="stage" data-stage="osrm"><span class="stage__dot"></span> bike route · osrm-au</div>
+        <div class="stage" data-stage="ptv"><span class="stage__dot"></span> ptv departures</div>
+        <div class="stage" data-stage="enrich"><span class="stage__dot"></span> enrich · gh-route</div>
+        <div class="stage" data-stage="rank"><span class="stage__dot"></span> rank</div>
+      </div>
     </div>
     <div id="results"></div>
   </div>

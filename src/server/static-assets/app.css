@@ -257,25 +257,24 @@ body {
   margin: 8px 0;
 }
 
-/* ─── HTMX progress indicator — visible only while a request is in flight ─── */
+/* ─── Staged loading indicator — visible while a plan request is in flight ─── */
 .sheet__indicator {
   display: none;
-  align-items: center;
-  gap: 10px;
   padding: 14px 20px;
   font-family: var(--mono);
   font-size: 13px;
   color: var(--rmai-fg-2);
 }
-.sheet__indicator .dot {
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--rmai-purple);
-  animation: pulse 1s ease-in-out infinite;
-}
+.sheet__indicator.is-active,
 .sheet__indicator.htmx-request,
-.htmx-request .sheet__indicator {
-  display: flex;
-}
+.htmx-request .sheet__indicator { display: block; }
+.stages { display: flex; flex-direction: column; gap: 6px; }
+.stage { display: flex; align-items: center; gap: 8px; opacity: 0.4; }
+.stage.is-active { opacity: 1; color: var(--rmai-fg-1); font-weight: 600; }
+.stage.is-done   { opacity: 1; color: var(--rmai-fg-2); }
+.stage__dot { width: 10px; height: 10px; border-radius: 50%; background: var(--rmai-stone); flex-shrink: 0; }
+.stage.is-active .stage__dot { background: var(--rmai-purple); animation: pulse 1s ease-in-out infinite; }
+.stage.is-done   .stage__dot { background: var(--rmai-green); }
 @keyframes pulse {
   0%, 100% { opacity: 0.3; transform: scale(0.9); }
   50%      { opacity: 1;   transform: scale(1.1); }

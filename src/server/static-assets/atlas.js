@@ -408,6 +408,31 @@ function escHtml(s) {
   })[c]);
 }
 
+function markStages(activeOrDone) {
+  document.querySelectorAll('.stage').forEach((el) => {
+    const s = el.dataset.stage;
+    el.classList.remove('is-active', 'is-done');
+    if (activeOrDone.length === 0) return;
+    const idx = activeOrDone.indexOf(s);
+    if (idx === -1) return;
+    if (idx === activeOrDone.length - 1) el.classList.add('is-active');
+    else el.classList.add('is-done');
+  });
+}
+
+function scheduleStages() {
+  // Returns a teardown function. Each delay is from the START of the request,
+  // so we use absolute timeouts not chained ones.
+  const steps = [
+    { atMs: 400,  to: ['geocode', 'osrm'] },
+    { atMs: 2400, to: ['geocode', 'osrm', 'ptv'] },
+    { atMs: 4200, to: ['geocode', 'osrm', 'ptv', 'enrich'] },
+    { atMs: 5500, to: ['geocode', 'osrm', 'ptv', 'enrich', 'rank'] },
+  ];
+  const ids = steps.map((step) => setTimeout(() => markStages(step.to), step.atMs));
+  return { clear: () => ids.forEach((id) => clearTimeout(id)) };
+}
+
 export function renderResultsSheet(result) {
   const root = document.getElementById('results');
   if (!root) return;
@@ -494,6 +519,10 @@ export function renderRecentsIfEmpty(sm) {
 export async function firePlan(sm, opts = {}) {
   // Mark history-boundary on this projection cycle so projectToUrl uses pushState.
   sm.setState({ pendingPlan: true, __pushHistory: !opts.fromPopstate });
+  const indicator = document.getElementById('results-sheet');
+  if (indicator) indicator.classList.add('htmx-request');
+  markStages(['geocode']);
+  const stagingTimer = scheduleStages();
   try {
     const body = encodePlanBody(sm.state);
     const res = await fetch('/api/plan', {
@@ -531,6 +560,10 @@ export async function firePlan(sm, opts = {}) {
   } catch (e) {
     sm.setState({ pendingPlan: false });
     renderResultsError(e instanceof Error ? e.message : String(e));
+  } finally {
+    stagingTimer.clear();
+    markStages([]);
+    if (indicator) indicator.classList.remove('htmx-request');
   }
 }
 
