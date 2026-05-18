@@ -11,8 +11,8 @@ import { segmentBarHtml, segmentsFromItinerary } from './segment-bar.js';
 import { addRecent, listRecents } from './recents.js';
 
 export const DEFAULTS = Object.freeze({
-  mode: 'bike-only',
-  goal: 'day-ride',
+  mode: 'bike-train',
+  goal: 'commute',
   depart: '',
   arriveBy: '',
   minBikeKm: 0,
@@ -620,7 +620,7 @@ export function wireClear(sm) {
   const btn = document.getElementById('clear-trip');
   if (!btn) return;
   btn.addEventListener('click', () => {
-    sm.setState({ origin: null, destination: null, lastResult: null, lastPlanKey: null, __pushHistory: true });
+    sm.setState({ origin: null, destination: null, lastResult: null, lastPlanKey: null, pendingPlan: false, __pushHistory: true });
     // Tear down any rendered polyline layers and bottom-sheet cards.
     if (window.__atlasRouteLayers) {
       for (const g of Object.values(window.__atlasRouteLayers)) window.__atlasMap?.removeLayer(g);

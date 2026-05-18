@@ -7,8 +7,8 @@
  */
 
 export const DEFAULTS = Object.freeze({
-  mode: 'bike-only',
-  goal: 'day-ride',
+  mode: 'bike-train',
+  goal: 'commute',
   depart: '',
   arriveBy: '',
   minBikeKm: 0,

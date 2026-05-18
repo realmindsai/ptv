@@ -108,7 +108,7 @@ describe('url-state', () => {
       expect(r).toEqual({
         origin: { lat: -37.78, lon: 144.96 },
         destination: null,
-        params: { goal: 'commute' },
+        params: {},
       });
     });
   });
@@ -163,7 +163,6 @@ describe('url-state', () => {
     expect(decoded?.origin).toEqual(original.origin);
     expect(decoded?.destination).toEqual(original.destination);
     expect(decoded?.params).toMatchObject({
-      mode: 'bike-train',
       goal: 'max-path',
       depart: '08:00',
       maxTransfers: 2,
