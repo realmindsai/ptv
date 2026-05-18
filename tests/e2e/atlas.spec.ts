@@ -46,9 +46,22 @@ test('Atlas shell renders core structure', async ({ page }) => {
   await expect(page.locator('input[name="origin-query"]')).toBeVisible();
   await expect(page.locator('input[name="destination-query"]')).toBeVisible();
 
-  // Bottom sheet + Plan button.
-  await expect(page.locator('.sheet')).toBeVisible();
-  await expect(page.locator('button.btn--cta[type="submit"]')).toBeVisible();
+  // v2 shell: pill starts in edit state (JS transitions from "empty" HTML attr to "edit").
+  await expect(page.locator('#from-to-pill')).toHaveAttribute('data-state', 'edit');
+
+  // v2 shell: FAB geolocate (renamed from #geolocate-from).
+  await expect(page.locator('#fab-geolocate')).toBeVisible();
+
+  // v2 shell: trip chips toolbar.
+  await expect(page.locator('#trip-chips')).toBeVisible();
+  await expect(page.locator('#chip-when, #chip-goal, #chip-flags')).toHaveCount(3);
+
+  // v2 shell: no old plan-btn or CTA button.
+  await expect(page.locator('#plan-btn')).toHaveCount(0);
+  await expect(page.locator('.btn--cta')).toHaveCount(0);
+
+  // Results sheet (use specific class for the peek sheet now there are two .sheet elements).
+  await expect(page.locator('.sheet--peek')).toBeVisible();
 
   // Vendored assets actually load (no failed /static/ requests).
   await page.waitForLoadState('networkidle');
@@ -112,8 +125,6 @@ test('geocode autocomplete fills hidden inputs and submits a plan', async ({ pag
 test('plan error responses are rendered into #results (atlas.js JS path)', async ({ page }) => {
   // atlas.js intercepts form submit and posts JSON to /api/plan. A 5xx response
   // triggers renderResultsError(), which writes a .error div. Verify user sees it.
-  // (Previously tested the HTMX htmx:beforeSwap path; that path is now bypassed
-  // by the atlas.js wireForm submit interceptor.)
   await page.route('**/api/plan', async (route) => {
     await route.fulfill({
       status: 500, contentType: 'application/json',
@@ -122,14 +133,23 @@ test('plan error responses are rendered into #results (atlas.js JS path)', async
   });
 
   await page.goto(BASE);
-  // Populate hidden lat/lon so the atlas.js wireForm handler sees valid coords.
+  await page.waitForFunction(() => !!(window as any).__atlas);
+
+  // Set origin and destination on the state machine, then fire the plan via import.
   await page.evaluate(() => {
-    (document.getElementById('origin-lat') as HTMLInputElement).value = '-37.64';
-    (document.getElementById('origin-lon') as HTMLInputElement).value = '145.19';
-    (document.getElementById('destination-lat') as HTMLInputElement).value = '-37.86';
-    (document.getElementById('destination-lon') as HTMLInputElement).value = '144.89';
+    const sm = (window as any).__atlas.sm;
+    sm.setState({
+      origin:      { lat: -37.64, lon: 145.19 },
+      destination: { lat: -37.86, lon: 144.89 },
+    });
   });
-  await page.locator('#plan-btn').click();
+
+  // Trigger firePlan via the exported function (atlas.js is a module; dynamic import
+  // returns the same module record so exports are accessible).
+  await page.evaluate(async () => {
+    const mod = await import('/static/atlas.js');
+    await (mod as any).firePlan((window as any).__atlas.sm);
+  });
 
   await expect(page.locator('#results .error')).toBeVisible({ timeout: 3000 });
   await expect(page.locator('#results .error')).toContainText('simulated planner failure');
@@ -164,9 +184,8 @@ test('typing in autocomplete does not throw and does not flash plan indicator', 
 });
 
 test('form submits depart=HH:MM through to /api/plan', async ({ page }) => {
-  // atlas.js intercepts form submit and posts JSON to /api/plan. Capture the
-  // atlas.js JSON body (Content-Type: application/json) and verify depart is present.
-  // NOTE: HTMX also fires a form-encoded POST; we only care about the atlas.js one.
+  // atlas.js auto-fires JSON to /api/plan when both endpoints are set and "done"
+  // is clicked in the params sheet. Capture the JSON body and verify depart is present.
   let capturedJsonBody = '';
   await page.route('**/api/plan', async (route) => {
     if (route.request().method() !== 'POST') return route.continue();
@@ -188,25 +207,28 @@ test('form submits depart=HH:MM through to /api/plan', async ({ page }) => {
   });
 
   await page.goto(BASE);
+  await page.waitForFunction(() => !!(window as any).__atlas);
 
-  // Populate hidden lat/lon so wireForm sees valid coords.
+  // Pre-populate origin+destination so the auto-fire after "done" has both endpoints.
   await page.evaluate(() => {
-    (document.getElementById('origin-lat') as HTMLInputElement).value = '-37.64';
-    (document.getElementById('origin-lon') as HTMLInputElement).value = '145.19';
-    (document.getElementById('destination-lat') as HTMLInputElement).value = '-37.86';
-    (document.getElementById('destination-lon') as HTMLInputElement).value = '144.89';
+    (window as any).__atlas.sm.setState({
+      origin:      { lat: -37.64, lon: 145.19 },
+      destination: { lat: -37.86, lon: 144.89 },
+    });
   });
 
-  // The depart input lives inside a <details> element; open it first.
-  await page.locator('form details summary').click();
+  // Drive through the UI: chip → params sheet → depart at → time → done.
+  // The pill (z-index 10) can overlap the chips (z-index 9) when data-state="set",
+  // so dispatch the click programmatically to bypass pointer-event interception.
+  await page.evaluate(() => document.getElementById('chip-when')?.click());
+  // Wait for the params sheet to be populated by the async fetch.
+  await expect(page.locator('#params-sheet')).not.toBeHidden({ timeout: 3000 });
+  await page.locator('[data-when="depart"]').click();
+  await page.locator('#ps-time').fill('08:00');
+  await page.locator('#params-done').click();
 
-  // Type a depart value through the actual input the user would use.
-  await page.locator('input[name="depart"]').fill('08:00');
-
-  await page.locator('#plan-btn').click();
-
-  // Wait for the atlas.js result card to confirm the JSON request completed.
-  await expect(page.locator('#results .itinerary-card')).toHaveCount(1, { timeout: 3000 });
+  // After "done", syncParamsFromHiddenInputs fires the plan automatically.
+  await expect(page.locator('#results .itinerary-card')).toHaveCount(1, { timeout: 5000 });
 
   // atlas.js posts JSON — depart must be present in the JSON body.
   const parsed = JSON.parse(capturedJsonBody);
@@ -314,13 +336,16 @@ test('geolocation button fills origin with stubbed position', async ({ page, con
   await page.goto(BASE);
   await page.waitForFunction(() => !!(window as any).__atlas);
 
-  await page.locator('#geolocate-from').click();
+  // v2: renamed from #geolocate-from to #fab-geolocate.
+  await page.locator('#fab-geolocate').click();
 
   await expect(page.locator('#origin-query')).toHaveValue(/-37\.81/, { timeout: 3000 });
   await expect.poll(() => page.url()).toMatch(/\?from=-37\.81/);
 });
 
-test('regression: typed search + form submit still produces a plan via JS-intercept path', async ({ page }) => {
+test('typed coords + state dispatch produces a plan', async ({ page }) => {
+  // Regression: the JS path (state machine + firePlan) still works without a Plan
+  // button. Drive through typed coords → sm.setState → firePlan export.
   await page.route('**/api/plan', async (route) => {
     if (route.request().method() !== 'POST') return route.continue();
     const fake = {
@@ -340,7 +365,85 @@ test('regression: typed search + form submit still produces a plan via JS-interc
   // Type raw coords (skipping geocode-suggest).
   await page.locator('#origin-query').fill('-37.78, 144.96');
   await page.locator('#destination-query').fill('-37.86, 144.92');
-  await page.locator('#plan-btn').click();
+
+  // v2: no #plan-btn — dispatch via state machine + exported firePlan.
+  await page.evaluate(async () => {
+    const mod = await import('/static/atlas.js');
+    const { parseDecimalCoord, firePlan } = mod as any;
+    const sm = (window as any).__atlas.sm;
+    const origin = parseDecimalCoord(
+      (document.getElementById('origin-query') as HTMLInputElement).value,
+    );
+    const destination = parseDecimalCoord(
+      (document.getElementById('destination-query') as HTMLInputElement).value,
+    );
+    sm.setState({ origin, destination });
+    await firePlan(sm);
+  });
 
   await expect(page.locator('#results .itinerary-card')).toHaveCount(1, { timeout: 5000 });
+});
+
+// ---------------------------------------------------------------------------
+// v2 params sheet
+// ---------------------------------------------------------------------------
+
+test('v2 params sheet: chip click opens, done writes hidden input, fires plan', async ({ page }) => {
+  let capturedBody = '';
+  await page.route('**/api/plan', async (route) => {
+    if (route.request().method() !== 'POST') return route.continue();
+    const ct = route.request().headers()['content-type'] ?? '';
+    if (!ct.includes('application/json')) {
+      return route.fulfill({ status: 200, contentType: 'text/html', body: '' });
+    }
+    capturedBody = route.request().postData() ?? '';
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        query: {},
+        itineraries: [{
+          labels: ['recommended'], totalTimeMin: 30, bikeKm: 10, bikeMin: 30,
+          trainKm: 0, trainMin: 0, waitMin: 0, transfers: 0,
+          legs: [{ mode: 'bike', from: { lat: -37.64, lon: 145.19 }, to: { lat: -37.86, lon: 144.89 }, km: 10, min: 30 }],
+        }],
+      }),
+    });
+  });
+
+  await page.goto(BASE);
+  await page.waitForFunction(() => !!(window as any).__atlas);
+
+  // Pre-populate origin+destination so the auto-fire after "done" has both endpoints.
+  await page.evaluate(() => {
+    (window as any).__atlas.sm.setState({
+      origin:      { lat: -37.64, lon: 145.19 },
+      destination: { lat: -37.86, lon: 144.89 },
+    });
+  });
+
+  // Click the goal chip to open the params sheet.
+  // The pill (z-index 10) overlaps the chips (z-index 9) when data-state="set",
+  // so dispatch the click programmatically to bypass pointer-event interception.
+  await page.evaluate(() => document.getElementById('chip-goal')?.click());
+  // Sheet must become visible (async fetch populates it).
+  await expect(page.locator('#params-sheet')).not.toBeHidden({ timeout: 3000 });
+
+  // Select the max-path goal radio. Note: DEFAULTS.goal is 'day-ride', so picking
+  // max-path ensures the radio actually CHANGES state and the `change` listener fires.
+  // (Playwright's .check() is a no-op if the radio is already checked.)
+  await page.locator('input[name="ps-goal"][value="max-path"]').check();
+
+  // Verify the hidden input was updated by the change listener before clicking done.
+  await expect(page.locator('#param-goal')).toHaveValue('max-path');
+
+  // Close the sheet via the done button.
+  await page.locator('#params-done').click();
+  await expect(page.locator('#params-sheet')).toBeHidden();
+
+  // Auto-fire should have run; wait for an itinerary card.
+  await expect(page.locator('#results .itinerary-card')).toHaveCount(1, { timeout: 5000 });
+
+  // Verify the JSON body carried goal=max-path.
+  const parsed = JSON.parse(capturedBody);
+  expect(parsed.goal).toBe('max-path');
 });
