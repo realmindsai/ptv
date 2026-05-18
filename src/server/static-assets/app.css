@@ -486,3 +486,18 @@ body {
   opacity: 0; transition: transform 180ms ease, opacity 180ms ease; pointer-events: none; z-index: 9999;
 }
 .toast--visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ─── Recents (empty-state, last 3 trips) ─── */
+.recents { padding: 8px 16px; }
+.recent-row {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 12px; border: 1px solid var(--rmai-border); border-radius: 12px;
+  background: var(--rmai-white); margin-bottom: 8px; cursor: pointer;
+  text-align: left; font-family: var(--sans);
+}
+.recent-row:hover { background: var(--rmai-lavender); }
+.recent-row__label {
+  flex: 1; min-width: 0; font: 600 13px var(--sans); color: var(--rmai-fg-1);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.recent-row__min { font-size: 14px; color: var(--rmai-fg-1); flex-shrink: 0; }
