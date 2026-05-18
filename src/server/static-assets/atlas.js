@@ -7,6 +7,7 @@
  */
 
 import { encodeUrlState, decodeUrlState } from './url-state.js';
+import { segmentBarHtml, segmentsFromItinerary } from './segment-bar.js';
 
 export const DEFAULTS = Object.freeze({
   mode: 'bike-only',
@@ -289,13 +290,38 @@ export function renderResultsSheet(result) {
   if (!root) return;
   const cards = result.itineraries.filter((i) => i.labels.length > 0).map((it) => {
     const labels = escHtml(it.labels.join(', '));
-    return `<article class="itinerary-card">
-      <header class="itinerary-card__label">${labels}</header>
-      <div class="itinerary-card__time"><span class="mono">${it.totalTimeMin.toFixed(0)}</span> min</div>
+    const segs = segmentsFromItinerary(it);
+    const trainLegs = it.legs.filter((l) => l.mode === 'train');
+    const firstTrain = trainLegs[0];
+    const lastTrain  = trainLegs[trainLegs.length - 1];
+    const headTimes = (firstTrain && lastTrain)
+      ? `<div class="itinerary-card__times">dep <time class="itin__dep mono" datetime="${firstTrain.departUtc}">${firstTrain.departUtc}</time> · arr <time class="itin__arr mono" datetime="${lastTrain.arriveUtc}">${lastTrain.arriveUtc}</time></div>`
+      : '';
+    const ascendM = typeof it.ascendM === 'number' ? Math.round(it.ascendM) : null;
+    const onPathPct = (typeof it.bikeKmOnPath === 'number' && it.bikeKm > 0)
+      ? Math.round(100 * it.bikeKmOnPath / it.bikeKm) : null;
+    const metaTail =
+      (ascendM != null   ? ` · <span class="mono">${ascendM}</span> m ↑` : '') +
+      (onPathPct != null ? ` · <span class="mono">${onPathPct}%</span> path` : '');
+    const legendHtml = segs.map((s) => `<span class="seg-legend"><span class="seg-legend__chip seg-legend__chip--${s.kind}"></span>${escHtml(s.label)}</span>`).join('');
+    return `<article class="itinerary-card" data-label="${labels}">
+      <header class="itinerary-card__head">
+        <span class="itinerary-card__label">${labels}</span>
+        <span class="itinerary-card__time"><span class="mono">${it.totalTimeMin.toFixed(0)}</span> min</span>
+      </header>
+      ${headTimes}
+      ${segmentBarHtml(segs)}
+      <div class="seg-bar__legend">${legendHtml}</div>
       <div class="itinerary-card__meta">
         <span class="mono">${it.bikeKm.toFixed(1)}</span> km bike ·
         <span class="mono">${it.transfers}</span> transfers ·
-        <span class="mono">${it.trainMin.toFixed(0)}</span> min train
+        <span class="mono">${it.trainMin.toFixed(0)}</span> min train${metaTail}
+      </div>
+      <div class="itinerary-card__actions">
+        <button type="button" class="action-btn" data-action="share" data-label="${labels}">↗ share</button>
+        <button type="button" class="action-btn" data-action="gpx" data-label="${labels}">⤓ gpx</button>
+        <button type="button" class="action-btn" data-action="osmand" data-label="${labels}">◐ osmand</button>
+        <button type="button" class="action-btn action-btn--mono" data-action="equiv" data-label="${labels}">$ equiv</button>
       </div>
     </article>`;
   }).join('');

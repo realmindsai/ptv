@@ -68,13 +68,55 @@ export function registerPlan(
       reply.type('text/html; charset=utf-8');
       const { scriptBody, cssBody } = renderMapInit(result);
       return render('results.html', {
-        itineraries: result.itineraries.map((it) => ({
-          labels: it.labels.join(', '),
-          totalTimeMin: it.totalTimeMin.toFixed(0),
-          bikeKm: it.bikeKm.toFixed(1),
-          transfers: it.transfers,
-          trainMin: it.trainMin.toFixed(0),
-        })),
+        itineraries: result.itineraries.map((it) => {
+          const segments = it.legs.map((leg) => {
+            if (leg.mode === 'bike') {
+              const min = Math.max(1, Math.round(leg.min));
+              const badge = min >= 12 ? `<span class="seg__min mono">${min}m</span>` : '';
+              return { kind: 'bike', min, label: `${leg.km.toFixed(1)}km`, badge };
+            }
+            const dep = new Date(leg.departUtc).getTime();
+            const arr = new Date(leg.arriveUtc).getTime();
+            const min = Math.max(1, Math.round((arr - dep) / 60000));
+            const badge = min >= 12 ? `<span class="seg__min mono">${min}m</span>` : '';
+            return { kind: 'train', min, label: escLabel(leg.routeName), badge };
+          });
+          // Pre-render segment bar HTML to avoid nested {{#each}} in the template engine.
+          const segBarHtml = '<div class="seg-bar" role="img" aria-label="trip segments">'
+            + segments.map((s) =>
+                `<div class="seg seg--${s.kind}" style="flex:${s.min}" title="${escLabel(s.label)}">${s.badge}</div>`,
+              ).join('')
+            + '</div>';
+          const segLegendHtml = '<div class="seg-bar__legend">'
+            + segments.map((s) =>
+                `<span class="seg-legend"><span class="seg-legend__chip seg-legend__chip--${s.kind}"></span>${escLabel(s.label)}</span>`,
+              ).join('')
+            + '</div>';
+          const trainLegs = it.legs.filter((l): l is Extract<typeof l, { mode: 'train' }> => l.mode === 'train');
+          const firstTrain = trainLegs[0];
+          const lastTrain = trainLegs[trainLegs.length - 1];
+          const headTimesHtml = firstTrain && lastTrain
+            ? `<div class="itinerary-card__times">dep <time class="itin__dep mono" datetime="${firstTrain.departUtc}">${firstTrain.departUtc}</time> · arr <time class="itin__arr mono" datetime="${lastTrain.arriveUtc}">${lastTrain.arriveUtc}</time></div>`
+            : '';
+          const ascendM = typeof it.ascendM === 'number' ? Math.round(it.ascendM) : null;
+          const onPathPct = (typeof it.bikeKmOnPath === 'number' && it.bikeKm > 0)
+            ? Math.round(100 * it.bikeKmOnPath / it.bikeKm) : null;
+          const metaTailHtml = [
+            ascendM != null   ? ` · <span class="mono">${ascendM}</span> m ↑` : '',
+            onPathPct != null ? ` · <span class="mono">${onPathPct}%</span> path` : '',
+          ].join('');
+          return {
+            labels: it.labels.join(', '),
+            totalTimeMin: it.totalTimeMin.toFixed(0),
+            bikeKm: it.bikeKm.toFixed(1),
+            transfers: it.transfers,
+            trainMin: it.trainMin.toFixed(0),
+            headTimesHtml,
+            segBarHtml,
+            segLegendHtml,
+            metaTailHtml,
+          };
+        }),
         mapCss: cssBody,
         mapScript: scriptBody,
       });
@@ -129,6 +171,12 @@ async function resolvePoint(p: Point, nom: Nominatim, label: string): Promise<{ 
     return { lat: rows[0].lat, lon: rows[0].lon };
   }
   throw new Error(`${label} requires {lat,lon} or {query}`);
+}
+
+function escLabel(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]!));
 }
 
 function toNumber(v: unknown, fallback: number): number {

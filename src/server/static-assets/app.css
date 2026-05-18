@@ -509,3 +509,49 @@ summary::-webkit-details-marker { display: none; }
   color: var(--rmai-fg-1);
   font: 13px var(--sans);
 }
+
+/* ─── Segment bar ─── */
+.seg-bar {
+  display: flex; width: 100%; height: 20px;
+  border-radius: 4px; overflow: hidden;
+  background: var(--rmai-stone);
+  border: 1px solid var(--rmai-border);
+  margin: 8px 0 4px;
+}
+.seg { display: flex; align-items: center; justify-content: center; min-width: 0; }
+.seg--bike  { background: var(--rmai-purple); color: #fff; }
+.seg--train { background: var(--rmai-fg-1);   color: #fff; }
+.seg--wait  { background: var(--rmai-stone);  color: var(--rmai-fg-2); }
+.seg__min {
+  font-family: var(--mono); font-size: 9.5px; font-weight: 600;
+  letter-spacing: 0.04em; text-shadow: 0 1px 0 rgba(0,0,0,0.15);
+  overflow: hidden; text-overflow: clip; white-space: nowrap;
+}
+.seg-bar__legend {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;
+  font-family: var(--mono); font-size: 10px; color: var(--rmai-fg-2);
+}
+.seg-legend { display: inline-flex; align-items: center; gap: 4px; }
+.seg-legend__chip { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+.seg-legend__chip--bike  { background: var(--rmai-purple); }
+.seg-legend__chip--train { background: var(--rmai-fg-1); }
+.seg-legend__chip--wait  { background: var(--rmai-stone); border: 1px solid var(--rmai-border); }
+
+.itinerary-card__head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+}
+.itinerary-card__times {
+  font-family: var(--mono); font-size: 11px; color: var(--rmai-fg-2);
+  margin-top: 2px;
+}
+.itinerary-card__actions {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;
+}
+.action-btn {
+  padding: 6px 10px; border: 1px solid var(--rmai-border); border-radius: 8px;
+  background: var(--rmai-white); color: var(--rmai-fg-1);
+  font: 600 11px var(--sans); cursor: pointer;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.action-btn:hover { background: var(--rmai-lavender); }
+.action-btn--mono { font-family: var(--mono); }

@@ -203,6 +203,54 @@ describe('POST /api/plan', () => {
     await app.close();
   });
 
+  it('HTML response includes a segment bar with bike and train segments + dep/arr times', async () => {
+    const fakeResultMixed = {
+      query: {
+        from: { lat: -37.64, lon: 145.19 }, to: { lat: -37.86, lon: 144.89 },
+        minBikeKm: 0, maxBikeKm: 20, maxTransfers: 1, enrich: true,
+        preferBikePath: false, hillWeight: 0, goal: 'commute', mode: 'bike-train',
+      },
+      itineraries: [{
+        labels: ['recommended'],
+        totalTimeMin: 92, bikeKm: 16, bikeMin: 43,
+        trainKm: 30, trainMin: 45, waitMin: 4, transfers: 0,
+        bikeKmOnPath: 12.5, ascendM: 220,
+        legs: [
+          { mode: 'bike',
+            from: { lat: -37.64, lon: 145.19 }, to: { lat: -37.65, lon: 145.10 },
+            km: 5, min: 12 },
+          { mode: 'train', routeId: 1, routeType: 0, routeName: 'Hurstbridge',
+            fromStopId: 1, toStopId: 2, fromStopName: 'A', toStopName: 'B',
+            departUtc: '2026-05-18T08:04:00Z', arriveUtc: '2026-05-18T08:49:00Z', runRef: 'r' },
+          { mode: 'bike',
+            from: { lat: -37.85, lon: 144.95 }, to: { lat: -37.86, lon: 144.89 },
+            km: 11, min: 31 },
+        ],
+      }],
+    };
+    const planFn = vi.fn(async () => fakeResultMixed);
+    const app = createApp({ logger: false, planFn, cache: null, nominatimUrl: 'http://x' });
+    const res = await app.inject({
+      method: 'POST', url: '/api/plan',
+      headers: { 'content-type': 'application/json', accept: 'text/html' },
+      payload: { origin: { lat: -37.64, lon: 145.19 }, destination: { lat: -37.86, lon: 144.89 },
+                 mode: 'bike-train', goal: 'commute' },
+    });
+    expect(res.body).toMatch(/class="seg-bar"/);
+    expect(res.body).toMatch(/seg seg--bike/);
+    expect(res.body).toMatch(/seg seg--train/);
+    expect(res.body).toMatch(/class="itin__dep mono"/);
+    expect(res.body).toMatch(/class="itin__arr mono"/);
+    expect(res.body).toMatch(/220.*m ↑/);
+    expect(res.body).toMatch(/78%.*path/);  // round(100 * 12.5 / 16) = 78
+    // action buttons (inert here; wired in task 4.3)
+    expect(res.body).toMatch(/data-action="share"/);
+    expect(res.body).toMatch(/data-action="gpx"/);
+    expect(res.body).toMatch(/data-action="osmand"/);
+    expect(res.body).toMatch(/data-action="equiv"/);
+    await app.close();
+  });
+
   it('JSON response exposes fields atlas.js renders', async () => {
     // Minimal fake plan result with all the fields renderPlanOnMap + renderResultsSheet read.
     const atlasResult = {
