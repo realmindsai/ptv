@@ -652,6 +652,20 @@ export function wirePillEdit() {
 }
 
 /**
+ * Swap origin and destination. If only one endpoint is set, it moves to the
+ * other side. If both are set, they swap and the plan re-fires.
+ */
+export function wireSwap(sm) {
+  const btn = document.getElementById('swap-btn');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const { origin, destination } = sm.state;
+    sm.setState({ origin: destination, destination: origin });
+    if (sm.state.origin && sm.state.destination) firePlan(sm);
+  });
+}
+
+/**
  * Block accidental form submits (e.g. pressing Enter inside an input).
  * Auto-fire happens via state transitions, not via form submission.
  */
@@ -954,9 +968,12 @@ export function init() {
 
   // Initialize the map.
   const map = L.map('map', { zoomControl: true });
-  const TILE_URL  = 'https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}.png';
-  const TILE_ATTR = '&copy; <a href="https://stadiamaps.com/">Stadia</a> &copy; <a href="https://stamen.com/">Stamen</a> &copy; <a href="https://openmaptiles.org/">OMT</a> &copy; OSM';
-  L.tileLayer(TILE_URL, { attribution: TILE_ATTR, maxZoom: 19 }).addTo(map);
+  // Stamen Toner-Lite via Stadia needs an API key for prod (returns 401 without).
+  // Stay on OSM tiles until we vendor a self-hosted style or wire a key.
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap',
+    maxZoom: 19,
+  }).addTo(map);
   map.setView([MELBOURNE_CENTER.lat, MELBOURNE_CENTER.lon], MELBOURNE_ZOOM);
   window.__atlasMap = map;
   window.__atlasMarkerLayer = L.layerGroup().addTo(map);
@@ -975,6 +992,7 @@ export function init() {
   wireClear(sm);
   wireFormSubmitGuard();
   wirePillEdit();
+  wireSwap(sm);
   wireTripChips(sm);
   wireItineraryActivation();
   wireActionButtons(sm);

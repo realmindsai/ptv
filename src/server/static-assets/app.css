@@ -401,9 +401,16 @@ body {
 
 /* ─── Trip chips ─── */
 .trip-chips {
-  position: absolute; top: 80px; left: 12px; right: 12px;
-  display: flex; align-items: center; gap: 6px; z-index: 9;
+  /* Sit below the pill in every state — pill (incl. edit mode w/ 2 rows + padding)
+     can be up to ~130px tall starting at top:8px, so chips need to clear ~138px.
+     z-index above the pill (10) so chips are clickable in case of residual overlap. */
+  position: absolute; top: 142px; left: 12px; right: 12px;
+  display: flex; align-items: center; gap: 6px; z-index: 11;
   overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.from-to-pill[data-state="set"] ~ .trip-chips {
+  /* Collapsed pill is shorter (~64px ending around y:72). Tuck chips closer. */
+  top: 80px;
 }
 .trip-chips__prefix { font-size: 10px; color: var(--rmai-fg-mut); letter-spacing: 0.08em; flex-shrink: 0; }
 .chip {
