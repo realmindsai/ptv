@@ -62,6 +62,11 @@ export function encodeUrlState(state) {
   return parts.join('&');
 }
 
+export function shareUrlFor(state) {
+  const q = encodeUrlState(state);
+  return `${window.location.origin}${window.location.pathname}${q ? '?' + q : ''}`;
+}
+
 export function decodeUrlState(search) {
   const trimmed = typeof search === 'string' ? search.replace(/^\?/, '') : '';
   if (trimmed === '') return { origin: null, destination: null, params: {} };

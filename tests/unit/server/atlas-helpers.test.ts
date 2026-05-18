@@ -200,3 +200,56 @@ describe('projectToPill', () => {
     expect(document.getElementById('destination-label-collapsed').textContent).toContain('-37.86');
   });
 });
+
+describe('buildCliEquivalent', () => {
+  it('emits minimal invocation for defaults', async () => {
+    const mod = await import('../../../src/server/static-assets/atlas.js');
+    const cmd = mod.buildCliEquivalent({
+      origin: { lat: -37.640, lon: 145.190 },
+      destination: { lat: -37.871, lon: 144.892 },
+      params: {
+        mode: 'bike-train', goal: 'commute', depart: '', arriveBy: '',
+        minBikeKm: 0, maxBikeKm: 20, maxTransfers: 1, hillWeight: 0,
+        minOnPathFraction: '', preferBikePath: false,
+      },
+    });
+    expect(cmd).toBe('ptv plan -37.64000,145.19000 -37.87100,144.89200');
+  });
+
+  it('includes only non-default flags', async () => {
+    const mod = await import('../../../src/server/static-assets/atlas.js');
+    const cmd = mod.buildCliEquivalent({
+      origin: { lat: -37.640, lon: 145.190 },
+      destination: { lat: -37.871, lon: 144.892 },
+      params: {
+        mode: 'bike-train', goal: 'day-ride', depart: '08:00', arriveBy: '',
+        minBikeKm: 0, maxBikeKm: 20, maxTransfers: 1, hillWeight: 0,
+        minOnPathFraction: '', preferBikePath: false,
+      },
+    });
+    expect(cmd).toContain('--depart 08:00');
+    expect(cmd).toContain('--goal day-ride');
+    expect(cmd).not.toContain('--min-bike-km');
+    expect(cmd).not.toContain('--max-bike-km');
+    expect(cmd).not.toContain('--max-transfers');
+    expect(cmd).not.toContain('--mode');
+  });
+
+  it('includes --mode and --max-transfers when set', async () => {
+    const mod = await import('../../../src/server/static-assets/atlas.js');
+    const cmd = mod.buildCliEquivalent({
+      origin: { lat: -37.640, lon: 145.190 },
+      destination: { lat: -37.871, lon: 144.892 },
+      params: {
+        mode: 'bike-only', goal: 'day-ride', depart: '', arriveBy: '',
+        minBikeKm: 0, maxBikeKm: 20, maxTransfers: 2, hillWeight: -1,
+        minOnPathFraction: 0.5, preferBikePath: true,
+      },
+    });
+    expect(cmd).toContain('--mode bike-only');
+    expect(cmd).toContain('--max-transfers 2');
+    expect(cmd).toContain('--hill-weight -1');
+    expect(cmd).toContain('--min-on-path-fraction 0.5');
+    expect(cmd).toContain('--prefer-bike-path');
+  });
+});

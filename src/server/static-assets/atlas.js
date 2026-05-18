@@ -6,7 +6,7 @@
  * firePlan posts to /api/plan (JSON mode) and renders the result.
  */
 
-import { encodeUrlState, decodeUrlState } from './url-state.js';
+import { encodeUrlState, decodeUrlState, shareUrlFor } from './url-state.js';
 import { segmentBarHtml, segmentsFromItinerary } from './segment-bar.js';
 
 export const DEFAULTS = Object.freeze({
@@ -91,8 +91,9 @@ export function createStateMachine() {
     origin:      null,
     destination: null,
     params:      { ...DEFAULTS },
-    pendingPlan: false,
-    lastResult:  null,
+    pendingPlan:  false,
+    lastResult:   null,
+    lastPlanKey:  null,
   };
   const projectors = [];
 
@@ -320,6 +321,86 @@ export function wireItineraryActivation() {
   });
 }
 
+export function wireActionButtons(sm) {
+  const root = document.getElementById('results');
+  if (!root) return;
+  root.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.action-btn[data-action]');
+    if (!btn) return;
+    e.stopPropagation();
+    const action = btn.dataset.action;
+    if (action === 'share')  return actShare(sm);
+    if (action === 'gpx')    return actGpx(sm);
+    if (action === 'osmand') return actOsmand(sm);
+    if (action === 'equiv')  return actEquiv(sm);
+  });
+}
+
+async function actShare(sm) {
+  const url = shareUrlFor(sm.state);
+  if (navigator.share) {
+    try { await navigator.share({ title: 'ptv plan', url }); return; } catch { /* fallthrough */ }
+  }
+  await copyToClipboardOrPrompt(url, 'link copied');
+}
+
+function actGpx(sm) {
+  if (!sm.state.lastPlanKey) { flashToast('plan not cached — re-plan first'); return; }
+  window.location.href = `/api/plan/${encodeURIComponent(sm.state.lastPlanKey)}/gpx`;
+}
+
+function actOsmand(sm) {
+  if (!sm.state.lastPlanKey) { flashToast('plan not cached — re-plan first'); return; }
+  const abs = `${window.location.origin}/api/plan/${encodeURIComponent(sm.state.lastPlanKey)}/gpx`;
+  window.location.href = `osmand://gpx?url=${encodeURIComponent(abs)}`;
+}
+
+async function actEquiv(sm) {
+  const cmd = buildCliEquivalent(sm.state);
+  await copyToClipboardOrPrompt(cmd, '$ equiv copied');
+}
+
+export function buildCliEquivalent(state) {
+  if (!state.origin || !state.destination) return 'ptv plan';
+  const fmt = (p) => `${p.lat.toFixed(5)},${p.lon.toFixed(5)}`;
+  const args = ['ptv plan', fmt(state.origin), fmt(state.destination)];
+  const p = state.params;
+  if (p.depart)              args.push('--depart', p.depart);
+  if (p.arriveBy)            args.push('--arrive-by', p.arriveBy);
+  if (p.goal !== 'commute')  args.push('--goal', p.goal);
+  if (p.mode !== 'bike-train') args.push('--mode', p.mode);
+  if (p.minBikeKm !== 0)     args.push('--min-bike-km', String(p.minBikeKm));
+  if (p.maxBikeKm !== 20)    args.push('--max-bike-km', String(p.maxBikeKm));
+  if (p.maxTransfers !== 1)  args.push('--max-transfers', String(p.maxTransfers));
+  if (p.hillWeight !== 0)    args.push('--hill-weight', String(p.hillWeight));
+  if (p.preferBikePath)      args.push('--prefer-bike-path');
+  if (p.minOnPathFraction != null && p.minOnPathFraction !== '') {
+    args.push('--min-on-path-fraction', String(p.minOnPathFraction));
+  }
+  return args.join(' ');
+}
+
+async function copyToClipboardOrPrompt(text, successMsg) {
+  if (navigator.clipboard && window.isSecureContext) {
+    try { await navigator.clipboard.writeText(text); flashToast(successMsg); return; } catch { /* fallthrough */ }
+  }
+  window.prompt('copy with ⌘C:', text);
+}
+
+function flashToast(msg) {
+  let toast = document.getElementById('__atlas_toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = '__atlas_toast';
+    toast.className = 'toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.classList.add('toast--visible');
+  clearTimeout(toast.__t);
+  toast.__t = setTimeout(() => toast.classList.remove('toast--visible'), 1500);
+}
+
 function escHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -398,7 +479,8 @@ export async function firePlan(sm, opts = {}) {
       return;
     }
     const result = await res.json();
-    sm.setState({ pendingPlan: false, lastResult: result });
+    const planKey = res.headers.get('x-plan-key') || null;
+    sm.setState({ pendingPlan: false, lastResult: result, lastPlanKey: planKey });
     renderPlanOnMap(result);
     renderResultsSheet(result);
   } catch (e) {
@@ -460,7 +542,7 @@ export function wireClear(sm) {
   const btn = document.getElementById('clear-trip');
   if (!btn) return;
   btn.addEventListener('click', () => {
-    sm.setState({ origin: null, destination: null, lastResult: null, __pushHistory: true });
+    sm.setState({ origin: null, destination: null, lastResult: null, lastPlanKey: null, __pushHistory: true });
     // Tear down any rendered polyline layers and bottom-sheet cards.
     if (window.__atlasRouteLayers) {
       for (const g of Object.values(window.__atlasRouteLayers)) window.__atlasMap?.removeLayer(g);
@@ -815,6 +897,7 @@ export function init() {
   wirePillEdit();
   wireTripChips(sm);
   wireItineraryActivation();
+  wireActionButtons(sm);
   refreshChipLabels();
   wireGeocodeSuggest(sm);
   wirePopstate(sm);
