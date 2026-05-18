@@ -217,6 +217,11 @@ export function renderPlanOnMap(result) {
     window.__atlasLayerControl = null;
   }
 
+  // Resolve palette colors from CSS custom properties.
+  const css = getComputedStyle(document.documentElement);
+  const BIKE_COLOR  = css.getPropertyValue('--rmai-purple').trim() || '#A77ACD';
+  const TRAIN_COLOR = css.getPropertyValue('--rmai-fg-1').trim()   || '#1A1B25';
+
   const labeled = result.itineraries.filter((i) => i.labels.length > 0);
   labeled.sort((a, b) => a.totalTimeMin - b.totalTimeMin);
 
@@ -230,7 +235,7 @@ export function renderPlanOnMap(result) {
         const coords = leg.geometry && leg.geometry.coordinates
           ? leg.geometry.coordinates.map((c) => [c[1], c[0]])
           : [[leg.from.lat, leg.from.lon], [leg.to.lat, leg.to.lon]];
-        const line = L.polyline(coords, { color: '#2a7', weight: 4 });
+        const line = L.polyline(coords, { color: BIKE_COLOR, weight: 4 });
         let popup = `bike: ${leg.km.toFixed(1)} km, ${leg.min.toFixed(0)} min`;
         if (typeof leg.kmOnPath === 'number' && leg.km > 0) {
           const pct = (100 * leg.kmOnPath / leg.km).toFixed(0);
@@ -245,11 +250,11 @@ export function renderPlanOnMap(result) {
         const toCoord = (typeof leg.toLat === 'number' && typeof leg.toLon === 'number')
           ? [leg.toLat, leg.toLon] : null;
         if (fromCoord && toCoord) {
-          const line = L.polyline([fromCoord, toCoord], { color: '#c33', weight: 4, dashArray: '8,6' });
+          const line = L.polyline([fromCoord, toCoord], { color: TRAIN_COLOR, weight: 4, dashArray: '8,6' });
           line.bindPopup(`train: ${leg.routeName}<br>${leg.fromStopName} → ${leg.toStopName}<br>${leg.departUtc} → ${leg.arriveUtc}`);
           group.addLayer(line);
-          L.circleMarker(fromCoord, { radius: 5, color: '#c33', fillOpacity: 1 }).bindPopup(leg.fromStopName).addTo(group);
-          L.circleMarker(toCoord,   { radius: 5, color: '#c33', fillOpacity: 1 }).bindPopup(leg.toStopName).addTo(group);
+          L.circleMarker(fromCoord, { radius: 5, color: TRAIN_COLOR, fillOpacity: 1 }).bindPopup(leg.fromStopName).addTo(group);
+          L.circleMarker(toCoord,   { radius: 5, color: TRAIN_COLOR, fillOpacity: 1 }).bindPopup(leg.toStopName).addTo(group);
           allBounds.push(fromCoord);
           allBounds.push(toCoord);
         }

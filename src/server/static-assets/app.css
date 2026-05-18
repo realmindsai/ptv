@@ -493,10 +493,10 @@ summary::-webkit-details-marker { display: none; }
   box-sizing: border-box;
 }
 .pin--origin {
-  background: var(--rmai-green);
+  background: var(--rmai-fg-1);
 }
 .pin--destination {
-  background: var(--rmai-orange);
+  background: var(--rmai-purple);
 }
 .pin--pending {
   opacity: 0.5;
