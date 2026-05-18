@@ -493,3 +493,64 @@ function showInlineError(prefix, message) {
   clearTimeout(showInlineError._t);
   showInlineError._t = setTimeout(() => el.classList.remove('is-visible'), 4000);
 }
+
+// --- bootstrap ---
+
+export function init() {
+  const L = window.L;
+  if (!L) {
+    console.error('atlas: Leaflet (window.L) not loaded — check script order in page.html');
+    return;
+  }
+
+  // Initialize the map.
+  const map = L.map('map', { zoomControl: true });
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap',
+    maxZoom: 19,
+  }).addTo(map);
+  map.setView([MELBOURNE_CENTER.lat, MELBOURNE_CENTER.lon], MELBOURNE_ZOOM);
+  window.__atlasMap = map;
+  window.__atlasMarkerLayer = L.layerGroup().addTo(map);
+
+  // Build the state machine and register projectors.
+  const sm = createStateMachine();
+  sm.registerProjector(projectToMap);
+  sm.registerProjector(projectToForm);
+  sm.registerProjector(projectToUrl);
+
+  // Wire events.
+  wireMapClicks(map, sm);
+  wirePinDrags(sm);
+  wireGeolocate(sm);
+  wireClear(sm);
+  wireForm(sm);
+  wireGeocodeSuggest(sm);
+  wirePopstate(sm);
+
+  // Load initial state from the URL.
+  const decoded = decodeUrlState(window.location.search);
+  if (decoded) {
+    sm.setState({
+      origin: decoded.origin,
+      destination: decoded.destination,
+      params: { ...DEFAULTS, ...decoded.params },
+    });
+    if (decoded.origin && decoded.destination) firePlan(sm);
+  }
+
+  // Suppress HTMX submit on the form (we intercept it ourselves). Keep the
+  // hx-* attrs as a no-JS fallback — they're inert when JS is loaded because
+  // our submit handler preventDefaults.
+
+  // Expose for debugging.
+  window.__atlas = { sm, map };
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+}
