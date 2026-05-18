@@ -436,8 +436,8 @@ export function wireForm(sm) {
     let destination = (destLat && destLon) ? { lat: Number(destLat), lon: Number(destLon) } : parseDecimalCoord(String(fd.get('destination-query') || ''));
 
     if (!origin || !isValidLatLon(origin) || !destination || !isValidLatLon(destination)) {
-      // Let the HTMX fallback handle this case — its server-side validator returns
-      // a friendly error. We pre-empted the submit; re-fire the native one so HTMX picks it up.
+      // Block the submit entirely and show an inline error. The HTMX fallback only
+      // helps when a request reaches the server — with no coords we have nothing to send.
       e.preventDefault();
       showInlineError('origin', 'pick a from and to first (click the map or type a place)');
       return;
