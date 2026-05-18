@@ -36,121 +36,107 @@
   <!-- full-bleed leaflet target -->
   <div class="map" id="map"></div>
 
-  <!-- floating from/to pill -->
-  <div class="from-to-pill" role="form">
+  <!-- floating from/to pill — v2 collapsing shell -->
+  <div class="from-to-pill" id="from-to-pill" data-state="empty">
     <form
       id="plan-form"
       hx-post="/api/plan"
       hx-target="#results"
       hx-swap="innerHTML"
       hx-indicator="#results-sheet"
-      hx-disinherit="hx-indicator hx-disabled-elt"
-      hx-disabled-elt="#plan-btn"
+      hx-disinherit="hx-indicator"
       hx-headers='{"Accept":"text/html"}'
     >
-      <!-- from row -->
-      <div class="field-row field-row--origin">
-        <label for="origin-query">from</label>
-        <div class="field-row__input-with-button">
-          <input
-            id="origin-query"
-            name="origin-query"
-            type="text"
-            autocomplete="off"
-            placeholder="suburb, station, or -lat,lon"
-            hx-get="/api/geocode"
-            hx-trigger="keyup changed delay:300ms"
-            hx-target="#origin-suggest"
-            hx-vals='js:{q: document.getElementById("origin-query").value}'
-            hx-headers='{"Accept":"text/html"}'
-          >
-          <button type="button" id="geolocate-from" class="btn--icon" title="use my current location" aria-label="use my current location">⌖</button>
+
+      <!-- pill-edit: shown when data-state is "editing" or "empty" -->
+      <div class="pill-edit">
+        <div class="field-row field-row--origin">
+          <span class="dot dot--origin">A</span>
+          <input id="origin-query" name="origin-query" type="text" autocomplete="off"
+            placeholder="where from?"
+            hx-get="/api/geocode" hx-trigger="keyup changed delay:300ms"
+            hx-target="#origin-suggest" hx-vals='js:{q: document.getElementById("origin-query").value}'
+            hx-headers='{"Accept":"text/html"}'>
+          <input type="hidden" name="origin[lat]" id="origin-lat">
+          <input type="hidden" name="origin[lon]" id="origin-lon">
+          <div id="origin-suggest" class="geocode-suggest"></div>
+          <div id="origin-error" class="inline-error" aria-live="polite"></div>
         </div>
-        <input type="hidden" name="origin[lat]" id="origin-lat">
-        <input type="hidden" name="origin[lon]" id="origin-lon">
-        <div id="origin-suggest" class="geocode-suggest"></div>
-        <div id="origin-error" class="inline-error" aria-live="polite"></div>
-      </div>
-
-      <!-- to row -->
-      <div class="field-row field-row--destination">
-        <label for="destination-query">to</label>
-        <input
-          id="destination-query"
-          name="destination-query"
-          type="text"
-          autocomplete="off"
-          placeholder="suburb, station, or -lat,lon"
-          hx-get="/api/geocode"
-          hx-trigger="keyup changed delay:300ms"
-          hx-target="#destination-suggest"
-          hx-vals='js:{q: document.getElementById("destination-query").value}'
-          hx-headers='{"Accept":"text/html"}'
-        >
-        <input type="hidden" name="destination[lat]" id="destination-lat">
-        <input type="hidden" name="destination[lon]" id="destination-lon">
-        <div id="destination-suggest" class="geocode-suggest"></div>
-      </div>
-
-      <!-- quick options -->
-      <div class="quick-row">
-        <label class="quick-label">
-          <span class="quick-label__text">mode</span>
-          <select name="mode">
-            <option value="bike-only" selected>bike-only</option>
-            <option value="bike-train">bike-train</option>
-          </select>
-        </label>
-        <label class="quick-label">
-          <span class="quick-label__text">goal</span>
-          <select name="goal">
-            <option value="day-ride" selected>day-ride</option>
-            <option value="commute">commute</option>
-            <option value="max-path">max-path</option>
-          </select>
-        </label>
-      </div>
-
-      <!-- advanced -->
-      <details>
-        <summary>&#9658; advanced</summary>
-        <div class="adv-grid">
-          <label>depart
-            <input type="text" name="depart" placeholder="08:00" pattern="\d{2}:\d{2}">
-          </label>
-          <label>arrive-by
-            <input type="text" name="arriveBy" placeholder="--:--" pattern="\d{2}:\d{2}">
-          </label>
-          <label>min bike km
-            <input type="number" name="minBikeKm" value="0" min="0" step="1">
-          </label>
-          <label>max bike km
-            <input type="number" name="maxBikeKm" value="20" min="0" step="1">
-          </label>
-          <label>max transfers
-            <input type="number" name="maxTransfers" value="1" min="0" max="5" step="1">
-          </label>
-          <label>hill weight
-            <input type="range" name="hillWeight" value="0" min="-2" max="2" step="0.5">
-          </label>
-          <label>min on-path
-            <input type="number" name="minOnPathFraction" placeholder="0.5" min="0" max="1" step="0.05">
-          </label>
-          <label style="align-items:center;flex-direction:row;gap:6px;">
-            <input type="checkbox" name="preferBikePath" value="true">
-            prefer-bike-path
-          </label>
+        <div class="field-row field-row--destination">
+          <span class="dot dot--destination">B</span>
+          <input id="destination-query" name="destination-query" type="text" autocomplete="off"
+            placeholder="where to?"
+            hx-get="/api/geocode" hx-trigger="keyup changed delay:300ms"
+            hx-target="#destination-suggest" hx-vals='js:{q: document.getElementById("destination-query").value}'
+            hx-headers='{"Accept":"text/html"}'>
+          <input type="hidden" name="destination[lat]" id="destination-lat">
+          <input type="hidden" name="destination[lon]" id="destination-lon">
+          <div id="destination-suggest" class="geocode-suggest"></div>
         </div>
-      </details>
-
-      <div class="form-actions">
-        <button id="plan-btn" class="btn--cta" type="submit">
-          <span class="btn-label">plan</span>
-          <span class="btn-spinner" aria-hidden="true"></span>
-        </button>
-        <button id="clear-trip" type="button" class="btn--secondary" title="clear trip" aria-label="clear trip">×</button>
       </div>
+
+      <!-- pill-collapsed: shown when data-state is "ready" or "result" -->
+      <div class="pill-collapsed">
+        <div class="pill-collapsed__dots">
+          <span class="dot dot--origin">A</span>
+          <span class="pill-collapsed__connector"></span>
+          <span class="dot dot--destination">B</span>
+        </div>
+        <div class="pill-collapsed__labels">
+          <button type="button" class="pill-collapsed__btn" data-edit="origin"><span id="origin-label-collapsed">origin</span></button>
+          <button type="button" class="pill-collapsed__btn" data-edit="destination"><span id="destination-label-collapsed">destination</span></button>
+        </div>
+        <div class="pill-collapsed__icons">
+          <button type="button" id="swap-btn" class="btn--icon" title="swap" aria-label="swap">↕</button>
+          <button type="button" id="clear-trip" class="btn--icon" title="clear" aria-label="clear">×</button>
+        </div>
+      </div>
+
+      <!-- hidden param inputs — submitted with form for HTMX no-JS fallback -->
+      <input type="hidden" name="mode"              id="param-mode"              value="bike-train">
+      <input type="hidden" name="goal"              id="param-goal"              value="commute">
+      <input type="hidden" name="depart"            id="param-depart"            value="">
+      <input type="hidden" name="arriveBy"          id="param-arriveBy"          value="">
+      <input type="hidden" name="minBikeKm"         id="param-minBikeKm"         value="0">
+      <input type="hidden" name="maxBikeKm"         id="param-maxBikeKm"         value="20">
+      <input type="hidden" name="maxTransfers"      id="param-maxTransfers"      value="1">
+      <input type="hidden" name="hillWeight"        id="param-hillWeight"        value="0">
+      <input type="hidden" name="minOnPathFraction" id="param-minOnPathFraction" value="">
+      <input type="hidden" name="preferBikePath"    id="param-preferBikePath"    value="false">
     </form>
+  </div>
+
+  <!-- trip chips — outside form; JS-only interaction -->
+  <div class="trip-chips" id="trip-chips" role="toolbar" aria-label="trip parameters">
+    <span class="trip-chips__prefix mono">trip ·</span>
+    <button type="button" class="chip" data-chip="when" id="chip-when">
+      <span class="chip__dot chip__dot--now" id="chip-when-dot"></span>
+      <span id="chip-when-text">now</span>
+      <span class="chip__chev">▾</span>
+    </button>
+    <button type="button" class="chip" data-chip="goal" id="chip-goal">
+      <span id="chip-goal-text">commute</span>
+      <span class="chip__chev">▾</span>
+    </button>
+    <button type="button" class="chip" data-chip="flags" id="chip-flags">
+      <span class="mono">ƒ</span>
+      <span id="chip-flags-count" class="chip__badge"></span>
+    </button>
+  </div>
+
+  <!-- map FAB — geolocate -->
+  <button type="button" class="fab" id="fab-geolocate" title="use my current location" aria-label="use my current location">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+  </button>
+
+  <!-- params sheet shell — populated by JS, hidden by default -->
+  <div class="sheet sheet--params" id="params-sheet" hidden>
+    <div class="sheet__handle"></div>
+    <div class="params-sheet__head">
+      <h2>trip params</h2>
+      <button type="button" id="params-done" class="link-btn">done</button>
+    </div>
+    <div class="params-sheet__body" id="params-sheet-body"></div>
   </div>
 
   <!-- bottom sheet — results -->
