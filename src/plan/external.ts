@@ -292,6 +292,34 @@ export async function ghRouteBike(
   to: LatLon,
   profile: 'bike' | 'bike_quiet' = 'bike',
 ): Promise<ParsedGhRoute | null> {
+  // REST first — works inside Docker (graphhopper-vic-bike:8989) and from any
+  // machine on the tailnet (graphhopper.magpie-inconnu.ts.net:8989). Same data
+  // as the subprocess CLI, fewer moving parts in the container deploy.
+  try {
+    const r = await fetch(GH_REST_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        points: [[from.lon, from.lat], [to.lon, to.lat]],
+        profile,
+        'ch.disable': true,
+        points_encoded: false,
+        instructions: false,
+        elevation: true,
+        details: ['road_class', 'average_slope', 'surface'],
+      }),
+    });
+    if (r.ok) {
+      const data = await r.json() as { paths?: unknown[] };
+      if (data.paths && data.paths.length > 0) {
+        return parseGhRoute([{ response: { paths: data.paths as never } }]);
+      }
+    }
+  } catch {
+    // network/connection refused — fall through to the subprocess binary if present
+  }
+  // Subprocess fallback for CLI dev environments where REST isn't reachable
+  // but a local gh-route binary exists.
   try {
     const raw = runJson(GH_BIN, [
       'route',
