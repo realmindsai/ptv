@@ -554,6 +554,216 @@ function showInlineError(prefix, message) {
   showInlineError._t = setTimeout(() => el.classList.remove('is-visible'), 4000);
 }
 
+// --- params-sheet ---
+
+let __paramsSheetHtml = null;
+async function ensureParamsSheetLoaded() {
+  if (__paramsSheetHtml) return __paramsSheetHtml;
+  const res = await fetch('/static/params-sheet.html');
+  __paramsSheetHtml = await res.text();
+  const body = document.getElementById('params-sheet-body');
+  if (body) body.innerHTML = __paramsSheetHtml;
+  return __paramsSheetHtml;
+}
+
+export function wireTripChips(sm) {
+  const sheet = document.getElementById('params-sheet');
+  const doneBtn = document.getElementById('params-done');
+  if (!sheet || !doneBtn) return;
+  document.querySelectorAll('#trip-chips .chip').forEach((chip) => {
+    chip.addEventListener('click', async () => {
+      await ensureParamsSheetLoaded();
+      bindParamsSheet(sm);
+      sheet.hidden = false;
+      const section = chip.dataset.chip;
+      const target = document.querySelector(`.ps-section[data-section="${section}"]`);
+      if (target) target.scrollIntoView({ block: 'start' });
+    });
+  });
+  doneBtn.addEventListener('click', () => {
+    sheet.hidden = true;
+    syncParamsFromHiddenInputs(sm);
+    refreshChipLabels();
+  });
+}
+
+function bindParamsSheet(sm) {
+  const sheet = document.getElementById('params-sheet');
+  if (sheet && sheet.__paramsSheetBound) {
+    // Already bound — just re-sync current values from sm.state.params into the controls.
+    syncSheetControlsFromState(sm);
+    return;
+  }
+
+  const p = sm.state.params;
+
+  // WHEN — segmented buttons for now/depart/arriveBy
+  const activeWhen = p.arriveBy ? 'arriveBy' : p.depart ? 'depart' : 'now';
+  document.querySelectorAll('[data-when]').forEach((b) => {
+    b.classList.toggle('is-active', b.dataset.when === activeWhen);
+    b.addEventListener('click', () => {
+      document.querySelectorAll('[data-when]').forEach((x) => x.classList.toggle('is-active', x === b));
+      const which = b.dataset.when;
+      const v = document.getElementById('ps-time')?.value || '';
+      document.getElementById('param-depart').value   = (which === 'depart')   ? v : '';
+      document.getElementById('param-arriveBy').value = (which === 'arriveBy') ? v : '';
+    });
+  });
+  const tEl = document.getElementById('ps-time');
+  if (tEl) {
+    tEl.value = p.depart || p.arriveBy || '';
+    tEl.addEventListener('input', () => {
+      const which = document.querySelector('[data-when].is-active')?.dataset.when;
+      const v = tEl.value;
+      document.getElementById('param-depart').value   = (which === 'depart')   ? v : '';
+      document.getElementById('param-arriveBy').value = (which === 'arriveBy') ? v : '';
+    });
+  }
+
+  // GOAL — radio cards
+  document.querySelectorAll('input[name="ps-goal"]').forEach((r) => {
+    r.checked = r.value === p.goal;
+    r.addEventListener('change', () => {
+      document.getElementById('param-goal').value = r.value;
+    });
+  });
+
+  // MODE — segmented
+  document.querySelectorAll('[data-mode]').forEach((b) => {
+    b.classList.toggle('is-active', b.dataset.mode === p.mode);
+    b.addEventListener('click', () => {
+      document.querySelectorAll('[data-mode]').forEach((x) => x.classList.toggle('is-active', x === b));
+      document.getElementById('param-mode').value = b.dataset.mode;
+    });
+  });
+
+  // HILL
+  const hw = document.getElementById('ps-hillWeight');
+  if (hw) {
+    hw.value = String(p.hillWeight);
+    const out = document.getElementById('ps-hillWeight-out');
+    if (out) out.textContent = String(p.hillWeight);
+    hw.addEventListener('input', () => {
+      if (out) out.textContent = hw.value;
+      document.getElementById('param-hillWeight').value = hw.value;
+    });
+  }
+
+  // MIN ON PATH
+  const mp = document.getElementById('ps-minOnPath');
+  if (mp) {
+    const v = typeof p.minOnPathFraction === 'number' ? p.minOnPathFraction
+            : (p.minOnPathFraction === '' || p.minOnPathFraction == null ? 0 : Number(p.minOnPathFraction));
+    mp.value = String(v);
+    const out = document.getElementById('ps-minOnPath-out');
+    if (out) out.textContent = `${Math.round(v * 100)}%`;
+    mp.addEventListener('input', () => {
+      if (out) out.textContent = `${Math.round(Number(mp.value) * 100)}%`;
+      document.getElementById('param-minOnPathFraction').value = mp.value === '0' ? '' : mp.value;
+    });
+  }
+
+  // BIKE KM RANGE
+  const minK = document.getElementById('ps-minBikeKm');
+  const maxK = document.getElementById('ps-maxBikeKm');
+  if (minK) {
+    minK.value = String(p.minBikeKm);
+    minK.addEventListener('input', () => { document.getElementById('param-minBikeKm').value = minK.value; });
+  }
+  if (maxK) {
+    maxK.value = String(p.maxBikeKm);
+    maxK.addEventListener('input', () => { document.getElementById('param-maxBikeKm').value = maxK.value; });
+  }
+
+  // TRANSFERS
+  document.querySelectorAll('[data-transfers]').forEach((b) => {
+    b.classList.toggle('is-active', b.dataset.transfers === String(p.maxTransfers));
+    b.addEventListener('click', () => {
+      document.querySelectorAll('[data-transfers]').forEach((x) => x.classList.toggle('is-active', x === b));
+      document.getElementById('param-maxTransfers').value = b.dataset.transfers;
+    });
+  });
+
+  // PREFER BIKE PATH
+  const pbp = document.getElementById('ps-preferBikePath');
+  if (pbp) {
+    pbp.checked = !!p.preferBikePath;
+    pbp.addEventListener('change', () => {
+      document.getElementById('param-preferBikePath').value = String(pbp.checked);
+    });
+  }
+
+  if (sheet) sheet.__paramsSheetBound = true;
+}
+
+function syncSheetControlsFromState(sm) {
+  const p = sm.state.params;
+  const activeWhen = p.arriveBy ? 'arriveBy' : p.depart ? 'depart' : 'now';
+  document.querySelectorAll('[data-when]').forEach((b) => {
+    b.classList.toggle('is-active', b.dataset.when === activeWhen);
+  });
+  const tEl = document.getElementById('ps-time');
+  if (tEl) tEl.value = p.depart || p.arriveBy || '';
+
+  document.querySelectorAll('input[name="ps-goal"]').forEach((r) => {
+    r.checked = r.value === p.goal;
+  });
+
+  document.querySelectorAll('[data-mode]').forEach((b) => {
+    b.classList.toggle('is-active', b.dataset.mode === p.mode);
+  });
+
+  const hw = document.getElementById('ps-hillWeight');
+  const hwOut = document.getElementById('ps-hillWeight-out');
+  if (hw) hw.value = String(p.hillWeight);
+  if (hwOut) hwOut.textContent = String(p.hillWeight);
+
+  const mp = document.getElementById('ps-minOnPath');
+  const mpOut = document.getElementById('ps-minOnPath-out');
+  const mpV = typeof p.minOnPathFraction === 'number' ? p.minOnPathFraction
+            : (p.minOnPathFraction === '' || p.minOnPathFraction == null ? 0 : Number(p.minOnPathFraction));
+  if (mp) mp.value = String(mpV);
+  if (mpOut) mpOut.textContent = `${Math.round(mpV * 100)}%`;
+
+  const minK = document.getElementById('ps-minBikeKm');
+  const maxK = document.getElementById('ps-maxBikeKm');
+  if (minK) minK.value = String(p.minBikeKm);
+  if (maxK) maxK.value = String(p.maxBikeKm);
+
+  document.querySelectorAll('[data-transfers]').forEach((b) => {
+    b.classList.toggle('is-active', b.dataset.transfers === String(p.maxTransfers));
+  });
+
+  const pbp = document.getElementById('ps-preferBikePath');
+  if (pbp) pbp.checked = !!p.preferBikePath;
+}
+
+export function refreshChipLabels() {
+  const goalEl = document.getElementById('param-goal');
+  const departEl = document.getElementById('param-depart');
+  const arriveByEl = document.getElementById('param-arriveBy');
+  const goal = goalEl ? goalEl.value : 'commute';
+  const depart = departEl ? departEl.value : '';
+  const arriveBy = arriveByEl ? arriveByEl.value : '';
+  const when = arriveBy ? `arr ${arriveBy}` : (depart || 'now');
+  const setText = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  setText('chip-when-text', when);
+  const dot = document.getElementById('chip-when-dot');
+  if (dot) dot.classList.toggle('chip__dot--now', when === 'now');
+  setText('chip-goal-text', goal);
+
+  // Flags badge: count any params that deviate from the form's hidden defaults.
+  let flags = 0;
+  const v = (id) => document.getElementById(id)?.value ?? '';
+  if (v('param-hillWeight') !== '0') flags++;
+  if (v('param-minOnPathFraction') !== '') flags++;
+  if (v('param-preferBikePath') === 'true') flags++;
+  if (v('param-minBikeKm') !== '0' || v('param-maxBikeKm') !== '20') flags++;
+  if (v('param-maxTransfers') !== '1') flags++;
+  const badge = document.getElementById('chip-flags-count');
+  if (badge) badge.textContent = flags > 0 ? String(flags) : '';
+}
+
 // --- bootstrap ---
 
 export function init() {
@@ -587,6 +797,8 @@ export function init() {
   wireClear(sm);
   wireFormSubmitGuard();
   wirePillEdit();
+  wireTripChips(sm);
+  refreshChipLabels();
   wireGeocodeSuggest(sm);
   wirePopstate(sm);
 
