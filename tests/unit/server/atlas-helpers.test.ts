@@ -1,6 +1,7 @@
+// @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
 // @ts-expect-error - importing untyped JS module
-import { formatCoord, parseDecimalCoord, isValidLatLon, debounce, encodePlanBody, DEFAULTS, createStateMachine } from '../../../src/server/static-assets/atlas.js';
+import { formatCoord, parseDecimalCoord, isValidLatLon, debounce, encodePlanBody, DEFAULTS, createStateMachine, projectToPill } from '../../../src/server/static-assets/atlas.js';
 
 describe('atlas helpers', () => {
   describe('formatCoord', () => {
@@ -154,5 +155,23 @@ describe('state machine', () => {
     expect(sm.state).not.toHaveProperty('__pushHistory');
     // Projector still sees it on the patch:
     expect(a).toHaveBeenCalledWith(sm.state, expect.objectContaining({ __pushHistory: true }));
+  });
+});
+
+describe('projectToPill', () => {
+  it('switches data-state and updates label spans', async () => {
+    document.body.innerHTML = `
+      <div id="from-to-pill" data-state="empty"></div>
+      <span id="origin-label-collapsed"></span>
+      <span id="destination-label-collapsed"></span>`;
+    projectToPill({ origin: null, destination: null });
+    expect(document.getElementById('from-to-pill').dataset.state).toBe('edit');
+    projectToPill({
+      origin: { lat: -37.64, lon: 145.19, _label: 'Hurstbridge' },
+      destination: { lat: -37.86, lon: 144.89 },
+    });
+    expect(document.getElementById('from-to-pill').dataset.state).toBe('set');
+    expect(document.getElementById('origin-label-collapsed').textContent).toBe('Hurstbridge');
+    expect(document.getElementById('destination-label-collapsed').textContent).toContain('-37.86');
   });
 });

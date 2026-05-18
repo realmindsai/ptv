@@ -143,6 +143,22 @@ export function projectToForm(state) {
 }
 
 /**
+ * Sync the pill's collapsed/edit state based on whether both endpoints are set.
+ * Mirrors origin/destination labels (or raw coords) into the collapsed-view spans.
+ */
+export function projectToPill(state) {
+  const pill = document.getElementById('from-to-pill');
+  if (!pill) return;
+  const both = !!(state.origin && state.destination);
+  pill.dataset.state = both ? 'set' : 'edit';
+  if (!both) return;
+  const labelFor = (p) => p._label || formatCoord(p);
+  const setText = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  setText('origin-label-collapsed',      labelFor(state.origin));
+  setText('destination-label-collapsed', labelFor(state.destination));
+}
+
+/**
  * Sync the browser URL's query string from state.
  *
  * Uses replaceState for in-progress edits (first pin, drag-in-progress) and
@@ -399,7 +415,7 @@ export function wirePinDrags(sm) {
 }
 
 export function wireGeolocate(sm) {
-  const btn = document.getElementById('geolocate-from');
+  const btn = document.getElementById('fab-geolocate');
   if (!btn) return;
   btn.addEventListener('click', () => {
     if (!('geolocation' in navigator)) {
@@ -409,7 +425,8 @@ export function wireGeolocate(sm) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const point = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-        sm.setState({ origin: point });
+        const labeled = { ...point, _label: 'my location' };
+        sm.setState({ origin: labeled });
         window.__atlasMap?.setView([point.lat, point.lon], 13);
         if (sm.state.destination) firePlan(sm);
       },
@@ -438,50 +455,57 @@ export function wireClear(sm) {
   });
 }
 
-export function wireForm(sm) {
+/**
+ * Pill collapsed → edit transition. Clicking either label button re-opens
+ * the edit view and focuses that field for re-entry.
+ */
+export function wirePillEdit() {
+  document.querySelectorAll('[data-edit]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const which = btn.getAttribute('data-edit');
+      const pill = document.getElementById('from-to-pill');
+      if (!pill) return;
+      pill.dataset.state = 'edit';
+      const input = document.getElementById(`${which}-query`);
+      if (input) input.focus();
+    });
+  });
+}
+
+/**
+ * Block accidental form submits (e.g. pressing Enter inside an input).
+ * Auto-fire happens via state transitions, not via form submission.
+ */
+export function wireFormSubmitGuard() {
   const form = document.getElementById('plan-form');
   if (!form) return;
   form.addEventListener('submit', (e) => {
-    // Read current form values into params.
-    const fd = new FormData(form);
-    const params = {};
-    for (const k of Object.keys(DEFAULTS)) {
-      if (fd.has(k)) {
-        const raw = fd.get(k);
-        params[k] = typeof DEFAULTS[k] === 'number'
-          ? (raw === '' ? DEFAULTS[k] : Number(raw))
-          : (typeof DEFAULTS[k] === 'boolean' ? raw === 'true' || raw === 'on' : String(raw));
-      } else if (typeof DEFAULTS[k] === 'boolean') {
-        // Unchecked checkboxes don't appear in FormData.
-        params[k] = false;
-      }
-    }
-
-    // Read endpoints. Prefer hidden lat/lon (set by pin drops or geocode-suggest).
-    // Fallback: parse the visible text input as raw coords.
-    const origLat = fd.get('origin[lat]');
-    const origLon = fd.get('origin[lon]');
-    const destLat = fd.get('destination[lat]');
-    const destLon = fd.get('destination[lon]');
-    let origin = (origLat && origLon) ? { lat: Number(origLat), lon: Number(origLon) } : parseDecimalCoord(String(fd.get('origin-query') || ''));
-    let destination = (destLat && destLon) ? { lat: Number(destLat), lon: Number(destLon) } : parseDecimalCoord(String(fd.get('destination-query') || ''));
-
-    if (!origin || !isValidLatLon(origin) || !destination || !isValidLatLon(destination)) {
-      // Block the submit entirely and show an inline error. The HTMX fallback only
-      // helps when a request reaches the server — with no coords we have nothing to send.
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      showInlineError('origin', 'pick a from and to first (click the map or type a place)');
-      return;
-    }
-
-    // stopImmediatePropagation blocks HTMX's own submit listener — without it
-    // HTMX fires its form-encoded /api/plan request in parallel with our JSON one.
     e.preventDefault();
     e.stopImmediatePropagation();
-    sm.setState({ origin, destination, params });
-    firePlan(sm);
   });
+}
+
+/**
+ * Read the ten hidden #param-* inputs into state.params, then auto-fire if
+ * both endpoints are set. Called by the params-sheet "done" button (Task 2.4).
+ */
+export function syncParamsFromHiddenInputs(sm) {
+  const form = document.getElementById('plan-form');
+  if (!form) return;
+  const fd = new FormData(form);
+  const params = {};
+  for (const k of Object.keys(DEFAULTS)) {
+    if (fd.has(k)) {
+      const raw = fd.get(k);
+      params[k] = typeof DEFAULTS[k] === 'number'
+        ? (raw === '' ? DEFAULTS[k] : Number(raw))
+        : (typeof DEFAULTS[k] === 'boolean' ? raw === 'true' || raw === 'on' : String(raw));
+    } else if (typeof DEFAULTS[k] === 'boolean') {
+      params[k] = false;
+    }
+  }
+  sm.setState({ params });
+  if (sm.state.origin && sm.state.destination) firePlan(sm);
 }
 
 export function wireGeocodeSuggest(sm) {
@@ -497,7 +521,8 @@ export function wireGeocodeSuggest(sm) {
     const which = parentRow.classList.contains('field-row--origin') ? 'origin' : 'destination';
     const point = { lat: Number(item.dataset.lat), lon: Number(item.dataset.lon) };
     if (!isValidLatLon(point)) return;
-    sm.setState({ [which]: point });
+    const labeled = { ...point, _label: item.dataset.label };
+    sm.setState({ [which]: labeled });
     // Display the label (place name) instead of raw coords in the visible input.
     const queryEl = document.getElementById(`${which}-query`);
     if (queryEl) queryEl.value = item.dataset.label;
@@ -552,6 +577,7 @@ export function init() {
   const sm = createStateMachine();
   sm.registerProjector(projectToMap);
   sm.registerProjector(projectToForm);
+  sm.registerProjector(projectToPill);
   sm.registerProjector(projectToUrl);
 
   // Wire events.
@@ -559,7 +585,8 @@ export function init() {
   wirePinDrags(sm);
   wireGeolocate(sm);
   wireClear(sm);
-  wireForm(sm);
+  wireFormSubmitGuard();
+  wirePillEdit();
   wireGeocodeSuggest(sm);
   wirePopstate(sm);
 
