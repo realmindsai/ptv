@@ -202,4 +202,69 @@ describe('POST /api/plan', () => {
     expect(planFn).not.toHaveBeenCalled();
     await app.close();
   });
+
+  it('JSON response exposes fields atlas.js renders', async () => {
+    // Minimal fake plan result with all the fields renderPlanOnMap + renderResultsSheet read.
+    const atlasResult = {
+      query: { from: { lat: -37.78, lon: 144.96 }, to: { lat: -37.86, lon: 144.92 } },
+      itineraries: [
+        {
+          labels: ['recommended'],
+          totalTimeMin: 30,
+          bikeKm: 10.5,
+          bikeMin: 30,
+          bikeKmOnPath: 8,
+          trainKm: 0,
+          trainMin: 0,
+          waitMin: 0,
+          transfers: 0,
+          legs: [
+            {
+              mode: 'bike',
+              from: { lat: -37.78, lon: 144.96 },
+              to:   { lat: -37.86, lon: 144.92 },
+              km: 10.5,
+              min: 30,
+              kmOnPath: 8,
+              geometry: { type: 'LineString', coordinates: [[144.96, -37.78], [144.92, -37.86]] },
+            },
+          ],
+        },
+      ],
+    };
+
+    const planFn = vi.fn(async () => atlasResult as any);
+    const app = createApp({ logger: false, planFn, cache: null, nominatimUrl: 'http://x' });
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/plan',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      payload: JSON.stringify({
+        origin: { lat: -37.78, lon: 144.96 },
+        destination: { lat: -37.86, lon: 144.92 },
+      }),
+    });
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body);
+    // Top-level shape:
+    expect(body).toHaveProperty('itineraries');
+    expect(Array.isArray(body.itineraries)).toBe(true);
+    const it0 = body.itineraries[0];
+    // Card fields (renderResultsSheet):
+    expect(it0).toMatchObject({
+      labels: ['recommended'],
+      totalTimeMin: 30,
+      bikeKm: 10.5,
+      transfers: 0,
+      trainMin: 0,
+    });
+    // Polyline fields (renderPlanOnMap):
+    const bike = it0.legs[0];
+    expect(bike.mode).toBe('bike');
+    expect(bike).toHaveProperty('km');
+    expect(bike).toHaveProperty('kmOnPath');
+    expect(bike.geometry.coordinates[0]).toEqual([144.96, -37.78]);
+    await app.close();
+  });
 });
