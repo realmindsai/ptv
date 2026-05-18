@@ -251,6 +251,45 @@ describe('POST /api/plan', () => {
     await app.close();
   });
 
+  it('GET /api/plan/:key/gpx returns GPX for a cached plan; POST emits x-plan-key', async () => {
+    const cacheStore = new Map<string, unknown>();
+    const cache = {
+      get: async <T,>(scope: string, k: string) => (cacheStore.get(`${scope}:${k}`) as T) ?? null,
+      setex: async (scope: string, k: string, _ttl: number, v: unknown) => { cacheStore.set(`${scope}:${k}`, v); },
+    } as unknown as import('../../../src/server/cache').Cache;
+    const planFn = vi.fn(async () => fakeResult);
+    const app = createApp({ logger: false, planFn, cache, nominatimUrl: 'http://x' });
+    const post = await app.inject({
+      method: 'POST', url: '/api/plan',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      payload: { origin: { lat: -37.64, lon: 145.19 }, destination: { lat: -37.86, lon: 144.89 },
+                 mode: 'bike-only', goal: 'commute' },
+    });
+    expect(post.statusCode).toBe(200);
+    const key = post.headers['x-plan-key'];
+    expect(typeof key).toBe('string');
+    expect(key).toBeTruthy();
+    const get = await app.inject({ method: 'GET', url: `/api/plan/${key}/gpx` });
+    expect(get.statusCode).toBe(200);
+    expect(get.headers['content-type']).toMatch(/application\/gpx\+xml/);
+    expect(get.payload).toMatch(/^<\?xml /);
+    expect(get.payload).toContain('<gpx');
+    expect(get.headers['content-disposition']).toMatch(/attachment; filename="ptv-plan-/);
+    await app.close();
+  });
+
+  it('GET /api/plan/:key/gpx returns 404 for unknown key', async () => {
+    const cache = {
+      get: async () => null,
+      setex: async () => undefined,
+    } as unknown as import('../../../src/server/cache').Cache;
+    const app = createApp({ logger: false, cache, nominatimUrl: 'http://x' });
+    const res = await app.inject({ method: 'GET', url: '/api/plan/nonexistent/gpx' });
+    expect(res.statusCode).toBe(404);
+    expect(res.json().error.code).toBe('PLAN_NOT_FOUND');
+    await app.close();
+  });
+
   it('JSON response exposes fields atlas.js renders', async () => {
     // Minimal fake plan result with all the fields renderPlanOnMap + renderResultsSheet read.
     const atlasResult = {

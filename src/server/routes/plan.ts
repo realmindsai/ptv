@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { plan as defaultPlan } from '../../plan/orchestrator';
 import type { PlanRequest, PlanResult } from '../../plan/types';
 import { renderMapInit } from '../../plan/map';
+import { buildGpxXml } from '../../plan/gpx';
 import { render } from '../render';
 import { Cache } from '../cache';
 import { Nominatim } from '../nominatim';
@@ -48,6 +49,7 @@ export function registerPlan(
     }
 
     const key = planCacheKey(resolved as unknown as Record<string, unknown>);
+    reply.header('x-plan-key', key);
     let result = (await deps.cache?.get<PlanResult>('plan', key)) ?? null;
     if (!result) {
       try {
@@ -122,6 +124,17 @@ export function registerPlan(
       });
     }
     return result;
+  });
+
+  app.get<{ Params: { key: string } }>('/api/plan/:key/gpx', async (req, reply) => {
+    const result = (await deps.cache?.get<PlanResult>('plan', req.params.key)) ?? null;
+    if (!result) {
+      reply.code(404);
+      return { error: { code: 'PLAN_NOT_FOUND', message: 'plan cache miss — re-plan to download' } };
+    }
+    reply.type('application/gpx+xml; charset=utf-8');
+    reply.header('content-disposition', `attachment; filename="ptv-plan-${req.params.key}.gpx"`);
+    return buildGpxXml(result);
   });
 }
 
