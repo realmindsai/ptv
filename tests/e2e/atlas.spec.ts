@@ -109,19 +109,20 @@ test('geocode autocomplete fills hidden inputs and submits a plan', async ({ pag
   await expect(page.locator('#origin-suggest .geocode-item')).toHaveCount(0);
 });
 
-test('plan error responses are swapped into #results (HTMX swap-on-error)', async ({ page }) => {
-  // Regression: HTMX 1.x by default does NOT swap non-2xx responses. Our /api/plan
-  // returns 4xx/5xx with a friendly error fragment; without an htmx:beforeSwap
-  // listener the user sees an empty #results and no error.
+test('plan error responses are rendered into #results (atlas.js JS path)', async ({ page }) => {
+  // atlas.js intercepts form submit and posts JSON to /api/plan. A 5xx response
+  // triggers renderResultsError(), which writes a .error div. Verify user sees it.
+  // (Previously tested the HTMX htmx:beforeSwap path; that path is now bypassed
+  // by the atlas.js wireForm submit interceptor.)
   await page.route('**/api/plan', async (route) => {
     await route.fulfill({
-      status: 500, contentType: 'text/html',
-      body: '<div id="results-inner" class="error-banner" role="alert"><strong>error:</strong> simulated planner failure</div>',
+      status: 500, contentType: 'application/json',
+      body: JSON.stringify({ error: { message: 'simulated planner failure' } }),
     });
   });
 
   await page.goto(BASE);
-  // The form has required hidden lat/lon; populate them directly so submit fires.
+  // Populate hidden lat/lon so the atlas.js wireForm handler sees valid coords.
   await page.evaluate(() => {
     (document.getElementById('origin-lat') as HTMLInputElement).value = '-37.64';
     (document.getElementById('origin-lon') as HTMLInputElement).value = '145.19';
@@ -130,8 +131,8 @@ test('plan error responses are swapped into #results (HTMX swap-on-error)', asyn
   });
   await page.locator('#plan-btn').click();
 
-  await expect(page.locator('#results .error-banner')).toBeVisible({ timeout: 3000 });
-  await expect(page.locator('#results .error-banner')).toContainText('simulated planner failure');
+  await expect(page.locator('#results .error')).toBeVisible({ timeout: 3000 });
+  await expect(page.locator('#results .error')).toContainText('simulated planner failure');
 });
 
 test('typing in autocomplete does not throw and does not flash plan indicator', async ({ page }) => {
@@ -163,20 +164,32 @@ test('typing in autocomplete does not throw and does not flash plan indicator', 
 });
 
 test('form submits depart=HH:MM through to /api/plan', async ({ page }) => {
-  // Capture what the form posts to the server.
-  let capturedBody = '';
+  // atlas.js intercepts form submit and posts JSON to /api/plan. Capture the
+  // atlas.js JSON body (Content-Type: application/json) and verify depart is present.
+  // NOTE: HTMX also fires a form-encoded POST; we only care about the atlas.js one.
+  let capturedJsonBody = '';
   await page.route('**/api/plan', async (route) => {
-    capturedBody = route.request().postData() ?? '';
-    // Return an empty 200 fragment so HTMX has something to swap.
-    await route.fulfill({
-      status: 200, contentType: 'text/html',
-      body: '<div id="results-inner" class="results-empty">ok</div>',
-    });
+    if (route.request().method() !== 'POST') return route.continue();
+    const ct = route.request().headers()['content-type'] ?? '';
+    if (!ct.includes('application/json')) {
+      // HTMX form-encoded fallback — return empty result so it doesn't interfere.
+      return route.fulfill({ status: 200, contentType: 'text/html', body: '' });
+    }
+    capturedJsonBody = route.request().postData() ?? '';
+    const fake = {
+      query: {},
+      itineraries: [{
+        labels: ['recommended'], totalTimeMin: 30, bikeKm: 10, bikeMin: 30,
+        trainKm: 0, trainMin: 0, waitMin: 0, transfers: 0,
+        legs: [{ mode: 'bike', from: { lat: -37.64, lon: 145.19 }, to: { lat: -37.86, lon: 144.89 }, km: 10, min: 30 }],
+      }],
+    };
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(fake) });
   });
 
   await page.goto(BASE);
 
-  // Populate hidden lat/lon directly (matches the swap-on-error e2e test).
+  // Populate hidden lat/lon so wireForm sees valid coords.
   await page.evaluate(() => {
     (document.getElementById('origin-lat') as HTMLInputElement).value = '-37.64';
     (document.getElementById('origin-lon') as HTMLInputElement).value = '145.19';
@@ -192,10 +205,142 @@ test('form submits depart=HH:MM through to /api/plan', async ({ page }) => {
 
   await page.locator('#plan-btn').click();
 
-  // Wait for the fulfilled response to come back so capturedBody is populated.
-  await expect(page.locator('#results .results-empty')).toBeVisible({ timeout: 3000 });
+  // Wait for the atlas.js result card to confirm the JSON request completed.
+  await expect(page.locator('#results .itinerary-card')).toHaveCount(1, { timeout: 3000 });
 
-  // HTMX serializes as form-urlencoded by default. URL-decode and check.
-  const decoded = decodeURIComponent(capturedBody);
-  expect(decoded).toContain('depart=08:00');
+  // atlas.js posts JSON — depart must be present in the JSON body.
+  const parsed = JSON.parse(capturedJsonBody);
+  expect(parsed.depart).toBe('08:00');
+});
+
+// ---------------------------------------------------------------------------
+// Phase 2: click-to-route, URL load, clear, geolocate, form submit (JS path)
+// ---------------------------------------------------------------------------
+
+test('click-to-route: two map clicks fire a plan', async ({ page }) => {
+  // Stub /api/plan to a deterministic result so the test doesn't depend on
+  // a live planner. This isolates the client-side wiring.
+  await page.route('**/api/plan', async (route) => {
+    if (route.request().method() !== 'POST') return route.continue();
+    const fake = {
+      query: { from: { lat: -37.78, lon: 144.96 }, to: { lat: -37.86, lon: 144.92 } },
+      itineraries: [{
+        labels: ['recommended'],
+        totalTimeMin: 30,
+        bikeKm: 10.5,
+        bikeMin: 30,
+        trainKm: 0,
+        trainMin: 0,
+        waitMin: 0,
+        transfers: 0,
+        legs: [{ mode: 'bike', from: { lat: -37.78, lon: 144.96 }, to: { lat: -37.86, lon: 144.92 }, km: 10.5, min: 30 }],
+      }],
+    };
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(fake) });
+  });
+
+  await page.goto(BASE);
+  await page.waitForSelector('#map', { state: 'visible' });
+  // Wait for atlas.js bootstrap.
+  await page.waitForFunction(() => !!(window as any).__atlas);
+
+  // Two map clicks (rough pixel coords inside the map div).
+  const map = page.locator('#map');
+  const box = await map.boundingBox();
+  if (!box) throw new Error('map not laid out');
+  await map.click({ position: { x: box.width * 0.3, y: box.height * 0.4 } });
+  await map.click({ position: { x: box.width * 0.7, y: box.height * 0.6 } });
+
+  // Results sheet should populate.
+  await expect(page.locator('#results .itinerary-card')).toHaveCount(1, { timeout: 5000 });
+  await expect(page.locator('.itinerary-card__label')).toContainText('recommended');
+
+  // URL should now have ?from=...&to=...
+  await expect.poll(() => page.url()).toMatch(/\?from=.+&to=.+/);
+});
+
+test('URL load: ?from=...&to=... auto-fires the plan', async ({ page }) => {
+  await page.route('**/api/plan', async (route) => {
+    if (route.request().method() !== 'POST') return route.continue();
+    const fake = {
+      query: { from: { lat: -37.78, lon: 144.96 }, to: { lat: -37.86, lon: 144.92 } },
+      itineraries: [{
+        labels: ['recommended'],
+        totalTimeMin: 25, bikeKm: 8, bikeMin: 25,
+        trainKm: 0, trainMin: 0, waitMin: 0, transfers: 0,
+        legs: [{ mode: 'bike', from: { lat: -37.78, lon: 144.96 }, to: { lat: -37.86, lon: 144.92 }, km: 8, min: 25 }],
+      }],
+    };
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(fake) });
+  });
+
+  await page.goto(`${BASE}/?from=-37.78,144.96&to=-37.86,144.92`);
+  await page.waitForFunction(() => !!(window as any).__atlas);
+
+  // Plan fires automatically.
+  await expect(page.locator('#results .itinerary-card')).toHaveCount(1, { timeout: 5000 });
+  await expect(page.locator('#origin-query')).toHaveValue(/-37\.78/);
+  await expect(page.locator('#destination-query')).toHaveValue(/-37\.86/);
+});
+
+test('clear button removes pins, results, and URL state', async ({ page }) => {
+  await page.route('**/api/plan', async (route) => {
+    if (route.request().method() !== 'POST') return route.continue();
+    const fake = {
+      query: { from: { lat: -37.78, lon: 144.96 }, to: { lat: -37.86, lon: 144.92 } },
+      itineraries: [{
+        labels: ['recommended'], totalTimeMin: 30, bikeKm: 10, bikeMin: 30,
+        trainKm: 0, trainMin: 0, waitMin: 0, transfers: 0,
+        legs: [{ mode: 'bike', from: { lat: -37.78, lon: 144.96 }, to: { lat: -37.86, lon: 144.92 }, km: 10, min: 30 }],
+      }],
+    };
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(fake) });
+  });
+
+  await page.goto(`${BASE}/?from=-37.78,144.96&to=-37.86,144.92`);
+  await page.waitForFunction(() => !!(window as any).__atlas);
+  await expect(page.locator('#results .itinerary-card')).toHaveCount(1, { timeout: 5000 });
+
+  await page.locator('#clear-trip').click();
+  await expect(page.locator('#results .itinerary-card')).toHaveCount(0);
+  await expect(page.locator('#origin-query')).toHaveValue('');
+  await expect.poll(() => page.url()).not.toMatch(/\?from=/);
+});
+
+test('geolocation button fills origin with stubbed position', async ({ page, context }) => {
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: -37.81, longitude: 144.96 });
+
+  await page.goto(BASE);
+  await page.waitForFunction(() => !!(window as any).__atlas);
+
+  await page.locator('#geolocate-from').click();
+
+  await expect(page.locator('#origin-query')).toHaveValue(/-37\.81/, { timeout: 3000 });
+  await expect.poll(() => page.url()).toMatch(/\?from=-37\.81/);
+});
+
+test('regression: typed search + form submit still produces a plan via JS-intercept path', async ({ page }) => {
+  await page.route('**/api/plan', async (route) => {
+    if (route.request().method() !== 'POST') return route.continue();
+    const fake = {
+      query: { from: { lat: -37.78, lon: 144.96 }, to: { lat: -37.86, lon: 144.92 } },
+      itineraries: [{
+        labels: ['recommended'], totalTimeMin: 30, bikeKm: 10, bikeMin: 30,
+        trainKm: 0, trainMin: 0, waitMin: 0, transfers: 0,
+        legs: [{ mode: 'bike', from: { lat: -37.78, lon: 144.96 }, to: { lat: -37.86, lon: 144.92 }, km: 10, min: 30 }],
+      }],
+    };
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(fake) });
+  });
+
+  await page.goto(BASE);
+  await page.waitForFunction(() => !!(window as any).__atlas);
+
+  // Type raw coords (skipping geocode-suggest).
+  await page.locator('#origin-query').fill('-37.78, 144.96');
+  await page.locator('#destination-query').fill('-37.86, 144.92');
+  await page.locator('#plan-btn').click();
+
+  await expect(page.locator('#results .itinerary-card')).toHaveCount(1, { timeout: 5000 });
 });
