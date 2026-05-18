@@ -7,6 +7,8 @@ export function registerStatic(app: FastifyInstance): void {
     root: resolve(__dirname, '../static-assets'),
     prefix: '/static/',
     cacheControl: true,
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in ms
+    maxAge: 5 * 60 * 1000, // 5 minutes — short TTL so future deploys propagate
+                            // through Cloudflare without stale-cache incidents.
+                            // page.html appends ?v= to its asset URLs as belt-and-braces.
   });
 }

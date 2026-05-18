@@ -6,7 +6,9 @@
  * firePlan posts to /api/plan (JSON mode) and renders the result.
  */
 
-import { encodeUrlState, decodeUrlState, shareUrlFor } from './url-state.js';
+// Query strings bypass Cloudflare's cached stale copies of these files.
+// Bump on each change (the fastifyStatic handler ignores the query).
+import { encodeUrlState, decodeUrlState, shareUrlFor } from './url-state.js?v=v2-1';
 import { segmentBarHtml, segmentsFromItinerary } from './segment-bar.js';
 import { addRecent, listRecents } from './recents.js';
 

@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
   <title>ptv plan</title>
-  <link rel="stylesheet" href="/static/leaflet.css">
-  <link rel="stylesheet" href="/static/app.css">
-  <script src="/static/leaflet.js"></script>
-  <script src="/static/htmx.min.js" defer></script>
+  <link rel="stylesheet" href="/static/leaflet.css?v={{v}}">
+  <link rel="stylesheet" href="/static/app.css?v={{v}}">
+  <script src="/static/leaflet.js?v={{v}}"></script>
+  <script src="/static/htmx.min.js?v={{v}}" defer></script>
   <style>
     /* Atlas palette tokens — kept inline intentionally (defensive redundancy).
        /static/app.css also declares these; the inline copy ensures the shell
@@ -169,7 +169,7 @@
   </script>
 
   <!-- Phase 2 client: state machine, click-to-route, URL state, geolocation -->
-  <script type="module" src="/static/atlas.js"></script>
+  <script type="module" src="/static/atlas.js?v={{v}}"></script>
 
 </body>
 </html>
