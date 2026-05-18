@@ -82,24 +82,27 @@ function trkFor(it: Itinerary): string {
   return `<trk><name>${name}</name><desc>${desc}</desc>${segs}</trk>`;
 }
 
-export function writeGpx(path: string, result: PlanResult): void {
-  const fullPath = resolve(path);
-  const dir = dirname(fullPath);
-  if (!existsSync(dir)) {
-    throw new Error(`cannot write to ${path}: directory does not exist`);
-  }
+export function buildGpxXml(result: PlanResult): string {
   const labeled = result.itineraries.filter((i) => i.labels.length > 0);
   labeled.sort((a, b) => a.totalTimeMin - b.totalTimeMin);
   const time = metadataTimeFor(result);
   const trks = labeled.map(trkFor).join('');
   const wpts = collectWaypoints(labeled).map(wptFor).join('');
   const body = [wpts, trks].filter((s) => s.length > 0).join('\n');
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+  return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" creator="ptv plan" xmlns="http://www.topografix.com/GPX/1/1">
 <metadata><time>${time}</time></metadata>
 ${body}
 </gpx>`;
-  writeFileSync(fullPath, xml, 'utf8');
+}
+
+export function writeGpx(path: string, result: PlanResult): void {
+  const fullPath = resolve(path);
+  const dir = dirname(fullPath);
+  if (!existsSync(dir)) {
+    throw new Error(`cannot write to ${path}: directory does not exist`);
+  }
+  writeFileSync(fullPath, buildGpxXml(result), 'utf8');
   // Skip `open` under vitest: the test typically deletes the temp file in a finally,
   // and macOS opens it asynchronously, producing a "file not found" browser tab.
   if (process.env.VITEST || process.env.NODE_ENV === 'test') return;
