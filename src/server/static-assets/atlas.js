@@ -8,7 +8,7 @@
 
 // Query strings bypass Cloudflare's cached stale copies of these files.
 // Bump on each change (the fastifyStatic handler ignores the query).
-import { encodeUrlState, decodeUrlState, shareUrlFor } from './url-state.js?v=v2-2';
+import { encodeUrlState, decodeUrlState, shareUrlFor } from './url-state.js?v=v2-3';
 import { segmentBarHtml, segmentsFromItinerary } from './segment-bar.js';
 import { addRecent, listRecents } from './recents.js';
 
@@ -19,7 +19,7 @@ export const DEFAULTS = Object.freeze({
   arriveBy: '',
   minBikeKm: 0,
   maxBikeKm: 40,
-  maxTransfers: 1,
+  maxTransfers: 0,
   hillWeight: 0,
   minOnPathFraction: '',
   preferBikePath: false,
@@ -376,7 +376,7 @@ export function buildCliEquivalent(state) {
   if (p.mode !== 'bike-train') args.push('--mode', p.mode);
   if (p.minBikeKm !== 0)     args.push('--min-bike-km', String(p.minBikeKm));
   if (p.maxBikeKm !== 40)    args.push('--max-bike-km', String(p.maxBikeKm));
-  if (p.maxTransfers !== 1)  args.push('--max-transfers', String(p.maxTransfers));
+  if (p.maxTransfers !== 0)  args.push('--max-transfers', String(p.maxTransfers));
   if (p.hillWeight !== 0)    args.push('--hill-weight', String(p.hillWeight));
   if (p.preferBikePath)      args.push('--prefer-bike-path');
   if (p.minOnPathFraction != null && p.minOnPathFraction !== '') {
@@ -634,20 +634,44 @@ export function wireGeolocate(sm) {
   if (!btn) return;
   btn.addEventListener('click', () => {
     if (!('geolocation' in navigator)) {
-      showInlineError('origin', 'geolocation unavailable in this browser');
+      flashToast('geolocation unavailable in this browser');
       return;
     }
+    // Visual cue so the user knows the click landed.
+    btn.classList.add('is-loading');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        btn.classList.remove('is-loading');
         const point = { lat: pos.coords.latitude, lon: pos.coords.longitude };
         const labeled = { ...point, _label: 'my location' };
         sm.setState({ origin: labeled });
         window.__atlasMap?.setView([point.lat, point.lon], 13);
+        flashToast('using my location');
         if (sm.state.destination) firePlan(sm);
       },
-      (err) => showInlineError('origin', err.message || 'geolocation failed'),
+      (err) => {
+        btn.classList.remove('is-loading');
+        // Use the toast instead of #origin-error — that div is inside .pill-edit
+        // which is hidden whenever the pill is in 'set' state, so users in that
+        // mode would silently see nothing happen.
+        const msg = err.code === 1 ? 'location permission denied'
+                  : err.code === 2 ? 'location unavailable'
+                  : err.code === 3 ? 'location request timed out'
+                  : err.message || 'geolocation failed';
+        flashToast(msg);
+      },
       { timeout: 10000, maximumAge: 60000 },
     );
+  });
+}
+
+// Sheet handle: tap to cycle between peek (220px) and expanded (75dvh).
+export function wireSheetHandle() {
+  const handle = document.getElementById('sheet-handle');
+  const sheet = document.getElementById('results-sheet');
+  if (!handle || !sheet) return;
+  handle.addEventListener('click', () => {
+    sheet.classList.toggle('is-expanded');
   });
 }
 
@@ -1000,7 +1024,7 @@ export function refreshChipLabels() {
   if (v('param-minOnPathFraction') !== '') flags++;
   if (v('param-preferBikePath') === 'true') flags++;
   if (v('param-minBikeKm') !== '0' || v('param-maxBikeKm') !== '40') flags++;
-  if (v('param-maxTransfers') !== '1') flags++;
+  if (v('param-maxTransfers') !== '0') flags++;
   const badge = document.getElementById('chip-flags-count');
   if (badge) badge.textContent = flags > 0 ? String(flags) : '';
 }
@@ -1037,6 +1061,7 @@ export function init() {
   wireMapClicks(map, sm);
   wirePinDrags(sm);
   wireGeolocate(sm);
+  wireSheetHandle();
   wireClear(sm);
   wireFormSubmitGuard();
   wirePillEdit();

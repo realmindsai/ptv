@@ -137,25 +137,49 @@ body {
   background: var(--rmai-white);
   border-radius: 22px 22px 0 0;
   box-shadow: 0 -8px 32px rgba(26,27,37,0.10), 0 -1px 0 var(--rmai-border);
-  padding: 8px 0 28px;
+  padding: 8px 0 12px;
   z-index: 10;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: height 220ms ease;
 }
 
-.sheet--peek    { height: 200px; }
-.sheet--results { height: 380px; }
-.sheet--advanced { height: 100%; }
+/* Sheet height states. Tap the handle to cycle peek → expanded → peek.
+   Expanded uses dvh so it tracks mobile chrome correctly. */
+.sheet--peek                { height: 220px; }
+.sheet--peek.is-expanded    { height: 75dvh; max-height: 640px; }
 
+/* The handle is now a tap target (full-width strip with the visual bar centered).
+   Hover/active states make the affordance visible. */
 .sheet__handle {
-  width: 36px;
-  height: 4px;
+  width: 100%;
+  padding: 8px 0 12px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sheet__handle::before {
+  content: '';
+  display: block;
+  width: 44px; height: 5px;
   border-radius: 999px;
   background: #D9D7D2;
-  margin: 6px auto 12px;
+  transition: background 120ms ease, width 120ms ease;
 }
+.sheet__handle:hover::before { background: var(--rmai-purple); }
+.sheet--peek.is-expanded .sheet__handle::before { width: 60px; }
 
 #results {
+  flex: 1;
+  min-height: 0;
   padding: 0 16px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ─── Geocode dropdown ─── */
@@ -445,14 +469,19 @@ body {
 
 /* ─── Map FAB ─── */
 .fab {
-  position: absolute; right: 14px; bottom: 220px;
+  position: absolute; right: 14px; bottom: 240px;
   width: 44px; height: 44px; border-radius: 50%;
   background: var(--rmai-white); border: 1px solid var(--rmai-border);
   box-shadow: 0 4px 14px rgba(26,27,37,0.18);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; padding: 0; color: var(--rmai-purple); z-index: 9;
+  cursor: pointer; padding: 0; color: var(--rmai-purple);
+  /* Above the bottom sheet so the user can always tap geolocate even when
+     the sheet is expanded. */
+  z-index: 20;
 }
 .fab:hover { background: var(--rmai-lavender); }
+.fab > svg { pointer-events: none; }
+.fab.is-loading { animation: pulse 1s ease-in-out infinite; }
 
 /* ─── Params sheet ─── */
 .sheet--params {

@@ -145,7 +145,7 @@ async function resolveRequest(body: PlanBody, nom: Nominatim): Promise<PlanReque
   // The orchestrator forbids maxTransfers > 0 in bike-only mode (there are no trains
   // to transfer between). Coerce rather than error so the form can default to
   // bike-only without the user knowing about the invariant.
-  const maxTransfers = mode === 'bike-only' ? 0 : toNumber(body.maxTransfers, 1);
+  const maxTransfers = mode === 'bike-only' ? 0 : toNumber(body.maxTransfers, 0);
   const departUtc   = parseOptionalTime(body.depart,   'depart');
   const arriveByUtc = parseOptionalTime(body.arriveBy, 'arriveBy');
   if (departUtc && arriveByUtc) {

@@ -99,7 +99,7 @@
       <input type="hidden" name="arriveBy"          id="param-arriveBy"          value="">
       <input type="hidden" name="minBikeKm"         id="param-minBikeKm"         value="0">
       <input type="hidden" name="maxBikeKm"         id="param-maxBikeKm"         value="40">
-      <input type="hidden" name="maxTransfers"      id="param-maxTransfers"      value="1">
+      <input type="hidden" name="maxTransfers"      id="param-maxTransfers"      value="0">
       <input type="hidden" name="hillWeight"        id="param-hillWeight"        value="0">
       <input type="hidden" name="minOnPathFraction" id="param-minOnPathFraction" value="">
       <input type="hidden" name="preferBikePath"    id="param-preferBikePath"    value="false">
@@ -141,7 +141,7 @@
 
   <!-- bottom sheet — results -->
   <div class="sheet sheet--peek" id="results-sheet">
-    <div class="sheet__handle"></div>
+    <button type="button" class="sheet__handle" id="sheet-handle" aria-label="expand or collapse results sheet"></button>
     <div class="sheet__indicator" aria-live="polite">
       <div class="stages">
         <div class="stage" data-stage="geocode"><span class="stage__dot"></span> geocode</div>
