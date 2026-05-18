@@ -339,3 +339,157 @@ export async function firePlan(sm, opts = {}) {
     renderResultsError(e instanceof Error ? e.message : String(e));
   }
 }
+
+// --- event wiring ---
+
+export function wireMapClicks(map, sm) {
+  map.on('click', (e) => {
+    // Inert when both pins exist (per design — change pins by drag or clear).
+    if (sm.state.origin && sm.state.destination) return;
+    const point = { lat: e.latlng.lat, lon: e.latlng.lng };
+    if (!sm.state.origin) {
+      sm.setState({ origin: point });
+      return;
+    }
+    sm.setState({ destination: point });
+    firePlan(sm);
+  });
+}
+
+export function wirePinDrags(sm) {
+  const debouncedFire = debounce(() => {
+    if (sm.state.origin && sm.state.destination) firePlan(sm);
+  }, DEBOUNCE_MS);
+  window.__atlasOnDragend = (which, latlng) => {
+    const point = { lat: latlng.lat, lon: latlng.lng };
+    sm.setState({ [which]: point });
+    debouncedFire();
+  };
+}
+
+export function wireGeolocate(sm) {
+  const btn = document.getElementById('geolocate-from');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    if (!('geolocation' in navigator)) {
+      showInlineError('origin', 'geolocation unavailable in this browser');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const point = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        sm.setState({ origin: point });
+        window.__atlasMap?.setView([point.lat, point.lon], 13);
+        if (sm.state.destination) firePlan(sm);
+      },
+      (err) => showInlineError('origin', err.message || 'geolocation failed'),
+      { timeout: 10000, maximumAge: 60000 },
+    );
+  });
+}
+
+export function wireClear(sm) {
+  const btn = document.getElementById('clear-trip');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    sm.setState({ origin: null, destination: null, lastResult: null, __pushHistory: true });
+    // Tear down any rendered polyline layers and bottom-sheet cards.
+    if (window.__atlasRouteLayers) {
+      for (const g of Object.values(window.__atlasRouteLayers)) window.__atlasMap?.removeLayer(g);
+      window.__atlasRouteLayers = null;
+    }
+    if (window.__atlasLayerControl) {
+      window.__atlasMap?.removeControl(window.__atlasLayerControl);
+      window.__atlasLayerControl = null;
+    }
+    const results = document.getElementById('results');
+    if (results) results.innerHTML = '';
+  });
+}
+
+export function wireForm(sm) {
+  const form = document.getElementById('plan-form');
+  if (!form) return;
+  form.addEventListener('submit', (e) => {
+    // Read current form values into params.
+    const fd = new FormData(form);
+    const params = {};
+    for (const k of Object.keys(DEFAULTS)) {
+      if (fd.has(k)) {
+        const raw = fd.get(k);
+        params[k] = typeof DEFAULTS[k] === 'number'
+          ? (raw === '' ? DEFAULTS[k] : Number(raw))
+          : (typeof DEFAULTS[k] === 'boolean' ? raw === 'true' || raw === 'on' : String(raw));
+      } else if (typeof DEFAULTS[k] === 'boolean') {
+        // Unchecked checkboxes don't appear in FormData.
+        params[k] = false;
+      }
+    }
+
+    // Read endpoints. Prefer hidden lat/lon (set by pin drops or geocode-suggest).
+    // Fallback: parse the visible text input as raw coords.
+    const origLat = fd.get('origin[lat]');
+    const origLon = fd.get('origin[lon]');
+    const destLat = fd.get('destination[lat]');
+    const destLon = fd.get('destination[lon]');
+    let origin = (origLat && origLon) ? { lat: Number(origLat), lon: Number(origLon) } : parseDecimalCoord(String(fd.get('origin-query') || ''));
+    let destination = (destLat && destLon) ? { lat: Number(destLat), lon: Number(destLon) } : parseDecimalCoord(String(fd.get('destination-query') || ''));
+
+    if (!origin || !isValidLatLon(origin) || !destination || !isValidLatLon(destination)) {
+      // Let the HTMX fallback handle this case — its server-side validator returns
+      // a friendly error. We pre-empted the submit; re-fire the native one so HTMX picks it up.
+      e.preventDefault();
+      showInlineError('origin', 'pick a from and to first (click the map or type a place)');
+      return;
+    }
+
+    e.preventDefault();
+    sm.setState({ origin, destination, params });
+    firePlan(sm);
+  });
+}
+
+export function wireGeocodeSuggest(sm) {
+  // The geocode-suggest dropdown items are server-rendered by /api/geocode (HTMX swap).
+  // Click on an item: copy lat/lon/label into the form + state.
+  document.addEventListener('click', (e) => {
+    const item = e.target.closest('[data-lat][data-lon][data-label]');
+    if (!item) return;
+    const suggest = item.closest('.geocode-suggest');
+    if (!suggest) return;
+    const parentRow = suggest.closest('.field-row');
+    if (!parentRow) return;
+    const which = parentRow.classList.contains('field-row--origin') ? 'origin' : 'destination';
+    const point = { lat: Number(item.dataset.lat), lon: Number(item.dataset.lon) };
+    if (!isValidLatLon(point)) return;
+    sm.setState({ [which]: point });
+    // Display the label (place name) instead of raw coords in the visible input.
+    const queryEl = document.getElementById(`${which}-query`);
+    if (queryEl) queryEl.value = item.dataset.label;
+    suggest.innerHTML = '';
+    if (sm.state.origin && sm.state.destination) firePlan(sm);
+  });
+}
+
+export function wirePopstate(sm) {
+  window.addEventListener('popstate', () => {
+    const decoded = decodeUrlState(window.location.search);
+    if (!decoded) return;
+    sm.setState({
+      origin: decoded.origin,
+      destination: decoded.destination,
+      params: { ...DEFAULTS, ...decoded.params },
+      lastResult: null,
+    });
+    if (decoded.origin && decoded.destination) firePlan(sm, { fromPopstate: true });
+  });
+}
+
+function showInlineError(prefix, message) {
+  const el = document.getElementById(`${prefix}-error`);
+  if (!el) return;
+  el.textContent = message;
+  el.classList.add('is-visible');
+  clearTimeout(showInlineError._t);
+  showInlineError._t = setTimeout(() => el.classList.remove('is-visible'), 4000);
+}
