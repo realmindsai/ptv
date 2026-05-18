@@ -157,3 +157,40 @@ export function projectToUrl(state, patch) {
     window.history.replaceState(null, '', url);
   }
 }
+
+/**
+ * Sync map markers from state. Polylines are handled separately by renderPlanOnMap
+ * because they only change when a plan result arrives, not on every state change.
+ *
+ * Markers are kept on window.__atlasMarkerLayer = L.layerGroup() and replaced
+ * (not mutated) on every projector call, so dragging the existing pin is handled
+ * by the Leaflet dragend handler binding to whatever pin is current.
+ */
+export function projectToMap(state) {
+  const map = window.__atlasMap;
+  if (!map) return;
+  const L = window.L;
+  const layer = window.__atlasMarkerLayer;
+  if (!layer) return;
+
+  layer.clearLayers();
+
+  if (state.origin) {
+    const m = L.marker([state.origin.lat, state.origin.lon], {
+      draggable: true,
+      icon: L.divIcon({ className: 'pin pin--origin', html: '', iconSize: [22, 22], iconAnchor: [11, 11] }),
+    });
+    m.on('dragend', (e) => window.__atlasOnDragend('origin', e.target.getLatLng()));
+    layer.addLayer(m);
+  }
+
+  if (state.destination) {
+    const pending = state.pendingPlan ? ' pin--pending' : '';
+    const m = L.marker([state.destination.lat, state.destination.lon], {
+      draggable: true,
+      icon: L.divIcon({ className: `pin pin--destination${pending}`, html: '', iconSize: [22, 22], iconAnchor: [11, 11] }),
+    });
+    m.on('dragend', (e) => window.__atlasOnDragend('destination', e.target.getLatLng()));
+    layer.addLayer(m);
+  }
+}
