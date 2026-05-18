@@ -507,3 +507,23 @@ body {
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .recent-row__min { font-size: 14px; color: var(--rmai-fg-1); flex-shrink: 0; }
+
+/* ─── Plan-result empty state + warnings ─── */
+.no-results {
+  padding: 16px; margin: 8px 16px;
+  border: 1px solid var(--rmai-border); border-radius: 12px;
+  background: var(--rmai-white);
+}
+.no-results__title {
+  font: 700 14px var(--sans); color: var(--rmai-fg-1); margin-bottom: 6px;
+}
+.no-results__hint {
+  font: 400 12.5px var(--sans); color: var(--rmai-fg-2); line-height: 1.5;
+}
+.no-results__hint b { color: var(--rmai-fg-1); font-weight: 600; }
+.result-warnings {
+  margin: 8px 16px; padding: 8px 12px;
+  background: #FFF7E6; border: 1px solid #F5D6A0; border-radius: 8px;
+  font: 500 11.5px var(--sans); color: #6B4A00;
+}
+.result-warnings__row + .result-warnings__row { margin-top: 4px; }

@@ -156,7 +156,7 @@ async function resolveRequest(body: PlanBody, nom: Nominatim): Promise<PlanReque
     departUtc,
     arriveByUtc,
     minBikeKm: toNumber(body.minBikeKm, 0),
-    maxBikeKm: toNumber(body.maxBikeKm, 20),
+    maxBikeKm: toNumber(body.maxBikeKm, 40),
     maxTransfers,
     enrich: body.enrich ?? true,
     preferBikePath: body.preferBikePath ?? false,

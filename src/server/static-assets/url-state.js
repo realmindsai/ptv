@@ -12,7 +12,7 @@ export const DEFAULTS = Object.freeze({
   depart: '',
   arriveBy: '',
   minBikeKm: 0,
-  maxBikeKm: 20,
+  maxBikeKm: 40,
   maxTransfers: 1,
   hillWeight: 0,
   minOnPathFraction: '',

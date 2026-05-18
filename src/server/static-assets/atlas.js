@@ -18,7 +18,7 @@ export const DEFAULTS = Object.freeze({
   depart: '',
   arriveBy: '',
   minBikeKm: 0,
-  maxBikeKm: 20,
+  maxBikeKm: 40,
   maxTransfers: 1,
   hillWeight: 0,
   minOnPathFraction: '',
@@ -373,7 +373,7 @@ export function buildCliEquivalent(state) {
   if (p.goal !== 'commute')  args.push('--goal', p.goal);
   if (p.mode !== 'bike-train') args.push('--mode', p.mode);
   if (p.minBikeKm !== 0)     args.push('--min-bike-km', String(p.minBikeKm));
-  if (p.maxBikeKm !== 20)    args.push('--max-bike-km', String(p.maxBikeKm));
+  if (p.maxBikeKm !== 40)    args.push('--max-bike-km', String(p.maxBikeKm));
   if (p.maxTransfers !== 1)  args.push('--max-transfers', String(p.maxTransfers));
   if (p.hillWeight !== 0)    args.push('--hill-weight', String(p.hillWeight));
   if (p.preferBikePath)      args.push('--prefer-bike-path');
@@ -438,7 +438,19 @@ function scheduleStages() {
 export function renderResultsSheet(result) {
   const root = document.getElementById('results');
   if (!root) return;
-  const cards = result.itineraries.filter((i) => i.labels.length > 0).map((it) => {
+  const labeled = result.itineraries.filter((i) => i.labels.length > 0);
+  const warnings = Array.isArray(result.warnings) ? result.warnings : [];
+  const warningsHtml = warnings.length
+    ? `<div class="result-warnings">${warnings.map((w) => `<div class="result-warnings__row">⚠ ${escHtml(String(w))}</div>`).join('')}</div>`
+    : '';
+  if (labeled.length === 0) {
+    root.innerHTML = `<div id="results-inner">${warningsHtml}<div class="no-results">
+      <div class="no-results__title">no itineraries found</div>
+      <div class="no-results__hint">try increasing <b>max bike km</b> in the <span class="mono">ƒ</span> chip, raising <b>max transfers</b>, or changing <b>goal</b>.</div>
+    </div></div>`;
+    return;
+  }
+  const cards = labeled.map((it) => {
     const labels = escHtml(it.labels.join(', '));
     const segs = segmentsFromItinerary(it);
     const trainLegs = it.legs.filter((l) => l.mode === 'train');
@@ -475,7 +487,7 @@ export function renderResultsSheet(result) {
       </div>
     </article>`;
   }).join('');
-  root.innerHTML = `<div id="results-inner">${cards}</div>`;
+  root.innerHTML = `<div id="results-inner">${warningsHtml}${cards}</div>`;
 }
 
 export function renderResultsError(message) {
@@ -951,7 +963,7 @@ export function refreshChipLabels() {
   if (v('param-hillWeight') !== '0') flags++;
   if (v('param-minOnPathFraction') !== '') flags++;
   if (v('param-preferBikePath') === 'true') flags++;
-  if (v('param-minBikeKm') !== '0' || v('param-maxBikeKm') !== '20') flags++;
+  if (v('param-minBikeKm') !== '0' || v('param-maxBikeKm') !== '40') flags++;
   if (v('param-maxTransfers') !== '1') flags++;
   const badge = document.getElementById('chip-flags-count');
   if (badge) badge.textContent = flags > 0 ? String(flags) : '';
