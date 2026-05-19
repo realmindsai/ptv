@@ -1055,6 +1055,15 @@ export function collapseAccordion(name) {
 // --- bootstrap ---
 
 export function init() {
+  // Idempotency: page.html loads atlas.js via `<script src="...atlas.js?v={{v}}">`
+  // (cache-busted), and e2e tests sometimes dynamic-import `/static/atlas.js`
+  // without the querystring — that produces a second module instance whose
+  // top-level bootstrap would call init() again and hit Leaflet's "Map
+  // container is already initialized" error. Guard on window (shared across
+  // module instances).
+  if (typeof window !== 'undefined' && window.__atlasInitialized) return;
+  if (typeof window !== 'undefined') window.__atlasInitialized = true;
+
   const L = window.L;
   if (!L) {
     console.error('atlas: Leaflet (window.L) not loaded — check script order in page.html');

@@ -359,7 +359,9 @@ test('geolocation button fills origin with stubbed position', async ({ page, con
   // so dispatch the click programmatically to bypass hit-testing.
   await page.evaluate(() => document.getElementById('fab-geolocate')?.click());
 
-  await expect(page.locator('#origin-query')).toHaveValue(/-37\.81/, { timeout: 3000 });
+  // main's 8b07c3f gave geolocated origins the 'my location' label — the
+  // input now shows that label rather than raw coords. URL still encodes coords.
+  await expect(page.locator('#origin-query')).toHaveValue('my location', { timeout: 3000 });
   await expect.poll(() => page.url()).toMatch(/\?from=-37\.81/);
 });
 
