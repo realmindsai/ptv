@@ -32,7 +32,7 @@ EXPOSE 8080
 
 # wget is in the base image; use it to ping the local healthz.
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD wget -qO- "http://localhost:${PORT}/healthz" >/dev/null || exit 1
+  CMD wget -qO- "http://127.0.0.1:${PORT}/healthz" >/dev/null || exit 1
 
 # Use shell form so PORT/HOST env vars are interpolated.
 CMD ["sh", "-c", "node dist/index.js serve --port \"$PORT\" --host \"$HOST\""]
