@@ -77,3 +77,23 @@ describe('POST /api/chat', () => {
     await app.close();
   });
 });
+
+describe('createChatApp default buildTools', () => {
+  it('builds all five tools from a ctx', async () => {
+    const app = createChatApp({
+      logger: false,
+      runTurnFn: async function*({}: any, opts: any) {
+        const names = Object.keys(opts.tools);
+        yield { type: 'text_delta', delta: names.sort().join(',') };
+        yield { type: 'turn_end' };
+      } as any,
+      // intentionally NOT passing buildTools — default should kick in
+    });
+    const res = await app.inject({
+      method: 'POST', url: '/api/chat',
+      payload: { messages: [] },
+    });
+    expect(res.body).toMatch(/bike_route,geocode,nearby_stops,plan,search_stops/);
+    await app.close();
+  });
+});

@@ -2,12 +2,41 @@ import Fastify, { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import { registerHealth } from './routes/health';
 import { registerChat, type RunTurnFn, type BuildToolsFn } from './routes/chat';
 import { runTurn as defaultRunTurn } from './agent';
+import type { ChatCtx } from './types';
+import type { LatLon } from '../plan/types';
+import { DAY_RIDE_CUSTOM_MODEL, MAX_PATH_CUSTOM_MODEL } from '../plan/types';
+import { makeGeocodeTool } from './tools/geocode';
+import { makePlanTool } from './tools/plan';
+import { makeBikeRouteTool, type BikeFn } from './tools/bike_route';
+import { makeSearchStopsTool, makeNearbyStopsTool } from './tools/stops';
+import { Nominatim } from '../server/nominatim';
+import { plan as planOrchestrator } from '../plan/orchestrator';
+import { ghRouteBike, ghRouteCustom } from '../plan/external';
+import { ptv } from '../client';
 
 export type ChatAppOptions = {
   logger?: FastifyBaseLogger | boolean;
   runTurnFn?: RunTurnFn;
   buildTools?: BuildToolsFn;
 };
+
+// Dispatch the right bike engine for the requested goal.
+const dispatchBike: BikeFn = async (from: LatLon, to: LatLon, goal) => {
+  if (goal === 'day-ride') return ghRouteCustom(from, to, DAY_RIDE_CUSTOM_MODEL);
+  if (goal === 'max-path') return ghRouteCustom(from, to, MAX_PATH_CUSTOM_MODEL);
+  return ghRouteBike(from, to, 'bike');  // commute
+};
+
+function defaultBuildTools(ctx: ChatCtx) {
+  const nominatim = new Nominatim(process.env.NOMINATIM_URL ?? 'http://localhost:8094');
+  return {
+    geocode:      makeGeocodeTool(ctx, nominatim),
+    plan:         makePlanTool(ctx, planOrchestrator),
+    bike_route:   makeBikeRouteTool(ctx, dispatchBike),
+    search_stops: makeSearchStopsTool(ptv),
+    nearby_stops: makeNearbyStopsTool(ptv),
+  };
+}
 
 export function createChatApp(opts: ChatAppOptions = {}): FastifyInstance {
   const app = Fastify({
@@ -16,7 +45,7 @@ export function createChatApp(opts: ChatAppOptions = {}): FastifyInstance {
   registerHealth(app);
   registerChat(app, {
     runTurnFn: opts.runTurnFn ?? (defaultRunTurn as RunTurnFn),
-    buildTools: opts.buildTools ?? ((_ctx) => ({})),  // real builder wired in Task C3
+    buildTools: opts.buildTools ?? defaultBuildTools,
   });
   return app;
 }
