@@ -1,7 +1,21 @@
 import type {
   LatLon, AccessCandidate, RouteTypeBikeable,
 } from './types';
-import { TOP_N_CANDIDATES, CANDIDATES_CLOSE, CANDIDATES_FAR } from './types';
+import {
+  TOP_N_CANDIDATES, CANDIDATES_CLOSE, CANDIDATES_FAR, CANDIDATE_DETOUR_MAX,
+} from './types';
+
+const EARTH_KM = 6371;
+function haversineKm(a: LatLon, b: LatLon): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLon = toRad(b.lon - a.lon);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return 2 * EARTH_KM * Math.asin(Math.sqrt(h));
+}
 
 type PtvFn = (path: string, params?: Record<string, string | number | number[]>) => Promise<unknown>;
 type ExternalMod = typeof import('./external');
@@ -28,6 +42,7 @@ export async function accessCandidates(
   maxBikeKm: number,
   routeTypes: RouteTypeBikeable[],
   deps?: Deps,
+  axisOther?: LatLon,
 ): Promise<AccessCandidate[]> {
   const { ptv, external } = deps ?? (await defaultDeps());
 
@@ -78,12 +93,26 @@ export async function accessCandidates(
       bikeMin: min,
     });
   }
-  if (out.length > TOP_N_CANDIDATES) {
-    const sorted = out.slice().sort((a, b) => a.bikeMin - b.bikeMin);
+  // Directionality filter: a bike-leg endpoint that drags the trip's total
+  // displacement way off the origin→destination axis produces useless
+  // "most-bike" itineraries (e.g. biking 32 km the wrong way to catch a
+  // 30-min train back). Only applied when the caller passes the axis other end.
+  let filtered = out;
+  if (axisOther) {
+    const direct = haversineKm(origin, axisOther);
+    if (direct > 0) {
+      filtered = out.filter((c) => {
+        const detour = (haversineKm(origin, c.coord) + haversineKm(c.coord, axisOther)) / direct;
+        return detour <= CANDIDATE_DETOUR_MAX;
+      });
+    }
+  }
+  if (filtered.length > TOP_N_CANDIDATES) {
+    const sorted = filtered.slice().sort((a, b) => a.bikeMin - b.bikeMin);
     const closeIds = new Set(sorted.slice(0, CANDIDATES_CLOSE).map((c) => c.stopId));
     const farIds   = new Set(sorted.slice(-CANDIDATES_FAR).map((c) => c.stopId));
     const keepIds  = new Set([...closeIds, ...farIds]);
-    return out.filter((c) => keepIds.has(c.stopId));
+    return filtered.filter((c) => keepIds.has(c.stopId));
   }
-  return out;
+  return filtered;
 }

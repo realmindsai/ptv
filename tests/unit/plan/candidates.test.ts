@@ -117,6 +117,57 @@ describe('accessCandidates()', () => {
     for (let i = 15; i < 35; i++) expect(keptIds.has(1000 + i)).toBe(false); // middle dropped
   });
 
+  it('drops candidates that detour excessively off the origin→axisOther axis', async () => {
+    // origin near central Melb, dest north-east. A station NW (Sunbury-ish) is far
+    // off-axis; one between origin and dest is on-axis.
+    const origin = { lat: -37.78, lon: 144.96 };
+    const dest   = { lat: -37.65, lon: 145.20 };
+    const onAxis  = { lat: -37.72, lon: 145.05 }; // roughly between
+    const offAxis = { lat: -37.58, lon: 144.72 }; // far NW (Sunbury direction)
+
+    const fakePtv = vi.fn(async () => ({
+      stops: [
+        { stop_id: 1, stop_name: 'OnAxis', route_type: 0,
+          stop_latitude: onAxis.lat, stop_longitude: onAxis.lon,
+          routes: [{ route_id: 100, route_type: 0 }] },
+        { stop_id: 2, stop_name: 'OffAxis', route_type: 0,
+          stop_latitude: offAxis.lat, stop_longitude: offAxis.lon,
+          routes: [{ route_id: 100, route_type: 0 }] },
+      ],
+    }));
+    const fakeExternal = {
+      osrmTable: vi.fn(async () => ({
+        durations: [600, 7200],
+        distances: [3000, 32000],
+      })),
+    };
+
+    const out = await accessCandidates(
+      origin, 40, [0, 3],
+      { ptv: fakePtv, external: fakeExternal as never },
+      dest,
+    );
+    expect(out.map((c) => c.stopId)).toEqual([1]);
+  });
+
+  it('skips directionality filter when axisOther is omitted (backward compat)', async () => {
+    const fakePtv = vi.fn(async () => ({
+      stops: [
+        { stop_id: 2, stop_name: 'OffAxis', route_type: 0,
+          stop_latitude: -37.58, stop_longitude: 144.72,
+          routes: [{ route_id: 100, route_type: 0 }] },
+      ],
+    }));
+    const fakeExternal = {
+      osrmTable: vi.fn(async () => ({ durations: [7200], distances: [32000] })),
+    };
+    const out = await accessCandidates(
+      { lat: -37.78, lon: 144.96 }, 40, [0, 3],
+      { ptv: fakePtv, external: fakeExternal as never },
+    );
+    expect(out.map((c) => c.stopId)).toEqual([2]);
+  });
+
   it('keeps both close and far stops (15 each, union) when input has more than 30 candidates', async () => {
     const stops = Array.from({ length: 50 }, (_, i) => ({
       stop_id: 1000 + i, stop_name: `Stop${i}`, route_type: 0,

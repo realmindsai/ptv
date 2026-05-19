@@ -174,6 +174,31 @@ describe('labelAndSort()', () => {
     expect(recommended?.bikeKmOnPath).toBe(7); // flat + more path wins
   });
 
+  it('most-bike is suppressed when the candidate is excessively slower than fastest', () => {
+    // fastest=40min, bikey=80min → delta=40 > 30min cap → most-bike NOT applied
+    const fast = it1({ totalTimeMin: 40, bikeKm: 5 });
+    const bikey = it1({ totalTimeMin: 80, bikeKm: 20 });
+    const out = labelAndSort([bikey, fast], makeReq());
+    for (const i of out) expect(i.labels).not.toContain('most-bike');
+  });
+
+  it('most-bike is applied when within the overtime cap (delta <= 30)', () => {
+    const fast = it1({ totalTimeMin: 40, bikeKm: 5 });
+    const bikey = it1({ totalTimeMin: 70, bikeKm: 15 }); // delta=30 — at the boundary
+    const out = labelAndSort([bikey, fast], makeReq());
+    const winner = out.find((i) => i.labels.includes('most-bike'));
+    expect(winner?.bikeKm).toBe(15);
+  });
+
+  it('most-bike-path is suppressed when its candidate is excessively slower than fastest', () => {
+    // Both feasible (bikeKm <= maxBikeKm=20). pathy has the most on-path km but
+    // is 50 min slower than fast → exceeds 30 min overtime cap.
+    const fast = it1({ totalTimeMin: 40, bikeKm: 5, bikeKmOnPath: 1 });
+    const pathy = it1({ totalTimeMin: 90, bikeKm: 18, bikeKmOnPath: 15 });
+    const out = labelAndSort([pathy, fast], makeReq());
+    for (const i of out) expect(i.labels).not.toContain('most-bike-path');
+  });
+
   it('--hill-weight falls back gracefully when elevation data absent', () => {
     // No ascendM / flatFraction / maxSustainedGradePercent on either — hilliness=0 for both
     // hillWeight=-5 but hilliness=0, so cost == totalTimeMin → fastest wins

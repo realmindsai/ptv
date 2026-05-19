@@ -519,8 +519,8 @@ export async function plan(req: PlanRequest, deps?: Partial<Deps>): Promise<Plan
       : new Date());
 
   const [access, egress] = await Promise.all([
-    accessCandidates(req.from, req.maxBikeKm, BIKEABLE_ROUTE_TYPES, resolved),
-    accessCandidates(req.to,   req.maxBikeKm, BIKEABLE_ROUTE_TYPES, resolved),
+    accessCandidates(req.from, req.maxBikeKm, BIKEABLE_ROUTE_TYPES, resolved, req.to),
+    accessCandidates(req.to,   req.maxBikeKm, BIKEABLE_ROUTE_TYPES, resolved, req.from),
   ]);
 
   const warnings: string[] = [];

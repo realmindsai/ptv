@@ -1,5 +1,8 @@
 import type { Itinerary, PlanRequest, ItineraryLabel } from './types';
-import { PATH_BONUS_PER_KM, HILL_ASCEND_WEIGHT, HILL_SUSTAINED_WEIGHT, HILL_FLAT_OFFSET } from './types';
+import {
+  PATH_BONUS_PER_KM, HILL_ASCEND_WEIGHT, HILL_SUSTAINED_WEIGHT, HILL_FLAT_OFFSET,
+  MOST_BIKE_MAX_OVERTIME_MIN,
+} from './types';
 
 function hilliness(i: Itinerary): number {
   let h = 0;
@@ -108,11 +111,18 @@ export function labelAndSort(items: Itinerary[], req: PlanRequest): Itinerary[] 
   function tag(it: Itinerary, label: ItineraryLabel): void {
     if (!it.labels.includes(label)) it.labels.push(label);
   }
+  // most-bike / most-bike-path are framed as "nicer ride, same trip" — not a
+  // workout. Suppress the label when the candidate is excessively slower than
+  // the fastest option (e.g. a 32 km detour to a wrong-direction station).
+  // Day-ride exploration belongs to --goal day-ride/max-path, not this label.
+  const overtimeCap = fastest.totalTimeMin + MOST_BIKE_MAX_OVERTIME_MIN;
   tag(fastest, 'fastest');
-  tag(mostBike, 'most-bike');
+  if (mostBike.totalTimeMin <= overtimeCap) tag(mostBike, 'most-bike');
   tag(fewestTransfers, 'fewest-transfers');
   tag(recommended, 'recommended');
-  if (mostBikePath) tag(mostBikePath, 'most-bike-path');
+  if (mostBikePath && mostBikePath.totalTimeMin <= overtimeCap) {
+    tag(mostBikePath, 'most-bike-path');
+  }
 
   return deduped;
 }
