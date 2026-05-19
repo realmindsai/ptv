@@ -554,7 +554,7 @@ export function renderRecentsIfEmpty(sm) {
 export async function firePlan(sm, opts = {}) {
   // Mark history-boundary on this projection cycle so projectToUrl uses pushState.
   sm.setState({ pendingPlan: true, __pushHistory: !opts.fromPopstate });
-  const indicator = document.getElementById('results-sheet');
+  const indicator = document.getElementById('sheet');
   if (indicator) indicator.classList.add('htmx-request');
   markStages(['geocode']);
   const stagingTimer = scheduleStages();
@@ -819,50 +819,69 @@ function showInlineError(prefix, message) {
   showInlineError._t = setTimeout(() => el.classList.remove('is-visible'), 4000);
 }
 
-// --- params-sheet ---
-
-let __paramsSheetHtml = null;
-async function ensureParamsSheetLoaded() {
-  if (__paramsSheetHtml) return __paramsSheetHtml;
-  const res = await fetch('/static/params-sheet.html');
-  __paramsSheetHtml = await res.text();
-  const body = document.getElementById('params-sheet-body');
-  if (body) body.innerHTML = __paramsSheetHtml;
-  return __paramsSheetHtml;
-}
+// --- v3 unified sheet wiring ---
 
 export function wireTripChips(sm) {
-  const sheet = document.getElementById('params-sheet');
-  const doneBtn = document.getElementById('params-done');
-  if (!sheet || !doneBtn) return;
-  document.querySelectorAll('#trip-chips .chip').forEach((chip) => {
-    chip.addEventListener('click', async () => {
-      await ensureParamsSheetLoaded();
-      bindParamsSheet(sm);
-      sheet.hidden = false;
-      const section = chip.dataset.chip;
-      const target = document.querySelector(`.ps-section[data-section="${section}"]`);
-      if (target) target.scrollIntoView({ block: 'start' });
-    });
-  });
-  doneBtn.addEventListener('click', () => {
-    sheet.hidden = true;
-    syncParamsFromHiddenInputs(sm);
+  const chips = document.getElementById('trip-chips');
+  if (!chips) return;
+  chips.addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip[data-chip]');
+    if (!chip) return;
+    const name = chip.dataset.chip;
+    if ('active' in chip.dataset) {
+      collapseAccordion(name);
+      snapSheet('peek');
+    } else {
+      snapSheet('full');
+      expandAccordion(name);
+    }
+    // Settings inputs are static DOM now; bind their listeners once on first
+    // chip-tap (idempotent — guarded inside bindStaticParamControls).
+    bindStaticParamControls(sm);
     refreshChipLabels();
   });
 }
 
-function bindParamsSheet(sm) {
-  const sheet = document.getElementById('params-sheet');
-  if (sheet && sheet.__paramsSheetBound) {
-    // Already bound — just re-sync current values from sm.state.params into the controls.
-    syncSheetControlsFromState(sm);
-    return;
-  }
+export function wireSheetHandle() {
+  const handle = document.getElementById('sheet-handle');
+  if (!handle) return;
+  handle.addEventListener('click', cycleSnap);
+}
+
+export function wireClearForRecents() {
+  const clearBtn = document.getElementById('clear-trip');
+  if (!clearBtn) return;
+  clearBtn.addEventListener('click', () => {
+    snapSheet('full');
+    expandAccordion('recents');
+  });
+}
+
+export function wireAccordionToggleSync() {
+  document.querySelectorAll('.accordion').forEach((acc) => {
+    acc.addEventListener('toggle', () => {
+      const name = acc.dataset.acc;
+      const chip = document.querySelector(`.chip[data-chip="${name}"]`);
+      if (acc.open) {
+        acc.dataset.accActive = '';
+        if (chip) chip.dataset.active = '';
+      } else {
+        delete acc.dataset.accActive;
+        if (chip) delete chip.dataset.active;
+      }
+    });
+  });
+}
+
+// Replaces the old bindParamsSheet — same control wiring, but the controls now
+// live in static DOM (accordion bodies) instead of an async-fetched partial.
+function bindStaticParamControls(sm) {
+  const root = document.getElementById('sheet');
+  if (!root || root.__paramControlsBound) return;
 
   const p = sm.state.params;
 
-  // WHEN — segmented buttons for now/depart/arriveBy
+  // WHEN
   const activeWhen = p.arriveBy ? 'arriveBy' : p.depart ? 'depart' : 'now';
   document.querySelectorAll('[data-when]').forEach((b) => {
     b.classList.toggle('is-active', b.dataset.when === activeWhen);
@@ -885,15 +904,13 @@ function bindParamsSheet(sm) {
     });
   }
 
-  // GOAL — radio cards
+  // GOAL
   document.querySelectorAll('input[name="ps-goal"]').forEach((r) => {
     r.checked = r.value === p.goal;
-    r.addEventListener('change', () => {
-      document.getElementById('param-goal').value = r.value;
-    });
+    r.addEventListener('change', () => { document.getElementById('param-goal').value = r.value; });
   });
 
-  // MODE — segmented
+  // MODE (now lives inside the flags accordion)
   document.querySelectorAll('[data-mode]').forEach((b) => {
     b.classList.toggle('is-active', b.dataset.mode === p.mode);
     b.addEventListener('click', () => {
@@ -902,7 +919,7 @@ function bindParamsSheet(sm) {
     });
   });
 
-  // HILL
+  // HILL WEIGHT
   const hw = document.getElementById('ps-hillWeight');
   if (hw) {
     hw.value = String(p.hillWeight);
@@ -958,49 +975,7 @@ function bindParamsSheet(sm) {
     });
   }
 
-  if (sheet) sheet.__paramsSheetBound = true;
-}
-
-function syncSheetControlsFromState(sm) {
-  const p = sm.state.params;
-  const activeWhen = p.arriveBy ? 'arriveBy' : p.depart ? 'depart' : 'now';
-  document.querySelectorAll('[data-when]').forEach((b) => {
-    b.classList.toggle('is-active', b.dataset.when === activeWhen);
-  });
-  const tEl = document.getElementById('ps-time');
-  if (tEl) tEl.value = p.depart || p.arriveBy || '';
-
-  document.querySelectorAll('input[name="ps-goal"]').forEach((r) => {
-    r.checked = r.value === p.goal;
-  });
-
-  document.querySelectorAll('[data-mode]').forEach((b) => {
-    b.classList.toggle('is-active', b.dataset.mode === p.mode);
-  });
-
-  const hw = document.getElementById('ps-hillWeight');
-  const hwOut = document.getElementById('ps-hillWeight-out');
-  if (hw) hw.value = String(p.hillWeight);
-  if (hwOut) hwOut.textContent = String(p.hillWeight);
-
-  const mp = document.getElementById('ps-minOnPath');
-  const mpOut = document.getElementById('ps-minOnPath-out');
-  const mpV = typeof p.minOnPathFraction === 'number' ? p.minOnPathFraction
-            : (p.minOnPathFraction === '' || p.minOnPathFraction == null ? 0 : Number(p.minOnPathFraction));
-  if (mp) mp.value = String(mpV);
-  if (mpOut) mpOut.textContent = `${Math.round(mpV * 100)}%`;
-
-  const minK = document.getElementById('ps-minBikeKm');
-  const maxK = document.getElementById('ps-maxBikeKm');
-  if (minK) minK.value = String(p.minBikeKm);
-  if (maxK) maxK.value = String(p.maxBikeKm);
-
-  document.querySelectorAll('[data-transfers]').forEach((b) => {
-    b.classList.toggle('is-active', b.dataset.transfers === String(p.maxTransfers));
-  });
-
-  const pbp = document.getElementById('ps-preferBikePath');
-  if (pbp) pbp.checked = !!p.preferBikePath;
+  root.__paramControlsBound = true;
 }
 
 export function refreshChipLabels() {
@@ -1112,6 +1087,9 @@ export function init() {
   wirePillEdit();
   wireSwap(sm);
   wireTripChips(sm);
+  wireSheetHandle();
+  wireClearForRecents();
+  wireAccordionToggleSync();
   wireItineraryActivation();
   wireActionButtons(sm);
   refreshChipLabels();
@@ -1129,6 +1107,9 @@ export function init() {
     if (decoded.origin && decoded.destination) firePlan(sm);
   }
 
+  // Bind settings controls after URL state is restored so the controls
+  // snapshot URL-restored params rather than DEFAULTS.
+  bindStaticParamControls(sm);
   // If no URL state populated the page, fall back to showing recents.
   renderRecentsIfEmpty(sm);
 
