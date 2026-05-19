@@ -60,8 +60,14 @@ export function mapSdkMessage(msg: any): SseEvent[] {
             ? b.name.slice(TOOL_PREFIX.length)
             : b.name;
           out.push({ type: 'tool_call', id: b.id, name: stripped, args: b.input ?? {} });
+        } else if (b.type === 'text' && typeof b.text === 'string' && b.text.length > 0) {
+          // The SDK delivers complete assistant text in one block (no partial deltas
+          // unless includePartialMessages is enabled). Forward it as a single text_delta
+          // so the client sees the assistant's words. If stream_event deltas ARE
+          // enabled by a future config, the same text will arrive twice — at that
+          // point gate this branch on the absence of stream events.
+          out.push({ type: 'text_delta', delta: b.text });
         }
-        // text blocks already streamed via stream_event
       }
       return out;
     }

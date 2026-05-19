@@ -32,10 +32,18 @@ describe('mapSdkMessage', () => {
     ]);
   });
 
-  it('skips assistant text-only content blocks (text already streamed via stream_event)', () => {
+  it('maps assistant text blocks to a single text_delta (SDK default is non-streaming)', () => {
     const ev: any = {
       type: 'assistant',
       message: { content: [{ type: 'text', text: 'all done' }] },
+    };
+    expect(mapSdkMessage(ev)).toEqual([{ type: 'text_delta', delta: 'all done' }]);
+  });
+
+  it('skips empty assistant text blocks', () => {
+    const ev: any = {
+      type: 'assistant',
+      message: { content: [{ type: 'text', text: '' }] },
     };
     expect(mapSdkMessage(ev)).toEqual([]);
   });
