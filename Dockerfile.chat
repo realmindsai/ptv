@@ -1,0 +1,40 @@
+# syntax=docker/dockerfile:1.6
+
+# ─── stage 1: build ──────────────────────────────────────────────
+FROM node:20-alpine AS build
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY tsconfig.json ./
+COPY src ./src
+COPY web-chat ./web-chat
+COPY scripts ./scripts
+
+RUN npm run build
+
+# ─── stage 2: runtime ────────────────────────────────────────────
+FROM node:20-alpine AS runtime
+WORKDIR /app
+
+# Install runtime deps only.
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+
+# Compiled output: dist/ already contains the chat static assets under
+# dist/chat/static-assets/ thanks to the build script's cpSync step.
+COPY --from=build /app/dist ./dist
+
+ENV NODE_ENV=production \
+    PORT=8086 \
+    HOST=0.0.0.0
+
+EXPOSE 8086
+
+# Use 127.0.0.1 rather than localhost — Alpine resolves localhost via IPv6
+# first, which fails when only IPv4 is bound (lesson from ptv-dsz).
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget -qO- "http://127.0.0.1:${PORT}/healthz" >/dev/null || exit 1
+
+CMD ["sh", "-c", "node dist/index.js chat-serve --port \"$PORT\" --host \"$HOST\""]

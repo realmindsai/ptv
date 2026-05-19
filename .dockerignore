@@ -6,6 +6,7 @@ docs
 web/design-reference
 tests
 *.log
+test-results
 .DS_Store
 .claude
 .idea
