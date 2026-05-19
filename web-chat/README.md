@@ -38,7 +38,70 @@ After seeding, the SDK refreshes tokens autonomously. Re-seed only if the
 refresh token itself is invalidated (e.g. after explicit `claude logout` or
 session revoke) — follow-up bead `ptv-2er` tracks an auto-refresh sidecar.
 
-### 2. Build + start the container
+### 2. (Optional) Photon geocoder
+
+Nominatim is a token-matching search over OSM names — it misses places when
+users say "CERES Environment Park" but OSM has it as "CERES Community Gardens".
+Photon (`komoot/photon`, Elasticsearch-backed over the same OSM data) handles
+fuzzy match, alt_name, and partial queries.
+
+Build the Photon image and import from the existing Nominatim postgres:
+
+```bash
+# On totoro:
+mkdir -p ~/docker/photon && cd ~/docker/photon
+curl -fsSL -o photon.jar \
+  https://github.com/komoot/photon/releases/download/1.1.0/photon-1.1.0.jar
+cat > Dockerfile <<'EOF'
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /photon
+COPY photon.jar /photon/photon.jar
+RUN mkdir -p /photon/photon_data
+EXPOSE 2322
+ENTRYPOINT ["java","-jar","/photon/photon.jar"]
+EOF
+docker build -t ptv-photon:1.1.0 .
+
+# One-shot import from Nominatim postgres (~10 min for Victoria-scope).
+# Replace <password> with the nominatim postgres password
+# (docker inspect nominatim | grep NOMINATIM_PASSWORD).
+docker volume create photon-data
+docker run --rm --name photon-import --network nominatim_default \
+  -v photon-data:/photon/photon_data ptv-photon:1.1.0 \
+  -data-dir /photon/photon_data -nominatim-import \
+  -host nominatim -port 5432 -database nominatim \
+  -user nominatim -password '<password>' -languages en
+```
+
+Serve compose (`~/docker/photon/docker-compose.yml`):
+
+```yaml
+services:
+  photon:
+    image: ptv-photon:1.1.0
+    container_name: photon
+    restart: unless-stopped
+    networks: [nominatim_default]
+    volumes: [photon-data:/photon/photon_data]
+    command:
+      - -data-dir
+      - /photon/photon_data
+      # REQUIRED — Photon's Javalin defaults to 127.0.0.1, which blocks
+      # other containers on the same network from reaching it.
+      - -listen-ip
+      - 0.0.0.0
+volumes:
+  photon-data: { external: true }
+networks:
+  nominatim_default: { external: true }
+```
+
+`docker compose up -d`, then check `docker exec photon wget -qO- 'http://127.0.0.1:2322/api?q=CERES+Brunswick'`.
+
+When wiring into ptv-chat, set `PHOTON_URL=http://photon:2322` — the geocode
+tool falls back to Nominatim if Photon is unset or returns nothing.
+
+### 3. Build + start the container
 
 ```bash
 docker build -f Dockerfile.chat -t ptv-chat:latest .
