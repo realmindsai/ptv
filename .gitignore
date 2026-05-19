@@ -1,2 +1,4 @@
 node_modules/
 dist/
+src/chat/static-assets/*
+!src/chat/static-assets/.gitkeep

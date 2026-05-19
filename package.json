@@ -15,18 +15,22 @@
     "test:e2e:browser": "playwright test"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.144",
     "@fastify/formbody": "^8.0.2",
     "@fastify/static": "^8.3.0",
     "commander": "^14.0.3",
     "fastify": "^5.8.5",
     "ioredis": "^5.10.1",
-    "qs": "^6.15.2"
+    "qs": "^6.15.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
+    "@types/leaflet": "^1.9.21",
     "@types/node": "^20.0.0",
     "@types/qs": "^6.15.1",
     "cheerio": "^1.2.0",
+    "esbuild": "^0.28.0",
     "ioredis-mock": "^8.13.1",
     "jsdom": "^29.1.1",
     "typescript": "^5.3.0",
