@@ -65,7 +65,8 @@ function systemPrompt(origin?: { lat: number; lon: number }, today = new Date())
     '3. Reply concisely. Name each route. Do not repeat geometry; the user sees polylines.',
     '   Do quote elevation numbers and train depart/arrive times from the summary.',
     '',
-    `Today is ${today.toISOString().slice(0, 10)} (UTC). Melbourne local may be a day ahead.`,
+    `Today (Melbourne local) is ${new Intl.DateTimeFormat('en-AU', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', timeZone: 'Australia/Melbourne' }).format(today)}. ` +
+    `Compute "next Sunday" / "this Friday" / etc. from THAT day, not from your training-data prior. Show your working in the arriveBy/depart ISO string so the user can sanity-check the date.`,
     `Origin hint: ${origin ? `${origin.lat},${origin.lon}` : 'unknown'}.`,
   ].join('\n');
 }
