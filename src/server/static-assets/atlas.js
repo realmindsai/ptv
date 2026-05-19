@@ -448,7 +448,7 @@ export function renderResultsSheet(result) {
   if (labeled.length === 0) {
     root.innerHTML = `<div id="results-inner">${warningsHtml}<div class="no-results">
       <div class="no-results__title">no itineraries found</div>
-      <div class="no-results__hint">try increasing <b>max bike km</b> in the <span class="mono">ƒ</span> chip, raising <b>max transfers</b>, or changing <b>goal</b>.</div>
+      <div class="no-results__hint">try increasing <b>max bike km</b> in the <span class="mono">ƒ</span> chip, raising <b>max train changes</b>, or changing <b>goal</b>.</div>
     </div></div>`;
     return;
   }
