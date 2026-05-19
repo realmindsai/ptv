@@ -1,35 +1,32 @@
+import { marked } from 'marked';
 import type { State } from './types';
+
+marked.setOptions({ gfm: true, breaks: false });
+
+function renderAssistant(content: string): HTMLElement {
+  const div = document.createElement('div');
+  div.className = 'msg msg--assistant';
+  // marked.parse output. Content originates from our own Claude invocation,
+  // so we trust it enough not to run a heavy sanitizer. User-typed input is
+  // echoed back as user messages with textContent (no HTML execution path).
+  div.innerHTML = marked.parse(content) as string;
+  return div;
+}
+
+function renderUser(content: string): HTMLElement {
+  const div = document.createElement('div');
+  div.className = 'msg msg--user';
+  div.textContent = content;
+  return div;
+}
 
 export function renderMessages(container: HTMLElement, state: State): void {
   container.innerHTML = '';
   for (const m of state.messages) {
-    const div = document.createElement('div');
-    div.className = `msg msg--${m.role}`;
-    div.textContent = m.content;
-    container.appendChild(div);
+    container.appendChild(m.role === 'user' ? renderUser(m.content) : renderAssistant(m.content));
   }
   if (state.assistantBuffer) {
-    const div = document.createElement('div');
-    div.className = 'msg msg--assistant';
-    div.textContent = state.assistantBuffer;
-    container.appendChild(div);
-  }
-  if (state.currentTurnPaths.length > 0) {
-    const row = document.createElement('div');
-    row.className = 'chip-row';
-    for (const p of state.currentTurnPaths) {
-      const chip = document.createElement('span');
-      chip.className = 'chip';
-      chip.dataset.pathId = p.id;
-      chip.dataset.active = String(state.activePathId === p.id);
-      chip.style.setProperty('--c', p.color);
-      chip.textContent = p.label;
-      chip.addEventListener('click', () => {
-        document.dispatchEvent(new CustomEvent('chat:set-active', { detail: p.id }));
-      });
-      row.appendChild(chip);
-    }
-    container.appendChild(row);
+    container.appendChild(renderAssistant(state.assistantBuffer));
   }
   container.scrollTop = container.scrollHeight;
 }

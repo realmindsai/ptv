@@ -3,11 +3,16 @@ import { streamChat } from './sse';
 import { initMap } from './map';
 import { renderMessages } from './chat';
 import { renderLog } from './log';
+import { renderLegend } from './legend';
 import type { State, Action, LogEntry, Message } from './types';
 
 const LS_KEY = 'ptv-chat:messages';
 const LS_LOG = 'ptv-chat:logOpen';
 const LS_DOCK = 'ptv-chat:dockCollapsed';
+const LS_WIDTH = 'ptv-chat:dockWidth';
+
+const DEFAULT_DOCK_W = 360;
+const MIN_DOCK_W = 280;
 
 let state: State = initialState();
 try {
@@ -18,12 +23,19 @@ try {
 state.logOpen = localStorage.getItem(LS_LOG) === '1';
 state.dockCollapsed = localStorage.getItem(LS_DOCK) === '1';
 
+// Restore dock width
+const savedW = parseInt(localStorage.getItem(LS_WIDTH) ?? '', 10);
+const initialW = Number.isFinite(savedW) && savedW >= MIN_DOCK_W ? savedW : DEFAULT_DOCK_W;
+document.documentElement.style.setProperty('--dock-w', `${initialW}px`);
+
 const map = initMap('map');
 const $messages = document.getElementById('messages') as HTMLElement;
 const $log = document.getElementById('log') as HTMLElement;
+const $legend = document.getElementById('path-legend') as HTMLElement;
 const $form = document.getElementById('send-form') as HTMLFormElement;
 const $input = document.getElementById('send-input') as HTMLTextAreaElement;
 const $dock = document.getElementById('chat') as HTMLElement;
+const $resizer = document.getElementById('dock-resizer') as HTMLElement;
 const $toggleLog = document.getElementById('toggle-log') as HTMLButtonElement;
 const $collapse = document.getElementById('collapse-chat') as HTMLButtonElement;
 const $newChat = document.getElementById('new-chat') as HTMLButtonElement;
@@ -36,6 +48,7 @@ function dispatch(action: Action) {
 function render() {
   renderMessages($messages, state);
   renderLog($log, state);
+  renderLegend($legend, state);
   $dock.classList.toggle('dock--collapsed', state.dockCollapsed);
   localStorage.setItem(LS_KEY, JSON.stringify(state.messages));
   localStorage.setItem(LS_LOG, state.logOpen ? '1' : '0');
@@ -58,8 +71,7 @@ async function tryGeolocate(): Promise<{ lat: number; lon: number } | undefined>
   }
 }
 
-$form.addEventListener('submit', async (e) => {
-  e.preventDefault();
+async function send() {
   const content = $input.value.trim();
   if (!content || state.streaming) return;
   $input.value = '';
@@ -107,6 +119,19 @@ $form.addEventListener('submit', async (e) => {
   } catch (err: any) {
     dispatch({ type: 'error', message: err?.message ?? String(err) });
   }
+}
+
+$form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  void send();
+});
+
+// Enter = send, Shift+Enter = newline.
+$input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+    e.preventDefault();
+    void send();
+  }
 });
 
 $toggleLog.addEventListener('click', () => dispatch({ type: 'toggle_log' }));
@@ -121,5 +146,29 @@ $newChat.addEventListener('click', () => {
 document.addEventListener('chat:set-active', (e: any) => {
   dispatch({ type: 'set_active', id: e.detail });
 });
+
+// Drag-resize: pull the left edge of the dock to widen/narrow.
+(function wireResizer() {
+  let dragging = false;
+  $resizer.addEventListener('mousedown', (e) => {
+    dragging = true;
+    $resizer.classList.add('dragging');
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const w = Math.max(MIN_DOCK_W, Math.min(window.innerWidth - 40, window.innerWidth - e.clientX));
+    document.documentElement.style.setProperty('--dock-w', `${w}px`);
+  });
+  window.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    $resizer.classList.remove('dragging');
+    const w = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--dock-w'), 10);
+    if (Number.isFinite(w)) localStorage.setItem(LS_WIDTH, String(w));
+    // Invalidate Leaflet so it re-measures the visible map area.
+    window.dispatchEvent(new Event('resize'));
+  });
+})();
 
 render();
