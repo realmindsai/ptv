@@ -1029,6 +1029,51 @@ export function refreshChipLabels() {
   if (badge) badge.textContent = flags > 0 ? String(flags) : '';
 }
 
+// --- v3 unified sheet ---
+
+const SNAP_HEIGHTS = ['peek', 'mid', 'full'];
+
+export function snapSheet(target) {
+  const sheet = document.getElementById('sheet');
+  if (!sheet || !SNAP_HEIGHTS.includes(target)) return;
+  sheet.dataset.snap = target;
+  sheet.dispatchEvent(new CustomEvent('sheet:snap', { detail: { target } }));
+}
+
+export function cycleSnap() {
+  const sheet = document.getElementById('sheet');
+  if (!sheet) return;
+  const cur = sheet.dataset.snap || 'peek';
+  const next = SNAP_HEIGHTS[(SNAP_HEIGHTS.indexOf(cur) + 1) % SNAP_HEIGHTS.length];
+  snapSheet(next);
+}
+
+export function expandAccordion(name, { scroll = true } = {}) {
+  const acc = document.querySelector(`.accordion[data-acc="${name}"]`);
+  if (!acc) return;
+  acc.open = true;
+  document.querySelectorAll('.accordion[data-acc-active]').forEach((a) => {
+    if (a !== acc) delete a.dataset.accActive;
+  });
+  acc.dataset.accActive = '';
+  document.querySelectorAll('.chip[data-chip]').forEach((c) => {
+    if (c.dataset.chip === name) c.dataset.active = '';
+    else delete c.dataset.active;
+  });
+  if (scroll && typeof acc.scrollIntoView === 'function') {
+    acc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+export function collapseAccordion(name) {
+  const acc = document.querySelector(`.accordion[data-acc="${name}"]`);
+  if (!acc) return;
+  acc.open = false;
+  delete acc.dataset.accActive;
+  const chip = document.querySelector(`.chip[data-chip="${name}"]`);
+  if (chip) delete chip.dataset.active;
+}
+
 // --- bootstrap ---
 
 export function init() {
