@@ -19,6 +19,33 @@ const SERVER_NAME = 'ptv-chat';
 const TOOL_PREFIX = `mcp__${SERVER_NAME}__`;
 const TOOL_NAMES = ['geocode', 'plan', 'bike_route', 'search_stops', 'nearby_stops', 'schedule'] as const;
 
+// Build a 14-day calendar table anchored at today's Melbourne local date.
+// Claude reads this verbatim instead of doing its own day-of-week arithmetic.
+function melbourneCalendarTable(now: Date): string {
+  const dayFmt = new Intl.DateTimeFormat('en-AU', {
+    weekday: 'long', timeZone: 'Australia/Melbourne',
+  });
+  const dateFmt = new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Australia/Melbourne',
+  });
+  const rows: string[] = [];
+  // Anchor at the start of today (Melbourne) then step a day at a time.
+  // Using 12:00 local each day avoids DST-transition edge cases.
+  for (let i = 0; i < 14; i++) {
+    const probe = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
+    const iso = dateFmt.format(probe);           // YYYY-MM-DD in Melbourne
+    const weekday = dayFmt.format(probe);
+    const tag = i === 0 ? ' ← TODAY' : i === 1 ? ' ← tomorrow' : '';
+    rows.push(`  ${iso} (${weekday})${tag}`);
+  }
+  return [
+    'Calendar — Melbourne local dates for the next 14 days:',
+    ...rows,
+    'When the user says e.g. "next Sunday", pick the FIRST row whose weekday matches',
+    'AND whose date is at least 1 day after today. Do not improvise.',
+  ].join('\n');
+}
+
 function systemPrompt(origin?: { lat: number; lon: number }, today = new Date()): string {
   return [
     'You are the assistant for ptv-chat — a Melbourne bike + train trip planner.',
@@ -79,9 +106,12 @@ function systemPrompt(origin?: { lat: number; lon: number }, today = new Date())
     'by suggesting a different (closer-to-destination, further-from-origin) stop pair so',
     'more of the trip is bike. Always state the tradeoff so the user can choose.',
     '',
-    `Today (Melbourne local) is ${new Intl.DateTimeFormat('en-AU', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', timeZone: 'Australia/Melbourne' }).format(today)}. ` +
-    `Compute "next Sunday" / "this Friday" / etc. from THAT day, not from your training-data prior. Show your working in the arriveBy/depart ISO string so the user can sanity-check the date.`,
-    `Origin hint: ${origin ? `${origin.lat},${origin.lon}` : 'unknown'}.`,
+    melbourneCalendarTable(today),
+    `Origin hint: ${origin ? `${origin.lat},${origin.lon} (Melbourne).` : 'unknown.'}`,
+    'When the user says "next <weekday>", "this <weekday>", "tomorrow", etc., LOOK UP',
+    'the date from the calendar table above. Do not compute it from your training-data',
+    'prior. Always echo the ISO date back to the user in your reply so they can correct',
+    'if needed.',
   ].join('\n');
 }
 
