@@ -93,7 +93,7 @@ describe('createChatApp default buildTools', () => {
       method: 'POST', url: '/api/chat',
       payload: { messages: [] },
     });
-    expect(res.body).toMatch(/bike_route,geocode,nearby_stops,plan,search_stops/);
+    expect(res.body).toMatch(/bike_route,geocode,nearby_stops,plan,schedule,search_stops/);
     await app.close();
   });
 });

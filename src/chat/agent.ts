@@ -7,6 +7,7 @@ export type ToolBundle = {
   bike_route: any;
   search_stops: any;
   nearby_stops: any;
+  schedule: any;
 };
 
 export type RunTurnOpts = {
@@ -16,7 +17,7 @@ export type RunTurnOpts = {
 
 const SERVER_NAME = 'ptv-chat';
 const TOOL_PREFIX = `mcp__${SERVER_NAME}__`;
-const TOOL_NAMES = ['geocode', 'plan', 'bike_route', 'search_stops', 'nearby_stops'] as const;
+const TOOL_NAMES = ['geocode', 'plan', 'bike_route', 'search_stops', 'nearby_stops', 'schedule'] as const;
 
 function systemPrompt(origin?: { lat: number; lon: number }, today = new Date()): string {
   return [
@@ -28,8 +29,12 @@ function systemPrompt(origin?: { lat: number; lon: number }, today = new Date())
     '  mode=bike-only|bike-train, maxTransfers=0|1. Returns 1-3 labeled finalist routes per call.',
     '- bike_route: pure bicycle routing between two coords. goal=commute (fastest/safest),',
     '  day-ride (prefers cycleways), or max-path (longest on dedicated path).',
-    '- search_stops: find PTV stops by name.',
+    '- search_stops: find PTV stops by name (returns stop_id you can pass to schedule/plan).',
     '- nearby_stops: find PTV stops near a coord.',
+    '- schedule: list real upcoming train departures from a PTV stop. Pass toStopId to also',
+    '  get arrival time at the destination stop. Use this when the user wants a timetable',
+    '  view (multiple departure options) instead of one curated itinerary, or when planning',
+    '  around a specific deadline.',
     '',
     'How the tools work under the hood (so you can answer "what engine?" questions):',
     '- Bicycle routing (bike_route + every bike leg inside plan) is GraphHopper, hosted',
@@ -62,8 +67,17 @@ function systemPrompt(origin?: { lat: number; lon: number }, today = new Date())
     '1. Geocode any place names that are not already coordinates.',
     '2. Call plan (or bike_route for pure-bike asks). You may call it multiple times to',
     '   compare goals or modes; each call adds candidate path(s) to the user map.',
-    '3. Reply concisely. Name each route. Do not repeat geometry; the user sees polylines.',
+    '3. If the user wants a timetable or a particular departure time, ALSO call schedule',
+    '   to surface real departures around the window — plan alone returns the orchestrator-',
+    '   picked option, schedule gives you the full list. Find stop_ids via search_stops.',
+    '4. Reply concisely. Name each route. Do not repeat geometry; the user sees polylines.',
     '   Do quote elevation numbers and train depart/arrive times from the summary.',
+    '',
+    'Bike-vs-train balance: this user is a cyclist. When an arriveBy deadline leaves more',
+    'than ~30 minutes of slack after the orchestrator-picked itinerary, proactively offer',
+    'a longer-bike alternative — either by calling plan again with a higher minBikeKm, or',
+    'by suggesting a different (closer-to-destination, further-from-origin) stop pair so',
+    'more of the trip is bike. Always state the tradeoff so the user can choose.',
     '',
     `Today (Melbourne local) is ${new Intl.DateTimeFormat('en-AU', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', timeZone: 'Australia/Melbourne' }).format(today)}. ` +
     `Compute "next Sunday" / "this Friday" / etc. from THAT day, not from your training-data prior. Show your working in the arriveBy/depart ISO string so the user can sanity-check the date.`,

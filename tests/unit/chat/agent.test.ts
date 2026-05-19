@@ -102,6 +102,7 @@ describe('runTurn', () => {
       bike_route:   { name: 'bike_route',   description: 'd', schema: {} as any, handler: async () => ({}) },
       search_stops: { name: 'search_stops', description: 'd', schema: {} as any, handler: async () => ({}) },
       nearby_stops: { name: 'nearby_stops', description: 'd', schema: {} as any, handler: async () => ({}) },
+      schedule:     { name: 'schedule',     description: 'd', schema: {} as any, handler: async () => ({}) },
     };
     for await (const ev of runTurn(
       { messages: [{ role: 'user', content: 'where is Hurst?' }] },
@@ -121,7 +122,7 @@ describe('runTurn', () => {
     (mockQuery as any).mockImplementation(() => { throw new Error('boom'); });
     const events: SseEvent[] = [];
     const tools = {
-      geocode: {}, plan: {}, bike_route: {}, search_stops: {}, nearby_stops: {},
+      geocode: {}, plan: {}, bike_route: {}, search_stops: {}, nearby_stops: {}, schedule: {},
     } as any;
     for await (const ev of runTurn(
       { messages: [{ role: 'user', content: 'x' }] },

@@ -11,6 +11,7 @@ import { makeGeocodeTool } from './tools/geocode';
 import { makePlanTool } from './tools/plan';
 import { makeBikeRouteTool, type BikeFn } from './tools/bike_route';
 import { makeSearchStopsTool, makeNearbyStopsTool } from './tools/stops';
+import { makeScheduleTool } from './tools/schedule';
 import { Nominatim } from '../server/nominatim';
 import { plan as planOrchestrator } from '../plan/orchestrator';
 import { ghRouteBike, ghRouteCustom } from '../plan/external';
@@ -37,6 +38,7 @@ function defaultBuildTools(ctx: ChatCtx) {
     bike_route:   makeBikeRouteTool(ctx, dispatchBike),
     search_stops: makeSearchStopsTool(ptv),
     nearby_stops: makeNearbyStopsTool(ptv),
+    schedule:     makeScheduleTool(),
   };
 }
 
