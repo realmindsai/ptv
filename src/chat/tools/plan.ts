@@ -1,7 +1,45 @@
 import { z } from 'zod';
 import type { ChatCtx } from '../types';
-import type { Itinerary, PlanRequest, PlanResult } from '../../plan/types';
+import type { Itinerary, Leg, PlanRequest, PlanResult } from '../../plan/types';
 import { parseTime } from '../../plan/parse_time';
+
+// Melbourne wall-clock for a UTC ISO string, e.g. "06:18 (Sun)".
+const MELB_TIME = new Intl.DateTimeFormat('en-AU', {
+  hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Australia/Melbourne',
+});
+const MELB_DAY = new Intl.DateTimeFormat('en-AU', {
+  weekday: 'short', timeZone: 'Australia/Melbourne',
+});
+function melbLocal(iso: string): string {
+  try {
+    const d = new Date(iso);
+    return `${MELB_TIME.format(d)} (${MELB_DAY.format(d)})`;
+  } catch {
+    return iso;
+  }
+}
+
+function summarizeLeg(leg: Leg) {
+  if (leg.mode === 'bike') {
+    return {
+      mode: 'bike' as const,
+      km: leg.km,
+      min: Math.round(leg.min),
+      kmOnPath: leg.kmOnPath ?? undefined,
+      ascendM: leg.ascendM,
+      descendM: leg.descendM,
+    };
+  }
+  return {
+    mode: 'train' as const,
+    route: leg.routeName,
+    fromStop: leg.fromStopName,
+    toStop: leg.toStopName,
+    departLocal: melbLocal(leg.departUtc),
+    arriveLocal: melbLocal(leg.arriveUtc),
+    runRef: leg.runRef,
+  };
+}
 
 const zLatLon = z.object({ lat: z.number(), lon: z.number() });
 
@@ -52,13 +90,29 @@ function buildRequest(a: PlanArgs): PlanRequest {
 }
 
 function summarize(it: Itinerary) {
+  // Pull the first train leg's depart / last train leg's arrive as the trip
+  // window. For bike-only itineraries these are undefined.
+  const trainLegs = it.legs.filter((l): l is Extract<Leg, { mode: 'train' }> => l.mode === 'train');
+  const tripDepartLocal = trainLegs[0] ? melbLocal(trainLegs[0].departUtc) : undefined;
+  const tripArriveLocal = trainLegs.length > 0
+    ? melbLocal(trainLegs[trainLegs.length - 1].arriveUtc) : undefined;
+
   return {
     label: it.labels[0],
-    totalTimeMin: it.totalTimeMin,
+    totalTimeMin: Math.round(it.totalTimeMin),
     bikeKm: it.bikeKm,
+    bikeMin: Math.round(it.bikeMin),
     trainKm: it.trainKm,
+    trainMin: Math.round(it.trainMin),
+    waitMin: Math.round(it.waitMin),
+    transferDwellMin: it.transferDwellMin != null ? Math.round(it.transferDwellMin) : undefined,
     transfers: it.transfers,
     bikeKmOnPath: it.bikeKmOnPath ?? undefined,
+    // Trip window (Melbourne local time), if any train legs exist.
+    tripDepartLocal,
+    tripArriveLocal,
+    // Per-leg breakdown so you can quote exact route + departure/arrival times.
+    legs: it.legs.map(summarizeLeg),
     // Elevation analytics aggregated across all bike legs (from GraphHopper).
     ascendM: it.ascendM,
     descendM: it.descendM,
@@ -86,9 +140,18 @@ export function makePlanTool(
     name: 'plan' as const,
     description:
       'Plan a bike+train (or bike-only) trip between two coordinates in Melbourne. ' +
-      'Returns one summary per labeled finalist itinerary (typically 1-3 routes ' +
-      'named "fastest", "recommended", etc.). Full geometry is sent to the user ' +
-      'map directly as a side effect. Call multiple times to compare goals or modes.',
+      'Backed by the live PTV Timetable API + GraphHopper bike routing. ' +
+      'Returns 1-3 labeled finalist routes per call ("fastest", "recommended", ' +
+      '"most-bike"), each with a per-leg breakdown including real train departure ' +
+      'and arrival times in Melbourne local. Call multiple times to compare goals ' +
+      'or modes.\n\n' +
+      'Time arguments (`depart`, `arriveBy`):\n' +
+      '- "HH:MM" — interpreted as TODAY in Melbourne local. Use this only when the ' +
+      '  user is asking about today.\n' +
+      '- Full ISO8601 with timezone offset, e.g. "2026-05-25T07:00:00+10:00" — use ' +
+      '  for any other day. Australia/Melbourne is +10:00 (AEST) or +11:00 (AEDT).\n' +
+      'For arrive-by queries, the planner backs out feasible departures and picks ' +
+      'the latest one that meets the deadline.',
     schema: zPlanArgs,
     handler: async (args: PlanArgs) => {
       const result = await planFn(buildRequest(args));
