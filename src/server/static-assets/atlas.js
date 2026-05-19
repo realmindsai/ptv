@@ -764,7 +764,8 @@ export function wireFormSubmitGuard() {
 
 /**
  * Read the ten hidden #param-* inputs into state.params, then auto-fire if
- * both endpoints are set. Called by the params-sheet "done" button (Task 2.4).
+ * both endpoints are set. Called after settings UI interactions and from
+ * recents-row clicks in the v3 unified sheet.
  */
 export function syncParamsFromHiddenInputs(sm) {
   const form = document.getElementById('plan-form');
@@ -1117,6 +1118,12 @@ export function init() {
       params: { ...DEFAULTS, ...decoded.params },
     });
     if (decoded.origin && decoded.destination) firePlan(sm);
+  }
+
+  // Empty-state: no URL-restored trip → show the recents accordion at full snap.
+  if (!decoded || !decoded.origin || !decoded.destination) {
+    snapSheet('full');
+    expandAccordion('recents', { scroll: false });
   }
 
   // Bind settings controls after URL state is restored so the controls

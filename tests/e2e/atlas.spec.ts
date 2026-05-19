@@ -61,8 +61,9 @@ test('Atlas shell renders core structure', async ({ page }) => {
   await expect(page.locator('.btn--cta')).toHaveCount(0);
 
   // Results sheet (unified sheet — check by id and data-snap).
+  // Empty-state snaps to full per spec (recents IS the empty-state content).
   await expect(page.locator('section.sheet#sheet')).toBeVisible();
-  await expect(page.locator('section.sheet#sheet')).toHaveAttribute('data-snap', 'peek');
+  await expect(page.locator('section.sheet#sheet')).toHaveAttribute('data-snap', 'full');
 
   // Vendored assets actually load (no failed /static/ requests).
   await page.waitForLoadState('networkidle');
@@ -108,6 +109,10 @@ test('geocode autocomplete fills hidden inputs and submits a plan', async ({ pag
 
   // HTMX fires after its 300ms delay; wait for the injected suggestion to appear.
   await expect(page.locator('#origin-suggest .geocode-item')).toBeVisible({ timeout: 5000 });
+
+  // Empty-state starts at full snap; collapse to peek so the sheet doesn't
+  // intercept pointer events on the dropdown.
+  await page.evaluate(() => { const s = document.getElementById('sheet'); if (s) s.dataset.snap = 'peek'; });
 
   // Click the suggestion.
   await page.locator('#origin-suggest .geocode-item').first().click();
@@ -180,7 +185,7 @@ test('typing in autocomplete does not throw and does not flash plan indicator', 
 
   // Bug B: the planning indicator (the sheet) must NOT be in htmx-request state
   // while the autocomplete is what's firing.
-  const sheetClass = await page.evaluate(() => document.getElementById('results-sheet')?.className ?? '');
+  const sheetClass = await page.evaluate(() => document.getElementById('sheet')?.className ?? '');
   expect(sheetClass).not.toContain('htmx-request');
 });
 
@@ -277,6 +282,9 @@ test('click-to-route: two map clicks fire a plan', async ({ page }) => {
   await page.waitForFunction(() => !!(window as any).__atlas);
 
   // Two map clicks (rough pixel coords inside the map div).
+  // Empty-state starts at full snap; collapse to peek first so the sheet
+  // doesn't intercept pointer events on the map.
+  await page.evaluate(() => { const s = document.getElementById('sheet'); if (s) s.dataset.snap = 'peek'; });
   const map = page.locator('#map');
   const box = await map.boundingBox();
   if (!box) throw new Error('map not laid out');
