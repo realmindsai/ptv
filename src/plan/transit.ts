@@ -61,12 +61,19 @@ export async function departuresFrom(
 export async function runPattern(
   runRef: string,
   routeType: RouteTypeBikeable,
+  dateUtc?: Date,
   deps?: Deps,
 ): Promise<{ stopId: number; arriveUtc: string }[]> {
   const { ptv } = deps ?? (await defaultDeps());
-  const raw = (await ptv(`/v3/pattern/run/${runRef}/route_type/${routeType}`, {
-    expand: ['Stop'],
-  })) as { departures?: { stop_id: number; scheduled_departure_utc: string; estimated_departure_utc: string | null }[] };
+  // `date_utc` anchors which scheduled instance of this run to return.
+  // Without it PTV returns *today's* instance, which corrupts patterns when
+  // the trip is for a future day (depart/arrive timestamps come back stamped
+  // with today's date, often producing arrive < depart and negative durations).
+  const params: Record<string, string | number | string[]> = { expand: ['Stop'] };
+  if (dateUtc) params.date_utc = dateUtc.toISOString();
+  const raw = (await ptv(
+    `/v3/pattern/run/${runRef}/route_type/${routeType}`, params,
+  )) as { departures?: { stop_id: number; scheduled_departure_utc: string; estimated_departure_utc: string | null }[] };
   return (raw.departures ?? []).map((d) => ({
     stopId: d.stop_id,
     arriveUtc: d.estimated_departure_utc ?? d.scheduled_departure_utc,

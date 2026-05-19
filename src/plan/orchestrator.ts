@@ -100,11 +100,21 @@ function egressEnrich(s: SearchState, e: AccessCandidate): Promise<EnrichResult>
   return p;
 }
 
-async function getPattern(s: SearchState, runRef: string, routeType: 0 | 3): Promise<PatternStop[]> {
-  let p = s.patternCache.get(runRef);
+async function getPattern(
+  s: SearchState,
+  runRef: string,
+  routeType: 0 | 3,
+  dateUtc?: Date,
+): Promise<PatternStop[]> {
+  // Cache key must include the calendar day — the same runRef yields a
+  // different schedule on different days. Without this, a request on Tuesday
+  // would reuse Monday's cached pattern.
+  const dayKey = dateUtc ? dateUtc.toISOString().slice(0, 10) : 'today';
+  const cacheKey = `${runRef}@${dayKey}`;
+  let p = s.patternCache.get(cacheKey);
   if (!p) {
-    p = await runPattern(runRef, routeType, s.deps);
-    s.patternCache.set(runRef, p);
+    p = await runPattern(runRef, routeType, dateUtc, s.deps);
+    s.patternCache.set(cacheKey, p);
   }
   return p;
 }
@@ -205,7 +215,7 @@ async function planK1(s: SearchState): Promise<Itinerary[]> {
     const deps = await departuresFrom(a.stopId, a.routeType, notBefore, 60, s.deps);
     for (const d of deps) {
       if (!a.routeIds.includes(d.routeId)) continue;
-      const pattern = await getPattern(s, d.runRef, a.routeType);
+      const pattern = await getPattern(s, d.runRef, a.routeType, new Date(d.departUtc));
       const aIdx = pattern.findIndex((p) => p.stopId === a.stopId);
       if (aIdx < 0) continue;
       for (let i = aIdx + 1; i < pattern.length; i++) {
@@ -339,7 +349,7 @@ async function planK2Hubs(s: SearchState): Promise<Itinerary[]> {
     const deps = await departuresFrom(a.stopId, a.routeType, notBefore, 60, s.deps);
     for (const d of deps) {
       if (!a.routeIds.includes(d.routeId)) continue;
-      const pattern = await getPattern(s, d.runRef, a.routeType);
+      const pattern = await getPattern(s, d.runRef, a.routeType, new Date(d.departUtc));
       const aIdx = pattern.findIndex((p) => p.stopId === a.stopId);
       if (aIdx < 0) continue;
       for (let i = aIdx + 1; i < pattern.length; i++) {
@@ -368,7 +378,7 @@ async function planK2Hubs(s: SearchState): Promise<Itinerary[]> {
       const hubDeps = await departuresFrom(ha.hubStopId, rt, notBefore, 60, s.deps);
       for (const hd of hubDeps) {
         if (hd.runRef === ha.run1Ref) continue;
-        const pattern = await getPattern(s, hd.runRef, rt);
+        const pattern = await getPattern(s, hd.runRef, rt, new Date(hd.departUtc));
         const hIdx = pattern.findIndex((p) => p.stopId === ha.hubStopId);
         if (hIdx < 0) continue;
         for (let j = hIdx + 1; j < pattern.length; j++) {
