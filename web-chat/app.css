@@ -60,7 +60,9 @@ html, body { margin: 0; height: 100%; font: 14px/1.4 system-ui, sans-serif; }
   position: fixed; top: 1rem; left: 1rem;
   display: flex; flex-wrap: wrap; gap: .4rem;
   max-width: calc(100vw - var(--dock-w) - 2rem);
+  max-height: 6.5rem; overflow-y: auto;
   z-index: 800;
+  padding: .15rem;
 }
 .legend:empty { display: none; }
 .chip {

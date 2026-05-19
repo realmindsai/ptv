@@ -53,13 +53,21 @@ function buildRequest(a: PlanArgs): PlanRequest {
 
 function summarize(it: Itinerary) {
   return {
-    label: it.labels[0] ?? 'unlabeled',
+    label: it.labels[0],
     totalTimeMin: it.totalTimeMin,
     bikeKm: it.bikeKm,
     trainKm: it.trainKm,
     transfers: it.transfers,
     bikeKmOnPath: it.bikeKmOnPath ?? undefined,
   };
+}
+
+// labelAndSort returns every feasible dedup'd itinerary, but only the top 2-3
+// receive labels ('fastest', 'recommended', 'most-bike'). The rest are candidate
+// leftovers the orchestrator considered. For the chat UI we only want labeled
+// finalists — anything else clutters the map.
+function selectFinalists(its: Itinerary[]): Itinerary[] {
+  return its.filter((it) => Array.isArray(it.labels) && it.labels.length > 0);
 }
 
 export function makePlanTool(
@@ -71,26 +79,30 @@ export function makePlanTool(
     name: 'plan' as const,
     description:
       'Plan a bike+train (or bike-only) trip between two coordinates in Melbourne. ' +
-      'Returns a count + per-itinerary summary. Full geometry is sent to the user map ' +
-      'directly as a side effect. Call multiple times to compare goals or modes.',
+      'Returns one summary per labeled finalist itinerary (typically 1-3 routes ' +
+      'named "fastest", "recommended", etc.). Full geometry is sent to the user ' +
+      'map directly as a side effect. Call multiple times to compare goals or modes.',
     schema: zPlanArgs,
     handler: async (args: PlanArgs) => {
       const result = await planFn(buildRequest(args));
-      if (result.itineraries.length === 0) {
-        return { ok: false as const, error: 'No itineraries found' };
+      const finalists = selectFinalists(result.itineraries);
+      if (finalists.length === 0) {
+        return result.itineraries.length === 0
+          ? { ok: false as const, error: 'No itineraries found' }
+          : { ok: false as const, error: 'No feasible itinerary matched the constraints' };
       }
-      const summaries = result.itineraries.map((it) => {
+      const summaries = finalists.map((it) => {
         const id = genId();
         ctx.emit({
           type: 'path_add',
           pathId: id,
-          label: it.labels[0] ?? 'unlabeled',
+          label: it.labels[0],
           color: nextColor(),
           itinerary: it,
         });
         return summarize(it);
       });
-      return { ok: true as const, itineraryCount: result.itineraries.length, summaries };
+      return { ok: true as const, itineraryCount: finalists.length, summaries };
     },
   };
 }
