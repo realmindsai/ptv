@@ -60,8 +60,10 @@ export function makeBikeRouteTool(
   return {
     name: 'bike_route' as const,
     description:
-      'Pure bicycle routing between two coords. goal=commute (fastest/safest), ' +
-      'day-ride (prefers cycleways), or max-path (longest on dedicated path).',
+      'Pure bicycle routing between two coords. Backed by GraphHopper. ' +
+      'goal=commute (fastest/safest, default `bike` profile), day-ride (prefers ' +
+      'cycleways via custom_model), or max-path (longest on dedicated path, more ' +
+      'aggressive custom_model). Returns distance + elevation analytics.',
     schema: zBikeRouteArgs,
     handler: async (args: BikeRouteArgs) => {
       const r = await bikeFn(args.from, args.to, args.goal);
@@ -76,8 +78,15 @@ export function makeBikeRouteTool(
       });
       return {
         ok: true as const,
-        km: r.km, min: r.min, kmOnPath: r.kmOnPath,
-        ascendM: r.ascendM, descendM: r.descendM,
+        km: r.km,
+        min: r.min,
+        kmOnPath: r.kmOnPath,
+        ascendM: r.ascendM,
+        descendM: r.descendM,
+        maxSustainedGradePercent: r.maxSustainedGradePercent,
+        maxSustainedGradeM: r.maxSustainedGradeM,
+        flatFraction: r.flatFraction,
+        steepFraction: r.steepFraction,
       };
     },
   };

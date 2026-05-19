@@ -59,6 +59,13 @@ function summarize(it: Itinerary) {
     trainKm: it.trainKm,
     transfers: it.transfers,
     bikeKmOnPath: it.bikeKmOnPath ?? undefined,
+    // Elevation analytics aggregated across all bike legs (from GraphHopper).
+    ascendM: it.ascendM,
+    descendM: it.descendM,
+    maxSustainedGradePercent: it.maxSustainedGradePercent,
+    maxSustainedGradeM: it.maxSustainedGradeM,
+    flatFraction: it.flatFraction,
+    steepFraction: it.steepFraction,
   };
 }
 

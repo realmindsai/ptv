@@ -31,12 +31,12 @@ describe('plan tool', () => {
     expect(paths).toHaveLength(2);
     expect(paths[0]).toMatchObject({ type: 'path_add', label: 'recommended' });
 
-    expect(out).toEqual({
+    expect(out).toMatchObject({
       ok: true,
       itineraryCount: 2,
       summaries: [
-        { label: 'recommended', totalTimeMin: 65, bikeKm: 14, trainKm: 4, transfers: 0, bikeKmOnPath: 12 },
-        { label: 'fastest',     totalTimeMin: 55, bikeKm: 6,  trainKm: 10, transfers: 1, bikeKmOnPath: 4  },
+        expect.objectContaining({ label: 'recommended', totalTimeMin: 65, bikeKm: 14, trainKm: 4, transfers: 0, bikeKmOnPath: 12 }),
+        expect.objectContaining({ label: 'fastest',     totalTimeMin: 55, bikeKm: 6,  trainKm: 10, transfers: 1, bikeKmOnPath: 4  }),
       ],
     });
   });

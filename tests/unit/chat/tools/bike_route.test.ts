@@ -29,7 +29,11 @@ describe('bike_route tool', () => {
       type: 'path_add', pathId: 'b1', label: 'bike (day-ride)',
     });
     expect(out).toEqual({
-      ok: true, km: 22.4, min: 70, kmOnPath: 18.7, ascendM: 180, descendM: 160,
+      ok: true,
+      km: 22.4, min: 70, kmOnPath: 18.7,
+      ascendM: 180, descendM: 160,
+      maxSustainedGradePercent: 4.2, maxSustainedGradeM: 50,
+      flatFraction: 0.7, steepFraction: 0.05,
     });
   });
 
