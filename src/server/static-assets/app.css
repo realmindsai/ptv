@@ -128,51 +128,6 @@ body {
 }
 
 
-/* ─── Bottom sheet ─── */
-.sheet {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--rmai-white);
-  border-radius: 22px 22px 0 0;
-  box-shadow: 0 -8px 32px rgba(26,27,37,0.10), 0 -1px 0 var(--rmai-border);
-  padding: 8px 0 12px;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: height 220ms ease;
-}
-
-/* Sheet height states. Tap the handle to cycle peek → expanded → peek.
-   Expanded uses dvh so it tracks mobile chrome correctly. */
-.sheet--peek                { height: 220px; }
-.sheet--peek.is-expanded    { height: 75dvh; max-height: 640px; }
-
-/* The handle is now a tap target (full-width strip with the visual bar centered).
-   Hover/active states make the affordance visible. */
-.sheet__handle {
-  width: 100%;
-  padding: 8px 0 12px;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.sheet__handle::before {
-  content: '';
-  display: block;
-  width: 44px; height: 5px;
-  border-radius: 999px;
-  background: #D9D7D2;
-  transition: background 120ms ease, width 120ms ease;
-}
-.sheet__handle:hover::before { background: var(--rmai-purple); }
-.sheet--peek.is-expanded .sheet__handle::before { width: 60px; }
 
 #results {
   flex: 1;
@@ -436,18 +391,6 @@ body {
 .pill-collapsed__icons { display: flex; flex-direction: column; gap: 4px; }
 
 /* ─── Trip chips ─── */
-.trip-chips {
-  /* Sit below the pill in every state — pill (incl. edit mode w/ 2 rows + padding)
-     can be up to ~130px tall starting at top:8px, so chips need to clear ~138px.
-     z-index above the pill (10) so chips are clickable in case of residual overlap. */
-  position: absolute; top: 142px; left: 12px; right: 12px;
-  display: flex; align-items: center; gap: 6px; z-index: 11;
-  overflow-x: auto; -webkit-overflow-scrolling: touch;
-}
-.from-to-pill[data-state="set"] ~ .trip-chips {
-  /* Collapsed pill is shorter (~64px ending around y:72). Tuck chips closer. */
-  top: 80px;
-}
 .trip-chips__prefix { font-size: 10px; color: var(--rmai-fg-mut); letter-spacing: 0.08em; flex-shrink: 0; }
 .chip {
   display: inline-flex; align-items: center; gap: 6px;
@@ -483,18 +426,7 @@ body {
 .fab > svg { pointer-events: none; }
 .fab.is-loading { animation: pulse 1s ease-in-out infinite; }
 
-/* ─── Params sheet ─── */
-.sheet--params {
-  height: 75vh; max-height: 640px; padding-top: 8px; z-index: 30;
-  display: flex; flex-direction: column;
-}
-.sheet--params[hidden] { display: none; }
-.params-sheet__head {
-  display: flex; justify-content: space-between; align-items: baseline; padding: 0 16px 8px;
-}
-.params-sheet__head h2 { margin: 0; font: 700 18px var(--sans); color: var(--rmai-fg-1); }
 .link-btn { background: transparent; border: 0; color: var(--rmai-purple); font: 600 13px var(--sans); cursor: pointer; }
-.params-sheet__body { padding: 8px 16px; overflow-y: auto; flex: 1; }
 .ps-section { margin-bottom: 18px; }
 .eyebrow { font: 700 9.5px var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--rmai-purple); margin: 12px 0 6px; }
 .seg-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -582,4 +514,114 @@ body {
   font: 600 9px var(--mono); color: var(--rmai-fg-mut);
   background: var(--rmai-stone); border-radius: 4px; padding: 1px 5px;
   letter-spacing: 0.04em; text-transform: uppercase;
+}
+/* ─── unified sheet (v3) ──────────────────────────────────────────────── */
+
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--rmai-white);
+  border-top-left-radius: 22px;
+  border-top-right-radius: 22px;
+  box-shadow: 0 -8px 32px rgba(26, 27, 37, 0.10);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: height 280ms cubic-bezier(.2, .8, .2, 1);
+  z-index: 40;
+}
+
+.sheet[data-snap="peek"] { height: 260px; }
+.sheet[data-snap="mid"]  { height: 540px; }
+.sheet[data-snap="full"] { height: min(750px, 92vh); }
+
+.sheet__header {
+  flex: 0 0 auto;
+  padding: 6px 14px 8px;
+  border-bottom: 1px solid var(--rmai-border);
+  background: var(--rmai-white);
+}
+
+.sheet__handle {
+  display: block;
+  width: 36px;
+  height: 4px;
+  margin: 0 auto 10px;
+  border: 0;
+  padding: 0;
+  border-radius: 2px;
+  background: #D9D7D2;
+  cursor: pointer;
+}
+.sheet__handle:focus-visible { outline: 2px solid var(--rmai-purple); outline-offset: 2px; }
+
+.sheet__body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* trip chips — now inside .sheet__header (not floating) */
+.trip-chips {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  overflow-x: auto;
+  margin-top: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.trip-chips__spacer { flex: 1; }
+
+.chip[data-active] {
+  background: var(--rmai-lavender);
+  border-color: var(--rmai-purple);
+}
+.chip[data-active] .chip__chev,
+.chip[data-active] .chip__badge { color: var(--rmai-purple-d); }
+
+/* accordions — native <details> with lilac active overlay */
+.accordion { border-top: 1px solid var(--rmai-border); }
+
+.accordion__head {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--rmai-white);
+  border-left: 2px solid transparent;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rmai-fg-1);
+}
+.accordion__head::-webkit-details-marker { display: none; }
+.accordion__head::after {
+  content: '▾';
+  margin-left: auto;
+  color: var(--rmai-fg-mut);
+  transition: transform 200ms;
+}
+.accordion[open] > .accordion__head::after { transform: rotate(180deg); }
+
+.accordion__icon { width: 18px; text-align: center; color: var(--rmai-fg-mut); }
+.accordion__title { letter-spacing: -0.01em; }
+
+.accordion[data-acc-active] > .accordion__head {
+  background: var(--rmai-lavender);
+  border-left-color: var(--rmai-purple);
+}
+.accordion[data-acc-active] > .accordion__head .accordion__icon { color: var(--rmai-purple-d); }
+
+.accordion__body {
+  padding: 12px 14px;
+  background: var(--rmai-white);
+  border-left: 2px solid transparent;
+}
+.accordion[data-acc-active] > .accordion__body {
+  background: var(--rmai-lavender);
+  border-left-color: var(--rmai-purple);
 }
