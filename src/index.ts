@@ -12,6 +12,7 @@ import { nearbyCommand } from './commands/nearby';
 import { stopDetailsCommand } from './commands/stop-details';
 import { planCommand } from './commands/plan';
 import { serveCommand } from './commands/serve';
+import { chatServeCommand } from './commands/chat-serve';
 
 const argv = preprocessArgv(process.argv);
 
@@ -30,6 +31,7 @@ program.addCommand(nearbyCommand());
 program.addCommand(stopDetailsCommand());
 program.addCommand(planCommand());
 program.addCommand(serveCommand());
+program.addCommand(chatServeCommand());
 
 program.parseAsync(argv).catch((err: Error) => {
   if (err instanceof MissingCredentialsError) {
