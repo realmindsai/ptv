@@ -185,8 +185,8 @@ test('typing in autocomplete does not throw and does not flash plan indicator', 
 });
 
 test('form submits depart=HH:MM through to /api/plan', async ({ page }) => {
-  // atlas.js auto-fires JSON to /api/plan when both endpoints are set and "done"
-  // is clicked in the params sheet. Capture the JSON body and verify depart is present.
+  // atlas.js auto-fires JSON to /api/plan when both endpoints are set and the user
+  // interacts with the v3 unified sheet. Capture the JSON body and verify depart is present.
   let capturedJsonBody = '';
   await page.route('**/api/plan', async (route) => {
     if (route.request().method() !== 'POST') return route.continue();
@@ -210,7 +210,7 @@ test('form submits depart=HH:MM through to /api/plan', async ({ page }) => {
   await page.goto(BASE);
   await page.waitForFunction(() => !!(window as any).__atlas);
 
-  // Pre-populate origin+destination so the auto-fire after "done" has both endpoints.
+  // Pre-populate origin+destination so the auto-fire has both endpoints when the sheet is used.
   await page.evaluate(() => {
     (window as any).__atlas.sm.setState({
       origin:      { lat: -37.64, lon: 145.19 },
@@ -397,10 +397,10 @@ test('typed coords + state dispatch produces a plan', async ({ page }) => {
 });
 
 // ---------------------------------------------------------------------------
-// v2 params sheet
+// v3 unified-sheet: chip+accordion param flow
 // ---------------------------------------------------------------------------
 
-test('v2 params sheet: chip click opens, done writes hidden input, fires plan', async ({ page }) => {
+test('v3 chip+accordion: chip-goal → max-path → syncParams fires plan with goal in body', async ({ page }) => {
   let capturedBody = '';
   await page.route('**/api/plan', async (route) => {
     if (route.request().method() !== 'POST') return route.continue();
@@ -425,7 +425,7 @@ test('v2 params sheet: chip click opens, done writes hidden input, fires plan', 
   await page.goto(BASE);
   await page.waitForFunction(() => !!(window as any).__atlas);
 
-  // Pre-populate origin+destination so the auto-fire after "done" has both endpoints.
+  // Pre-populate origin+destination so firePlan has both endpoints when syncParams is called.
   await page.evaluate(() => {
     (window as any).__atlas.sm.setState({
       origin:      { lat: -37.64, lon: 145.19 },

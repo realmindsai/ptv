@@ -412,7 +412,7 @@ body {
 
 /* ─── Map FAB ─── */
 .fab {
-  position: absolute; right: 14px; bottom: 240px;
+  position: absolute; right: 14px; bottom: 276px;
   width: 44px; height: 44px; border-radius: 50%;
   background: var(--rmai-white); border: 1px solid var(--rmai-border);
   box-shadow: 0 4px 14px rgba(26,27,37,0.18);
