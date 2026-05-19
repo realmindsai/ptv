@@ -43,7 +43,7 @@
       hx-post="/api/plan"
       hx-target="#results"
       hx-swap="innerHTML"
-      hx-indicator="#results-sheet"
+      hx-indicator="#sheet"
       hx-disinherit="hx-indicator"
       hx-headers='{"Accept":"text/html"}'
     >
@@ -106,53 +106,75 @@
     </form>
   </div>
 
-  <!-- trip chips — outside form; JS-only interaction -->
-  <div class="trip-chips" id="trip-chips" role="toolbar" aria-label="trip parameters">
-    <span class="trip-chips__prefix mono">trip ·</span>
-    <button type="button" class="chip" data-chip="when" id="chip-when">
-      <span class="chip__dot chip__dot--now" id="chip-when-dot"></span>
-      <span id="chip-when-text">now</span>
-      <span class="chip__chev">▾</span>
-    </button>
-    <button type="button" class="chip" data-chip="goal" id="chip-goal">
-      <span id="chip-goal-text">commute</span>
-      <span class="chip__chev">▾</span>
-    </button>
-    <button type="button" class="chip" data-chip="flags" id="chip-flags">
-      <span class="mono">ƒ</span>
-      <span id="chip-flags-count" class="chip__badge"></span>
-    </button>
-  </div>
-
   <!-- map FAB — geolocate -->
   <button type="button" class="fab" id="fab-geolocate" title="use my current location" aria-label="use my current location">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
   </button>
 
-  <!-- params sheet shell — populated by JS, hidden by default -->
-  <div class="sheet sheet--params" id="params-sheet" hidden>
-    <div class="sheet__handle"></div>
-    <div class="params-sheet__head">
-      <h2>trip params</h2>
-      <button type="button" id="params-done" class="link-btn">done</button>
-    </div>
-    <div class="params-sheet__body" id="params-sheet-body"></div>
-  </div>
+  <!-- unified bottom sheet — one element, three snap heights -->
+  <section class="sheet" id="sheet" data-snap="peek" aria-label="trip details">
 
-  <!-- bottom sheet — results -->
-  <div class="sheet sheet--peek" id="results-sheet">
-    <button type="button" class="sheet__handle" id="sheet-handle" aria-label="expand or collapse results sheet"></button>
-    <div class="sheet__indicator" aria-live="polite">
-      <div class="stages">
-        <div class="stage" data-stage="geocode"><span class="stage__dot"></span> geocode</div>
-        <div class="stage" data-stage="osrm"><span class="stage__dot"></span> bike route · osrm-au</div>
-        <div class="stage" data-stage="ptv"><span class="stage__dot"></span> ptv departures</div>
-        <div class="stage" data-stage="enrich"><span class="stage__dot"></span> enrich · gh-route</div>
-        <div class="stage" data-stage="rank"><span class="stage__dot"></span> rank</div>
+    <header class="sheet__header">
+      <button type="button" class="sheet__handle" id="sheet-handle"
+        aria-label="cycle sheet height" aria-controls="sheet"></button>
+
+      <div class="trip-chips" id="trip-chips" role="toolbar" aria-label="trip parameters">
+        <span class="trip-chips__prefix mono">trip ·</span>
+        <button type="button" class="chip" data-chip="when" id="chip-when" aria-controls="acc-when">
+          <span class="chip__dot chip__dot--now" id="chip-when-dot"></span>
+          <span id="chip-when-text">now</span>
+          <span class="chip__chev">▾</span>
+        </button>
+        <button type="button" class="chip" data-chip="goal" id="chip-goal" aria-controls="acc-goal">
+          <span id="chip-goal-text">commute</span>
+          <span class="chip__chev">▾</span>
+        </button>
+        <button type="button" class="chip" data-chip="flags" id="chip-flags" aria-controls="acc-flags">
+          <span class="mono">ƒ</span>
+          <span id="chip-flags-count" class="chip__badge"></span>
+        </button>
+        <span class="trip-chips__spacer"></span>
+        <button type="button" class="chip" data-chip="recents" id="chip-recents" aria-controls="acc-recents">
+          <span class="mono">↻</span>
+          <span id="chip-recents-text">recents</span>
+        </button>
       </div>
+
+      <div class="sheet__indicator" aria-live="polite">
+        <div class="stages">
+          <div class="stage" data-stage="geocode"><span class="stage__dot"></span> geocode</div>
+          <div class="stage" data-stage="osrm"><span class="stage__dot"></span> bike route · osrm-au</div>
+          <div class="stage" data-stage="ptv"><span class="stage__dot"></span> ptv departures</div>
+          <div class="stage" data-stage="enrich"><span class="stage__dot"></span> enrich · gh-route</div>
+          <div class="stage" data-stage="rank"><span class="stage__dot"></span> rank</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="sheet__body">
+      <div id="results"></div>
+
+      <details class="accordion" id="acc-when" data-acc="when">
+        <summary class="accordion__head"><span class="accordion__icon mono">⏱</span><span class="accordion__title">when</span></summary>
+        <div class="accordion__body" id="acc-when-body"><!-- inlined in Task 4 --></div>
+      </details>
+
+      <details class="accordion" id="acc-goal" data-acc="goal">
+        <summary class="accordion__head"><span class="accordion__icon mono">◆</span><span class="accordion__title">goal</span></summary>
+        <div class="accordion__body" id="acc-goal-body"><!-- inlined in Task 4 --></div>
+      </details>
+
+      <details class="accordion" id="acc-flags" data-acc="flags">
+        <summary class="accordion__head"><span class="accordion__icon mono">ƒ</span><span class="accordion__title">flags</span></summary>
+        <div class="accordion__body" id="acc-flags-body"><!-- inlined in Task 4 --></div>
+      </details>
+
+      <details class="accordion" id="acc-recents" data-acc="recents">
+        <summary class="accordion__head"><span class="accordion__icon mono">↻</span><span class="accordion__title">recents</span></summary>
+        <div class="accordion__body" id="acc-recents-body"><!-- populated in Task 5 --></div>
+      </details>
     </div>
-    <div id="results"></div>
-  </div>
+  </section>
 
   <!-- HTMX 1.x silently drops non-2xx responses by default. Our /api/plan
        returns a friendly error fragment with status 4xx/5xx, so opt into
