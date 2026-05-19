@@ -831,9 +831,17 @@ export function wireTripChips(sm) {
     const chip = e.target.closest('.chip[data-chip]');
     if (!chip) return;
     const name = chip.dataset.chip;
-    if ('active' in chip.dataset) {
+    const wasActive = 'active' in chip.dataset;
+    if (wasActive) {
       collapseAccordion(name);
       snapSheet('peek');
+      // Chip-tap-again replaces the old params-sheet "done" button. Push the
+      // hidden #param-* inputs into state.params and auto-fire if both
+      // endpoints are set. Skip for the recents chip — its accordion has no
+      // settings to apply, and re-plan happens on row click instead.
+      if (name !== 'recents') {
+        syncParamsFromHiddenInputs(sm);
+      }
     } else {
       snapSheet('full');
       expandAccordion(name);
