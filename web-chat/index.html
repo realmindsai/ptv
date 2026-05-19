@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ptv-chat</title>
+  <link rel="stylesheet" href="/static/leaflet.css">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <div id="map" aria-label="map"></div>
+  <aside id="chat" class="dock" aria-label="chat">
+    <header class="chat__header">
+      <button id="new-chat" type="button" title="New chat">⟲</button>
+      <span class="chat__title">ptv-chat</span>
+      <button id="toggle-log" type="button" title="Show tool trace">⌘</button>
+      <button id="collapse-chat" type="button" title="Collapse">▶</button>
+    </header>
+    <div id="messages" class="chat__messages" aria-live="polite"></div>
+    <form id="send-form" class="chat__form">
+      <textarea id="send-input" rows="2" placeholder="Plan a trip…"></textarea>
+      <button type="submit">Send</button>
+    </form>
+  </aside>
+  <section id="log" class="log" hidden aria-label="tool-call log"></section>
+  <script src="/static/leaflet.js"></script>
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>
