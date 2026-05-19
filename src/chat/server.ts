@@ -1,6 +1,8 @@
 import Fastify, { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import { registerHealth } from './routes/health';
 import { registerChat, type RunTurnFn, type BuildToolsFn } from './routes/chat';
+import { registerPage } from './routes/page';
+import { registerStatic } from './routes/static';
 import { runTurn as defaultRunTurn } from './agent';
 import type { ChatCtx } from './types';
 import type { LatLon } from '../plan/types';
@@ -47,6 +49,11 @@ export function createChatApp(opts: ChatAppOptions = {}): FastifyInstance {
     runTurnFn: opts.runTurnFn ?? (defaultRunTurn as RunTurnFn),
     buildTools: opts.buildTools ?? defaultBuildTools,
   });
+  // Register static + page. fastify-static is async but we let the plugin
+  // resolve via the regular `register()` queue — callers should `await app.ready()`
+  // before assertion-style testing or first request.
+  app.register(registerStatic);
+  registerPage(app);
   return app;
 }
 

@@ -97,3 +97,23 @@ describe('createChatApp default buildTools', () => {
     await app.close();
   });
 });
+
+describe('GET /', () => {
+  it('serves the SPA shell', async () => {
+    const app = createChatApp({ logger: false });
+    await app.ready();
+    const res = await app.inject({ method: 'GET', url: '/' });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-type']).toMatch(/^text\/html/);
+    expect(res.body).toContain('<div id="map"');
+    await app.close();
+  });
+
+  it('serves static bundle at /static/app.js', async () => {
+    const app = createChatApp({ logger: false });
+    await app.ready();
+    const res = await app.inject({ method: 'GET', url: '/static/app.js' });
+    expect(res.statusCode).toBe(200);
+    await app.close();
+  });
+});

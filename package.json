@@ -6,7 +6,7 @@
     "ptv": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc && node -e \"const f=require('fs'); f.cpSync('src/server/templates','dist/server/templates',{recursive:true}); f.cpSync('src/server/static-assets','dist/server/static-assets',{recursive:true})\" && npm run build:chat-web",
+    "build": "tsc && node -e \"const f=require('fs'); f.cpSync('src/server/templates','dist/server/templates',{recursive:true}); f.cpSync('src/server/static-assets','dist/server/static-assets',{recursive:true})\" && npm run build:chat-web && node -e \"require('fs').cpSync('src/chat/static-assets','dist/chat/static-assets',{recursive:true})\"",
     "build:chat-web": "node web-chat/esbuild.config.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
