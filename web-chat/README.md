@@ -20,8 +20,11 @@ host. Run `claude login` once on the dev box if you haven't already.
 
 ### 1. One-time: seed the `claude-creds` Docker volume
 
-The container mounts `~/.claude` read-only. Seed the volume from totoro's host
-filesystem (where `claude login` must have already been run):
+The container mounts `~/.claude` **read-write** so the Agent SDK can persist
+refreshed OAuth tokens (a read-only mount causes HTTP 401 the moment the
+short-lived access token expires, ~30 min after first use). Seed the volume
+from totoro's host filesystem (where `claude login` must have already been
+run):
 
 ```bash
 docker volume create claude-creds
@@ -31,8 +34,9 @@ docker run --rm \
   alpine sh -c "cp -r /src/. /dst/"
 ```
 
-Re-run this when subscription tokens refresh. Open follow-up bead to automate
-this via a sidecar that re-syncs daily.
+After seeding, the SDK refreshes tokens autonomously. Re-seed only if the
+refresh token itself is invalidated (e.g. after explicit `claude logout` or
+session revoke) — follow-up bead `ptv-2er` tracks an auto-refresh sidecar.
 
 ### 2. Build + start the container
 

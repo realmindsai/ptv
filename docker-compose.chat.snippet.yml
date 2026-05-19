@@ -25,7 +25,10 @@ services:
       LOG_LEVEL: info
     volumes:
       # Subscription auth: seeded from totoro host's ~/.claude (see web-chat/README.md).
-      - claude-creds:/root/.claude:ro
+      # Mount is read-write so the Agent SDK can persist refreshed OAuth tokens —
+      # without rw access the access token expires after ~30 min and the next
+      # request fails with HTTP 401 "Invalid authentication credentials".
+      - claude-creds:/root/.claude
     networks:
       - default
       - nominatim_default
