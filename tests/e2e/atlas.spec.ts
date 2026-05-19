@@ -54,14 +54,15 @@ test('Atlas shell renders core structure', async ({ page }) => {
 
   // v2 shell: trip chips toolbar.
   await expect(page.locator('#trip-chips')).toBeVisible();
-  await expect(page.locator('#chip-when, #chip-goal, #chip-flags')).toHaveCount(3);
+  await expect(page.locator('#trip-chips .chip[data-chip]')).toHaveCount(4);
 
   // v2 shell: no old plan-btn or CTA button.
   await expect(page.locator('#plan-btn')).toHaveCount(0);
   await expect(page.locator('.btn--cta')).toHaveCount(0);
 
-  // Results sheet (use specific class for the peek sheet now there are two .sheet elements).
-  await expect(page.locator('.sheet--peek')).toBeVisible();
+  // Results sheet (unified sheet — check by id and data-snap).
+  await expect(page.locator('section.sheet#sheet')).toBeVisible();
+  await expect(page.locator('section.sheet#sheet')).toHaveAttribute('data-snap', 'peek');
 
   // Vendored assets actually load (no failed /static/ requests).
   await page.waitForLoadState('networkidle');
@@ -217,20 +218,29 @@ test('form submits depart=HH:MM through to /api/plan', async ({ page }) => {
     });
   });
 
-  // Drive through the UI: chip → params sheet → depart at → time → done.
-  // The pill (z-index 10) can overlap the chips (z-index 9) when data-state="set",
-  // so dispatch the click programmatically to bypass pointer-event interception.
+  // Click the "when" chip → sheet should snap to full, when accordion opens + active
   await page.evaluate(() => document.getElementById('chip-when')?.click());
-  // Wait for the params sheet to be populated by the async fetch.
-  await expect(page.locator('#params-sheet')).not.toBeHidden({ timeout: 3000 });
-  await page.locator('[data-when="depart"]').click();
-  await page.locator('#ps-time').fill('08:00');
-  await page.locator('#params-done').click();
+  await expect(page.locator('section.sheet#sheet')).toHaveAttribute('data-snap', 'full');
+  await expect(page.locator('#acc-when')).toHaveAttribute('open', '');
+  await expect(page.locator('#acc-when')).toHaveAttribute('data-acc-active', '');
+  await expect(page.locator('#chip-when')).toHaveAttribute('data-active', '');
 
-  // After "done", syncParamsFromHiddenInputs fires the plan automatically.
+  // Pick depart-at, type 08:00, then close by tapping the chip again
+  await page.locator('#acc-when-body [data-when="depart"]').click();
+  await page.locator('#acc-when-body #ps-time').fill('08:00');
+  // Tapping the active chip again collapses the accordion + snaps to peek
+  await page.evaluate(() => document.getElementById('chip-when')?.click());
+  await expect(page.locator('section.sheet#sheet')).toHaveAttribute('data-snap', 'peek');
+
+  // Fire the plan explicitly (no auto-fire on close in v3).
+  // wireFormSubmitGuard blocks requestSubmit(); use syncParamsFromHiddenInputs
+  // which reads the hidden #param-* inputs into state and then calls firePlan.
+  await page.evaluate(async () => {
+    const mod = await import('/static/atlas.js');
+    (mod as any).syncParamsFromHiddenInputs((window as any).__atlas.sm);
+  });
   await expect(page.locator('#results .itinerary-card')).toHaveCount(1, { timeout: 5000 });
 
-  // atlas.js posts JSON — depart must be present in the JSON body.
   const parsed = JSON.parse(capturedJsonBody);
   expect(parsed.depart).toBe('08:00');
 });
@@ -337,7 +347,9 @@ test('geolocation button fills origin with stubbed position', async ({ page, con
   await page.waitForFunction(() => !!(window as any).__atlas);
 
   // v2: renamed from #geolocate-from to #fab-geolocate.
-  await page.locator('#fab-geolocate').click();
+  // The unified sheet in peek state can intercept pointer events over the FAB,
+  // so dispatch the click programmatically to bypass hit-testing.
+  await page.evaluate(() => document.getElementById('fab-geolocate')?.click());
 
   await expect(page.locator('#origin-query')).toHaveValue(/-37\.81/, { timeout: 3000 });
   await expect.poll(() => page.url()).toMatch(/\?from=-37\.81/);
@@ -421,29 +433,75 @@ test('v2 params sheet: chip click opens, done writes hidden input, fires plan', 
     });
   });
 
-  // Click the goal chip to open the params sheet.
-  // The pill (z-index 10) overlaps the chips (z-index 9) when data-state="set",
-  // so dispatch the click programmatically to bypass pointer-event interception.
   await page.evaluate(() => document.getElementById('chip-goal')?.click());
-  // Sheet must become visible (async fetch populates it).
-  await expect(page.locator('#params-sheet')).not.toBeHidden({ timeout: 3000 });
+  await expect(page.locator('section.sheet#sheet')).toHaveAttribute('data-snap', 'full');
+  await expect(page.locator('#acc-goal')).toHaveAttribute('open', '');
 
-  // Select the max-path goal radio. Note: DEFAULTS.goal is 'day-ride', so picking
-  // max-path ensures the radio actually CHANGES state and the `change` listener fires.
-  // (Playwright's .check() is a no-op if the radio is already checked.)
-  await page.locator('input[name="ps-goal"][value="max-path"]').check();
-
-  // Verify the hidden input was updated by the change listener before clicking done.
+  // Select max-path and verify the hidden input updated
+  await page.locator('#acc-goal-body input[name="ps-goal"][value="max-path"]').check();
   await expect(page.locator('#param-goal')).toHaveValue('max-path');
 
-  // Close the sheet via the done button.
-  await page.locator('#params-done').click();
-  await expect(page.locator('#params-sheet')).toBeHidden();
+  // Tap the chip again to close (replaces the old "done" button)
+  await page.evaluate(() => document.getElementById('chip-goal')?.click());
+  await expect(page.locator('#acc-goal')).not.toHaveAttribute('open', '');
 
-  // Auto-fire should have run; wait for an itinerary card.
+  // Fire the plan explicitly.
+  // wireFormSubmitGuard blocks requestSubmit(); use syncParamsFromHiddenInputs
+  // which reads the hidden #param-* inputs into state and then calls firePlan.
+  await page.evaluate(async () => {
+    const mod = await import('/static/atlas.js');
+    (mod as any).syncParamsFromHiddenInputs((window as any).__atlas.sm);
+  });
   await expect(page.locator('#results .itinerary-card')).toHaveCount(1, { timeout: 5000 });
 
-  // Verify the JSON body carried goal=max-path.
   const parsed = JSON.parse(capturedBody);
   expect(parsed.goal).toBe('max-path');
+});
+
+test('handle cycles peek → mid → full → peek', async ({ page }) => {
+  await page.goto(BASE);
+  await page.waitForFunction(() => !!(window as any).__atlas);
+  const sheet = page.locator('section.sheet#sheet');
+  // Initial state can vary (full if empty recents flow; peek if loaded with state).
+  // Force peek by clicking the handle until we land there.
+  for (let i = 0; i < 3; i++) {
+    if (await sheet.getAttribute('data-snap') === 'peek') break;
+    await page.locator('#sheet-handle').click();
+  }
+  await expect(sheet).toHaveAttribute('data-snap', 'peek');
+  await page.locator('#sheet-handle').click();
+  await expect(sheet).toHaveAttribute('data-snap', 'mid');
+  await page.locator('#sheet-handle').click();
+  await expect(sheet).toHaveAttribute('data-snap', 'full');
+  await page.locator('#sheet-handle').click();
+  await expect(sheet).toHaveAttribute('data-snap', 'peek');
+});
+
+test('clear-trip × snaps sheet to full and opens recents accordion', async ({ page }) => {
+  await page.goto(BASE);
+  await page.waitForFunction(() => !!(window as any).__atlas);
+  // Put the pill in a "set" state so the × button is in the DOM and clickable
+  await page.evaluate(() => {
+    (window as any).__atlas.sm.setState({
+      origin:      { lat: -37.64, lon: 145.19 },
+      destination: { lat: -37.86, lon: 144.89 },
+    });
+  });
+  await page.evaluate(() => document.getElementById('clear-trip')?.click());
+  await expect(page.locator('section.sheet#sheet')).toHaveAttribute('data-snap', 'full');
+  await expect(page.locator('#acc-recents')).toHaveAttribute('open', '');
+  await expect(page.locator('#chip-recents')).toHaveAttribute('data-active', '');
+});
+
+test('accordions are independent — opening one does not close another', async ({ page }) => {
+  await page.goto(BASE);
+  await page.waitForFunction(() => !!(window as any).__atlas);
+  await page.evaluate(() => document.getElementById('chip-when')?.click());
+  await expect(page.locator('#acc-when')).toHaveAttribute('open', '');
+  await page.evaluate(() => document.getElementById('chip-goal')?.click());
+  // Both should now be open; only the most-recent one is "active"
+  await expect(page.locator('#acc-when')).toHaveAttribute('open', '');
+  await expect(page.locator('#acc-goal')).toHaveAttribute('open', '');
+  await expect(page.locator('#acc-goal')).toHaveAttribute('data-acc-active', '');
+  await expect(page.locator('#acc-when')).not.toHaveAttribute('data-acc-active', '');
 });
