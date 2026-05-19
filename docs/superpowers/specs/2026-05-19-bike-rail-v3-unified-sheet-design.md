@@ -232,8 +232,13 @@ The current `params-sheet.html` partial splits across three accordion bodies:
 - `#acc-goal` — three-radio card list (commute / day-ride / max-path). Writes to
   `#param-goal`.
 - `#acc-flags` — hill-weight slider, min-on-path-fraction input, prefer-bike-path
-  toggle. Writes to `#param-hillWeight`, `#param-minOnPathFraction`,
-  `#param-preferBikePath`.
+  toggle, **mode segmented control (bike-only / bike-train)**, bike-km range
+  (min/max), max-transfers segmented control (0/1/2/3). Writes to
+  `#param-hillWeight`, `#param-minOnPathFraction`, `#param-preferBikePath`,
+  `#param-mode`, `#param-minBikeKm`, `#param-maxBikeKm`, `#param-maxTransfers`.
+  (Mode lives here because v3's chip strip is when/goal/flags/recents — mode is
+  not a primary planning concern, so it folds into flags alongside the other
+  power-user toggles.)
 - `#acc-recents` — rows rendered from `listRecents()` in `recents.js`. Row click
   fills pill, submits form, snaps sheet to peek, collapses accordion.
 
