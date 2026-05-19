@@ -57,15 +57,36 @@ describe('state reducer', () => {
     s = reduce(s, { type: 'text_delta', delta: 'reply text' });
     s = { ...s, streaming: true };
     s = reduce(s, { type: 'turn_end' });
-    expect(s.messages).toEqual([{ role: 'assistant', content: 'reply text' }]);
+    expect(s.messages).toEqual([{ role: 'assistant', content: 'reply text', trace: undefined }]);
     expect(s.assistantBuffer).toBe('');
     expect(s.streaming).toBe(false);
   });
 
-  it('turn_end with empty buffer adds no message', () => {
+  it('turn_end attaches the logEntries snapshot as the assistant message trace', () => {
+    let s = initialState();
+    s = reduce(s, { type: 'text_delta', delta: 'ok' });
+    s = reduce(s, { type: 'tool_call', entry: { id: 't1', name: 'geocode', args: {}, startedAt: 0 } });
+    s = reduce(s, { type: 'tool_result', id: 't1', result: { ok: true, summary: 'done' } });
+    s = reduce(s, { type: 'turn_end' });
+    const last = s.messages[s.messages.length - 1];
+    expect(last.role).toBe('assistant');
+    expect((last as any).trace).toHaveLength(1);
+    expect((last as any).trace[0]).toMatchObject({ id: 't1', name: 'geocode', result: { ok: true, summary: 'done' } });
+  });
+
+  it('turn_end with empty buffer and no tools adds no message', () => {
     let s = initialState();
     s = reduce(s, { type: 'turn_end' });
     expect(s.messages).toEqual([]);
+  });
+
+  it('turn_end with only a trace (no text) still records the trace', () => {
+    let s = initialState();
+    s = reduce(s, { type: 'tool_call', entry: { id: 't1', name: 'geocode', args: {}, startedAt: 0 } });
+    s = reduce(s, { type: 'turn_end' });
+    expect(s.messages).toHaveLength(1);
+    expect(s.messages[0].content).toBe('');
+    expect((s.messages[0] as any).trace).toHaveLength(1);
   });
 
   it('set_active toggles', () => {

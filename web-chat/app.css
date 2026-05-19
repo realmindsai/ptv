@@ -55,6 +55,27 @@ html, body { margin: 0; height: 100%; font: 14px/1.4 system-ui, sans-serif; }
   margin: .4rem 0; padding: .2rem .6rem; border-left: 3px solid #ccc; color: #555;
 }
 
+/* Per-turn collapsible trace, rendered above the assistant message. */
+.msg-wrap { display: contents; }
+.trace {
+  align-self: flex-start; max-width: 95%;
+  margin: .35rem 0 .15rem;
+  font: 12px/1.4 ui-monospace, monospace;
+  background: #f7f7f9;
+  border: 1px solid #e3e3e8; border-radius: 6px;
+}
+.trace__summary {
+  cursor: pointer; padding: .25rem .5rem; color: #555; user-select: none;
+}
+.trace__summary::marker { color: #aaa; }
+.trace__body { padding: 0 .5rem .35rem; }
+.trace__entry { padding: .25rem 0; border-top: 1px dashed #e1e1e6; }
+.trace__entry:first-child { border-top: 0; }
+.trace__name { color: #2257d6; font-weight: 600; }
+.trace__args { color: #b07d3a; word-break: break-word; }
+.trace__result { color: #2d6a3a; white-space: pre-wrap; word-break: break-word; padding-top: .15rem; }
+.trace__result--err { color: #b00020; }
+
 /* floating legend on the map */
 .legend {
   position: fixed; top: 1rem; left: 1rem;
@@ -76,6 +97,13 @@ html, body { margin: 0; height: 100%; font: 14px/1.4 system-ui, sans-serif; }
 .chip[data-active="true"] { background: var(--c, #999); color: #fff; }
 .chip__dot { display: inline-block; width: .55rem; height: .55rem; border-radius: 50%; background: var(--c, #999); }
 .chip[data-active="true"] .chip__dot { background: #fff; }
+.chip__label { cursor: pointer; }
+.chip__dl {
+  background: none; border: 0; cursor: pointer; padding: 0 .15rem; font: inherit;
+  color: inherit; opacity: .65; line-height: 1;
+}
+.chip__dl:hover { opacity: 1; }
+.chip[data-active="true"] .chip__dl { color: #fff; }
 
 .log {
   position: fixed; bottom: 1rem; right: calc(var(--dock-w) + 20px);

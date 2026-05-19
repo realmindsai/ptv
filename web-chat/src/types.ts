@@ -7,7 +7,9 @@ export type Path = {
   itinerary: Itinerary;
 };
 
-export type Message = { role: 'user' | 'assistant'; content: string };
+export type Message =
+  | { role: 'user'; content: string }
+  | { role: 'assistant'; content: string; trace?: LogEntry[] };
 
 export type LogEntry = {
   id: string;

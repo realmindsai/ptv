@@ -46,8 +46,16 @@ export function reduce(state: State, action: Action): State {
         activePathId: state.activePathId === action.id ? null : action.id,
       };
     case 'turn_end': {
-      const messages = state.assistantBuffer
-        ? [...state.messages, { role: 'assistant', content: state.assistantBuffer } as Message]
+      const trace = state.logEntries.length > 0 ? state.logEntries : undefined;
+      const messages = state.assistantBuffer || trace
+        ? [
+            ...state.messages,
+            {
+              role: 'assistant',
+              content: state.assistantBuffer,
+              trace,
+            } as Message,
+          ]
         : state.messages;
       return { ...state, messages, assistantBuffer: '', streaming: false };
     }
