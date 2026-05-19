@@ -1,0 +1,46 @@
+# Drop this into totoro's existing docker-compose tree alongside
+# nominatim, twenty, graphhopper-vic-bike, and the existing ptv-web.
+# Reach the deployed chat app at http://ptv-chat.magpie-inconnu.ts.net:8086
+# (once a magic-DNS alias is wired) or http://totoro.magpie-inconnu.ts.net:8086
+# on day one.
+
+services:
+  ptv-chat:
+    build:
+      context: <path-to-this-repo>
+      dockerfile: Dockerfile.chat
+    image: ptv-chat:latest
+    container_name: ptv-chat
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      PTV_DEV_ID: ${PTV_DEV_ID}
+      PTV_API_KEY: ${PTV_API_KEY}
+      NOMINATIM_URL: http://nominatim:8080
+      OSRM_AU_BICYCLE_URL: http://osrm-au-bicycle:5000
+      OSRM_AU_FOOT_URL: http://osrm-au-foot:5000
+      GH_REST_URL: http://graphhopper-vic-bike:8989/route
+      MODEL: claude-sonnet-4-6
+      LOG_LEVEL: info
+    volumes:
+      # Subscription auth: seeded from totoro host's ~/.claude (see web-chat/README.md).
+      - claude-creds:/root/.claude:ro
+    networks:
+      - default
+      - nominatim_default
+      - osrm-au_default
+      - graphhopper_default
+
+volumes:
+  claude-creds:
+    external: true
+
+networks:
+  # All three are external — created by the respective stacks they belong to.
+  nominatim_default:
+    external: true
+  osrm-au_default:
+    external: true
+  graphhopper_default:
+    external: true
