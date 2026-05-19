@@ -507,46 +507,56 @@ export function renderResultsError(message) {
   root.innerHTML = `<div class="error"><strong>plan failed:</strong> ${escHtml(message)}</div>`;
 }
 
-export function renderRecentsIfEmpty(sm) {
-  const root = document.getElementById('results');
-  if (!root || root.querySelector('#results-inner')) return;
-  const recents = listRecents().slice(0, 3);
-  if (recents.length === 0) return;
-  const rowsHtml = recents.map((r, i) => {
-    const oLabel = escHtml(r.origin.label || `${r.origin.lat.toFixed(3)}, ${r.origin.lon.toFixed(3)}`);
-    const dLabel = escHtml(r.destination.label || `${r.destination.lat.toFixed(3)}, ${r.destination.lon.toFixed(3)}`);
-    const mins = Math.round(r.totalTimeMin || 0);
-    const km = typeof r.bikeKm === 'number' ? r.bikeKm.toFixed(1) : '?';
-    return `<button type="button" class="recent-row" data-i="${i}">
-      <div class="recent-row__dots">
+export function renderRecentsAccordion(sm) {
+  const body = document.getElementById('acc-recents-body');
+  if (!body) return;
+  const rows = listRecents();
+  if (!rows.length) {
+    body.innerHTML = '<div class="recents-empty mono">no recent trips yet</div>';
+    return;
+  }
+  body.innerHTML = rows.map((r, i) => `
+    <button type="button" class="recents-row" data-recent="${i}">
+      <span class="recents-row__dots">
         <span class="dot dot--origin">A</span>
-        <div class="recent-row__connector"></div>
+        <span class="recents-row__connector"></span>
         <span class="dot dot--destination">B</span>
-      </div>
-      <div class="recent-row__labels">
-        <div class="recent-row__label">${oLabel}</div>
-        <div class="recent-row__label">${dLabel}</div>
-      </div>
-      <div class="recent-row__stats">
-        <div class="mono recent-row__min">${mins} <span class="recent-row__unit">min</span></div>
-        <div class="mono recent-row__sub">${km} km bike</div>
-      </div>
-    </button>`;
-  }).join('');
-  root.innerHTML = `<div class="recents">
-    <div class="eyebrow">— recents · tap to re-plan</div>
-    ${rowsHtml}
-  </div>`;
-  root.querySelectorAll('.recent-row').forEach((btn) => {
+      </span>
+      <span class="recents-row__labels">
+        <span class="recents-row__from">${escHtml(r.originLabel || formatCoord(r.origin))}</span>
+        <span class="recents-row__to">${escHtml(r.destinationLabel || formatCoord(r.destination))}</span>
+        <span class="recents-row__ago mono">${formatAgo(r.ts)}</span>
+      </span>
+    </button>
+  `).join('');
+
+  body.querySelectorAll('.recents-row[data-recent]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const r = recents[Number(btn.dataset.i)];
+      const idx = Number(btn.dataset.recent);
+      const t = rows[idx];
+      if (!t) return;
       sm.setState({
-        origin:      { lat: r.origin.lat,      lon: r.origin.lon,      _label: r.origin.label || '' },
-        destination: { lat: r.destination.lat, lon: r.destination.lon, _label: r.destination.label || '' },
+        origin: t.origin,
+        destination: t.destination,
+        params: { ...sm.state.params, ...(t.params || {}) },
       });
+      collapseAccordion('recents');
+      snapSheet('peek');
       firePlan(sm);
     });
   });
+}
+
+function formatAgo(ts) {
+  if (!ts) return '';
+  const diffMs = Date.now() - ts;
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }
 
 // --- actions ---
@@ -582,11 +592,13 @@ export async function firePlan(sm, opts = {}) {
       const top = result.itineraries.find((i) => i.labels.length > 0);
       if (top && sm.state.origin && sm.state.destination) {
         addRecent({
-          origin:      { lat: sm.state.origin.lat,      lon: sm.state.origin.lon,
-                         label: sm.state.origin._label || '' },
-          destination: { lat: sm.state.destination.lat, lon: sm.state.destination.lon,
-                         label: sm.state.destination._label || '' },
-          totalTimeMin: top.totalTimeMin, bikeKm: top.bikeKm,
+          origin:           { lat: sm.state.origin.lat, lon: sm.state.origin.lon },
+          destination:      { lat: sm.state.destination.lat, lon: sm.state.destination.lon },
+          originLabel:      sm.state.origin._label || '',
+          destinationLabel: sm.state.destination._label || '',
+          params:           { ...sm.state.params },
+          totalTimeMin: top.totalTimeMin,
+          bikeKm:       top.bikeKm,
         });
       }
     } catch { /* localStorage may fail in private mode */ }
@@ -687,7 +699,7 @@ export function wireClear(sm) {
     }
     const results = document.getElementById('results');
     if (results) results.innerHTML = '';
-    renderRecentsIfEmpty(sm);
+    renderRecentsAccordion(sm);
   });
 }
 
@@ -1111,7 +1123,7 @@ export function init() {
   // snapshot URL-restored params rather than DEFAULTS.
   bindStaticParamControls(sm);
   // If no URL state populated the page, fall back to showing recents.
-  renderRecentsIfEmpty(sm);
+  renderRecentsAccordion(sm);
 
   // Suppress HTMX submit on the form (we intercept it ourselves). Keep the
   // hx-* attrs as a no-JS fallback — they're inert when JS is loaded because
