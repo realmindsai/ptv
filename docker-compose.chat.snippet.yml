@@ -18,6 +18,7 @@ services:
       PTV_DEV_ID: ${PTV_DEV_ID}
       PTV_API_KEY: ${PTV_API_KEY}
       NOMINATIM_URL: http://nominatim:8080
+      PHOTON_URL: http://photon:2322
       OSRM_AU_BICYCLE_URL: http://osrm-au-bicycle:5000
       OSRM_AU_FOOT_URL: http://osrm-au-foot:5000
       GH_REST_URL: http://graphhopper-vic-bike:8989/route

@@ -13,6 +13,7 @@ import { makeBikeRouteTool, type BikeFn } from './tools/bike_route';
 import { makeSearchStopsTool, makeNearbyStopsTool } from './tools/stops';
 import { makeScheduleTool } from './tools/schedule';
 import { Nominatim } from '../server/nominatim';
+import { Photon } from '../server/photon';
 import { plan as planOrchestrator } from '../plan/orchestrator';
 import { ghRouteBike, ghRouteCustom } from '../plan/external';
 import { ptv } from '../client';
@@ -32,8 +33,12 @@ const dispatchBike: BikeFn = async (from: LatLon, to: LatLon, goal) => {
 
 function defaultBuildTools(ctx: ChatCtx) {
   const nominatim = new Nominatim(process.env.NOMINATIM_URL ?? 'http://localhost:8094');
+  // PHOTON_URL unset = Photon disabled, tool falls back to Nominatim only.
+  const photon = process.env.PHOTON_URL
+    ? new Photon(process.env.PHOTON_URL)
+    : undefined;
   return {
-    geocode:      makeGeocodeTool(ctx, nominatim),
+    geocode:      makeGeocodeTool(ctx, nominatim, photon),
     plan:         makePlanTool(ctx, planOrchestrator),
     bike_route:   makeBikeRouteTool(ctx, dispatchBike),
     search_stops: makeSearchStopsTool(ptv),
