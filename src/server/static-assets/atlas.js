@@ -677,16 +677,6 @@ export function wireGeolocate(sm) {
   });
 }
 
-// Sheet handle: tap to cycle between peek (220px) and expanded (75dvh).
-export function wireSheetHandle() {
-  const handle = document.getElementById('sheet-handle');
-  const sheet = document.getElementById('results-sheet');
-  if (!handle || !sheet) return;
-  handle.addEventListener('click', () => {
-    sheet.classList.toggle('is-expanded');
-  });
-}
-
 export function wireClear(sm) {
   const btn = document.getElementById('clear-trip');
   if (!btn) return;
