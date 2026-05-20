@@ -2,3 +2,10 @@ node_modules/
 dist/
 src/chat/static-assets/*
 !src/chat/static-assets/.gitkeep
+
+# Deploy secrets — the encrypted .env.sops is committed; .env is regenerated
+# from it via scripts/decrypt-env.sh and must NEVER be committed.
+.env
+.env.*
+!.env.sops
+!.env.example
