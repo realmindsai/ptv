@@ -147,3 +147,45 @@ transport security.
 - Strava popularity overlay on chat-generated paths.
 - Voice input.
 - Auto-refresh of mounted Claude creds.
+
+## Conversation logging (production)
+
+The deployed ptv-chat container writes every chat turn to the central Postgres
+on totoro at `postgres.magpie-inconnu.ts.net:5433`, database `ptv_chat`. If
+`PTV_CHAT_PG_URL` is unset the logger is a no-op (used for local dev and
+tests).
+
+### One-time setup on totoro
+
+```bash
+sudo -u postgres psql -p 5433 -c "CREATE DATABASE ptv_chat OWNER dewoller;"
+sudo -u postgres psql -p 5433 -d ptv_chat -f src/chat/log/schema.sql
+# Then rotate the placeholder password in schema.sql to a real one and
+# store it in SOPS-encrypted .env.sops at the service root (see below).
+```
+
+### Secrets — SOPS + age (per infra-shared/STANDARDS.md §4)
+
+- Create `.env.sops` at the service root with one line:
+  `PTV_CHAT_PG_URL=postgres://ptv_chat_writer:<pw>@postgres.magpie-inconnu.ts.net:5433/ptv_chat?sslmode=prefer`
+- Encrypt with `sops-remediate.sh` against the standard age key
+  (`/etc/age/keys.txt`). Commit the encrypted file.
+- At deploy time, run `sops-decrypt-env ptv-chat` to produce
+  `/run/secrets/ptv-chat/.env` (tmpfs).
+- `docker-compose.chat.snippet.yml` consumes the decrypted env via
+  `env_file: /run/secrets/ptv-chat/.env`.
+
+### What is logged
+
+| Event type        | Source                                  |
+|-------------------|-----------------------------------------|
+| user_msg          | user's text                             |
+| assistant_msg     | full assistant text per turn            |
+| tool_call         | tool name + args                        |
+| tool_result       | ok flag + result summary string         |
+| path_add          | full itinerary (legs, geometry, totals) |
+| turn_end / error  | structural events                       |
+| ip, user_agent    | request metadata                        |
+| origin_lat/lon    | browser geolocation when granted        |
+
+There is no user-facing PII beyond IP. Retention is unlimited for now.
