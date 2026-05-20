@@ -2,6 +2,8 @@
 
 A TypeScript CLI for the Melbourne PTV (Public Transport Victoria) API v3. Designed to be invoked by AI agents or shell scripts for transit queries.
 
+**Deployed app:** `bike-rail.realmindsai.com.au` → ptv-chat (the conversational bike + train planner under `web-chat/` + `src/chat/`). The earlier non-chat web frontend (`src/server/` + `web/`) is no longer deployed as of 2026-05-21; its sources stay in the tree for history and reference. See `web-chat/README.md` for deploy details.
+
 ## Installation
 
 ```bash

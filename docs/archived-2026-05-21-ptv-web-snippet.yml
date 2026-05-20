@@ -1,10 +1,12 @@
+# ARCHIVED 2026-05-21 — ptv-web is no longer deployed.
+# bike-rail.realmindsai.com.au now points at ptv-chat (port 8086) via the
+# cloudflared tunnel. The ptv-web sources stay in src/server/ + web/ for
+# git history; this file is kept as reference only.
+#
+# Original notes:
 # Drop this into totoro's existing docker-compose tree alongside
 # nominatim, twenty, and graphhopper-vic-bike. It assumes those
 # stacks already exist and exposes their default network names.
-#
-# Reach the deployed app at http://ptv.magpie-inconnu.ts.net:8085
-# (once the magic-DNS alias is wired) or
-# http://totoro.magpie-inconnu.ts.net:8085 on day one.
 
 services:
   ptv-web:
