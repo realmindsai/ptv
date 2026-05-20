@@ -1,4 +1,4 @@
-import type { Pool } from 'pg';
+import type { Pool, PoolClient } from 'pg';
 import type { ConversationMeta, LoggedEvent, LoggedEventType } from './types';
 
 export interface WriterOptions {
@@ -54,7 +54,7 @@ export function createWriter(pool: Pool, opts: WriterOptions = {}): Writer {
       convs.set(row.meta.conversationId, row.meta);
     }
 
-    let client: Awaited<ReturnType<Pool['connect']>>;
+    let client: PoolClient;
     try {
       client = await pool.connect();
     } catch (err) {

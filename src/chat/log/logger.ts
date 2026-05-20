@@ -5,8 +5,9 @@ import type { Writer } from './writer';
 
 type DeltaBuf = Map<string, string>;
 
-export function makeLogger(env: NodeJS.ProcessEnv, writer: Writer | undefined): Logger {
-  if (!env.PTV_CHAT_PG_URL || !writer) return NOOP_LOGGER;
+export function makeLogger(env: NodeJS.ProcessEnv, writerArg: Writer | undefined): Logger {
+  if (!env.PTV_CHAT_PG_URL || !writerArg) return NOOP_LOGGER;
+  const writer: Writer = writerArg;
   const buffers: DeltaBuf = new Map();
 
   function recordUserMsg(meta: ConversationMeta, turnSeq: number, content: string): void {

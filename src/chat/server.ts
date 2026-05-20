@@ -17,11 +17,17 @@ import { Photon } from '../server/photon';
 import { plan as planOrchestrator } from '../plan/orchestrator';
 import { ghRouteBike, ghRouteCustom } from '../plan/external';
 import { ptv } from '../client';
+import { getPool } from './log/pool';
+import { createWriter, type Writer } from './log/writer';
+import { makeLogger } from './log/logger';
+import type { Logger } from './log/types';
 
 export type ChatAppOptions = {
   logger?: FastifyBaseLogger | boolean;
   runTurnFn?: RunTurnFn;
   buildTools?: BuildToolsFn;
+  /** Override the conversation logger (mainly for tests). */
+  chatLogger?: Logger;
 };
 
 // Dispatch the right bike engine for the requested goal.
@@ -52,9 +58,26 @@ export function createChatApp(opts: ChatAppOptions = {}): FastifyInstance {
     logger: opts.logger ?? { level: process.env.LOG_LEVEL ?? 'info' },
   });
   registerHealth(app);
+
+  let chatLogger: Logger | undefined = opts.chatLogger;
+  let writerForShutdown: Writer | undefined;
+  if (!chatLogger) {
+    const pool = getPool();
+    if (pool) {
+      writerForShutdown = createWriter(pool);
+      chatLogger = makeLogger(process.env, writerForShutdown);
+    } else {
+      chatLogger = makeLogger(process.env, undefined);
+    }
+  }
+  app.addHook('onClose', async () => {
+    if (writerForShutdown) await writerForShutdown.stop();
+  });
+
   registerChat(app, {
     runTurnFn: opts.runTurnFn ?? (defaultRunTurn as RunTurnFn),
     buildTools: opts.buildTools ?? defaultBuildTools,
+    chatLogger,
   });
   // Register static + page. fastify-static is async but we let the plugin
   // resolve via the regular `register()` queue — callers should `await app.ready()`
