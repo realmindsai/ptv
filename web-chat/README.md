@@ -158,25 +158,50 @@ tests).
 ### One-time setup on totoro
 
 ```bash
-sudo -u postgres psql -p 5433 -c "CREATE DATABASE ptv_chat OWNER dewoller;"
+sudo -u postgres psql -p 5433 <<SQL
+CREATE ROLE ptv_chat_svc    LOGIN PASSWORD '<svc-pw>';
+CREATE ROLE ptv_chat_writer LOGIN PASSWORD '<writer-pw>';
+CREATE DATABASE ptv_chat OWNER ptv_chat_svc;
+SQL
 sudo -u postgres psql -p 5433 -d ptv_chat -f src/chat/log/schema.sql
-# Then rotate the placeholder password in schema.sql to a real one and
-# store it in SOPS-encrypted .env.sops at the service root (see below).
 ```
 
-### Secrets — SOPS + age (per infra-shared/STANDARDS.md §4)
+Place `<writer-pw>` into `.env.sops` (see "Secrets" below).
 
-- Create `.env.sops` at the service root with one line:
-  `PTV_CHAT_PG_URL=postgres://ptv_chat_writer:<pw>@postgres.magpie-inconnu.ts.net:5433/ptv_chat?sslmode=disable`
-  (Tailnet is already WireGuard-encrypted; node-postgres v8 treats
-  `sslmode=prefer` as full verification which fails against the local PG17
-  self-signed cert.)
-- Encrypt with `sops-remediate.sh` against the standard age key
-  (`/etc/age/keys.txt`). Commit the encrypted file.
-- At deploy time, run `sops-decrypt-env ptv-chat` to produce
-  `/run/secrets/ptv-chat/.env` (tmpfs).
-- `docker-compose.chat.snippet.yml` consumes the decrypted env via
-  `env_file: /run/secrets/ptv-chat/.env`.
+### Secrets — SOPS + age
+
+Runtime secrets live encrypted at `.env.sops` in the repo root and decrypt
+to a plaintext `.env` at deploy time. Age recipients are configured in
+`.sops.yaml` (totoro + catbus host keys + team key in 1Password). The
+plaintext `.env` is gitignored.
+
+```bash
+# On totoro, every deploy:
+cd /tank/code/ptv
+git pull
+./scripts/decrypt-env.sh         # .env.sops -> .env
+docker compose up -d ptv-chat
+```
+
+To edit secrets (must run on a machine that has an age private key — totoro
+or via 1Password import locally):
+
+```bash
+SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt sops .env.sops    # opens $EDITOR
+```
+
+To rotate or add a key from plaintext, encrypt with `--filename-override` so
+SOPS picks up the `\.env\.sops$` rule:
+
+```bash
+sops --encrypt --filename-override .env.sops \
+     --input-type dotenv --output-type dotenv \
+     --output .env.sops .env
+```
+
+The `PTV_CHAT_PG_URL` line uses `sslmode=disable` (tailnet is WireGuard-
+encrypted; node-postgres v8 treats `sslmode=prefer` as full cert
+verification which fails against PG17's self-signed cert).
 
 ### What is logged
 

@@ -25,9 +25,10 @@ services:
       MODEL: claude-sonnet-4-6
       LOG_LEVEL: info
     env_file:
-      # Decrypted at deploy time by `sops-decrypt-env ptv-chat`.
-      # File contains PTV_CHAT_PG_URL=postgres://ptv_chat_writer:<pw>@postgres.magpie-inconnu.ts.net:5433/ptv_chat?sslmode=disable
-      - /run/secrets/ptv-chat/.env
+      # .env is regenerated from .env.sops by ./scripts/decrypt-env.sh
+      # before `docker compose up`. The plaintext .env is gitignored.
+      # See web-chat/README.md → "Secrets — SOPS + age".
+      - .env
     volumes:
       # Subscription auth: seeded from totoro host's ~/.claude (see web-chat/README.md).
       # Mount is read-write so the Agent SDK can persist refreshed OAuth tokens —
