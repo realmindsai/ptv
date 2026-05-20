@@ -167,7 +167,10 @@ sudo -u postgres psql -p 5433 -d ptv_chat -f src/chat/log/schema.sql
 ### Secrets — SOPS + age (per infra-shared/STANDARDS.md §4)
 
 - Create `.env.sops` at the service root with one line:
-  `PTV_CHAT_PG_URL=postgres://ptv_chat_writer:<pw>@postgres.magpie-inconnu.ts.net:5433/ptv_chat?sslmode=prefer`
+  `PTV_CHAT_PG_URL=postgres://ptv_chat_writer:<pw>@postgres.magpie-inconnu.ts.net:5433/ptv_chat?sslmode=disable`
+  (Tailnet is already WireGuard-encrypted; node-postgres v8 treats
+  `sslmode=prefer` as full verification which fails against the local PG17
+  self-signed cert.)
 - Encrypt with `sops-remediate.sh` against the standard age key
   (`/etc/age/keys.txt`). Commit the encrypted file.
 - At deploy time, run `sops-decrypt-env ptv-chat` to produce

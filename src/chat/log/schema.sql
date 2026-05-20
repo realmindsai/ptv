@@ -41,4 +41,7 @@ GRANT CONNECT ON DATABASE ptv_chat TO ptv_chat_writer;
 GRANT USAGE   ON SCHEMA public      TO ptv_chat_writer;
 GRANT INSERT  ON conversations, events TO ptv_chat_writer;
 GRANT UPDATE (last_event_at) ON conversations TO ptv_chat_writer;
+-- Needed for the ON CONFLICT (id) DO UPDATE SET last_event_at = excluded.last_event_at
+-- upsert clause: PG requires SELECT on the columns referenced in the UPDATE.
+GRANT SELECT (id, last_event_at) ON conversations TO ptv_chat_writer;
 GRANT USAGE, SELECT ON SEQUENCE events_id_seq TO ptv_chat_writer;

@@ -20,7 +20,9 @@ Non-goal: building an admin UI to browse the log. SQL access is enough for now.
 - New database: `ptv_chat`, owned by `dewoller`.
 - New role: `ptv_chat_writer` (LOGIN, INSERT only on the two tables below,
   plus `UPDATE (last_event_at)` on `conversations`).
-- Connection over the tailnet, `sslmode=prefer`.
+- Connection over the tailnet, `sslmode=disable` (tailnet is WireGuard-encrypted;
+  node-postgres v8 treats `sslmode=prefer` as full cert verification which
+  fails against the local PG17 self-signed cert).
 - Password managed per `infra-shared/STANDARDS.md` §4: encrypted with SOPS
   (age key) in `.env.sops` at the service root, decrypted at startup to
   `/run/secrets/ptv-chat/.env` (tmpfs) by `sops-decrypt-env ptv-chat`, and
@@ -228,7 +230,7 @@ for this spec.
 1. On totoro: `sudo -u postgres psql -p 5433 -c "CREATE DATABASE ptv_chat OWNER dewoller;"`
 2. Apply `src/chat/log/schema.sql`.
 3. Create `ptv_chat_writer` role + grants (also in schema.sql).
-4. Create `.env.sops` at service root with `PTV_CHAT_PG_URL=postgres://ptv_chat_writer:<pw>@postgres.magpie-inconnu.ts.net:5433/ptv_chat?sslmode=prefer`, encrypt with `sops-remediate.sh` against the standard age key (`/etc/age/keys.txt`). Commit the encrypted file.
+4. Create `.env.sops` at service root with `PTV_CHAT_PG_URL=postgres://ptv_chat_writer:<pw>@postgres.magpie-inconnu.ts.net:5433/ptv_chat?sslmode=disable`, encrypt with `sops-remediate.sh` against the standard age key (`/etc/age/keys.txt`). Commit the encrypted file.
 5. Update `docker-compose.chat.snippet.yml` to source secrets per STANDARDS.md §4:
    - Run `sops-decrypt-env ptv-chat` before `docker compose up` (writes `/run/secrets/ptv-chat/.env`).
    - Add `env_file: /run/secrets/ptv-chat/.env` to the `ptv-chat` service.
