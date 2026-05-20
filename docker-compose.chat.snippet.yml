@@ -24,6 +24,10 @@ services:
       GH_REST_URL: http://graphhopper-vic-bike:8989/route
       MODEL: claude-sonnet-4-6
       LOG_LEVEL: info
+    env_file:
+      # Decrypted at deploy time by `sops-decrypt-env ptv-chat`.
+      # File contains PTV_CHAT_PG_URL=postgres://ptv_chat_writer:<pw>@postgres.magpie-inconnu.ts.net:5433/ptv_chat?sslmode=prefer
+      - /run/secrets/ptv-chat/.env
     volumes:
       # Subscription auth: seeded from totoro host's ~/.claude (see web-chat/README.md).
       # Mount is read-write so the Agent SDK can persist refreshed OAuth tokens —
