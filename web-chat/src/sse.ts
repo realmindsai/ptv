@@ -23,10 +23,11 @@ export async function streamChat(
   body: unknown,
   onEvent: (ev: SseEvent) => void,
   signal?: AbortSignal,
+  extraHeaders?: Record<string, string>,
 ): Promise<void> {
   const res = await fetch('/api/chat', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...(extraHeaders ?? {}) },
     body: JSON.stringify(body),
     signal,
   });

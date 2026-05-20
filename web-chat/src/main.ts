@@ -10,6 +10,33 @@ const LS_KEY = 'ptv-chat:messages';
 const LS_LOG = 'ptv-chat:logOpen';
 const LS_DOCK = 'ptv-chat:dockCollapsed';
 const LS_WIDTH = 'ptv-chat:dockWidth';
+const LS_CLIENT_ID = 'ptv-chat:client-id';
+const LS_CONV_ID   = 'ptv-chat:conversation-id';
+
+function ensureClientId(): string {
+  let id = localStorage.getItem(LS_CLIENT_ID);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(LS_CLIENT_ID, id);
+  }
+  return id;
+}
+function ensureConversationId(): string {
+  let id = localStorage.getItem(LS_CONV_ID);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(LS_CONV_ID, id);
+  }
+  return id;
+}
+function newConversationId(): string {
+  const id = crypto.randomUUID();
+  localStorage.setItem(LS_CONV_ID, id);
+  return id;
+}
+
+const clientId = ensureClientId();
+let conversationId = ensureConversationId();
 
 const DEFAULT_DOCK_W = 360;
 const MIN_DOCK_W = 280;
@@ -75,9 +102,9 @@ async function send() {
   const content = $input.value.trim();
   if (!content || state.streaming) return;
   $input.value = '';
-  map.clear();
   dispatch({ type: 'user_send', content });
   const origin = await tryGeolocate();
+  let mapClearedForTurn = false;
   try {
     await streamChat(
       { messages: state.messages, origin },
@@ -101,6 +128,10 @@ async function send() {
                        result: { ok: ev.ok, summary: ev.summary } });
             break;
           case 'path_add': {
+            if (!mapClearedForTurn) {
+              map.clear();
+              mapClearedForTurn = true;
+            }
             const path = { id: ev.pathId, label: ev.label, color: ev.color, itinerary: ev.itinerary };
             dispatch({ type: 'path_add', path });
             map.addPath(path);
@@ -114,6 +145,11 @@ async function send() {
             dispatch({ type: 'error', message: ev.message });
             break;
         }
+      },
+      undefined,
+      {
+        'X-Ptv-Client-Id': clientId,
+        'X-Ptv-Conversation-Id': conversationId,
       },
     );
   } catch (err: any) {
@@ -139,6 +175,7 @@ $collapse.addEventListener('click', () => dispatch({ type: 'toggle_dock' }));
 $newChat.addEventListener('click', () => {
   if (!confirm('Clear chat?')) return;
   localStorage.removeItem(LS_KEY);
+  conversationId = newConversationId();
   map.clear();
   dispatch({ type: 'reset_chat' });
 });
