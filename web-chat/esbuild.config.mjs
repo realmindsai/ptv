@@ -1,5 +1,5 @@
 import * as esbuild from 'esbuild';
-import { cpSync, mkdirSync, existsSync } from 'node:fs';
+import { cpSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -19,7 +19,14 @@ await esbuild.build({
 });
 
 cpSync(resolve(__dirname, 'app.css'),    resolve(outDir, 'app.css'));
-cpSync(resolve(__dirname, 'index.html'), resolve(outDir, 'index.html'));
+
+// Cache-bust asset URLs in index.html with a build-time tag so Cloudflare's
+// edge cache (30-day default) doesn't serve stale CSS/JS after a deploy.
+const buildTag = String(Date.now());
+const indexHtml = readFileSync(resolve(__dirname, 'index.html'), 'utf8')
+  .replace(/(\/static\/(?:app\.css|app\.js|leaflet\.css|leaflet\.js))(")/g,
+           `$1?v=${buildTag}$2`);
+writeFileSync(resolve(outDir, 'index.html'), indexHtml);
 
 // Vendor Leaflet from the existing server's static-assets to avoid re-downloading.
 cpSync(

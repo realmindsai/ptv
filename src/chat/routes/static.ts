@@ -14,5 +14,13 @@ export async function registerStatic(app: FastifyInstance): Promise<void> {
     root: STATIC_ROOT,
     prefix: '/static/',
     decorateReply: false,
+    // Edge caches (e.g. Cloudflare in front of bike-rail.realmindsai.com.au)
+    // default to ~30 days for CSS/JS, which served stale ptv-web bundles
+    // after the chat cutover. Short max-age + must-revalidate keeps assets
+    // cacheable but lets fixes propagate within ~1 minute. The bundle URLs
+    // also carry a build-time ?v=<ts> for one-shot version busting.
+    setHeaders(res) {
+      res.setHeader('Cache-Control', 'public, max-age=60, must-revalidate');
+    },
   });
 }
