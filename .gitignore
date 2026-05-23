@@ -9,3 +9,6 @@ src/chat/static-assets/*
 .env.*
 !.env.sops
 !.env.example
+
+eval.db
+*.eval.db
