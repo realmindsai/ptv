@@ -22,7 +22,7 @@ services:
       OSRM_AU_BICYCLE_URL: http://osrm-au-bicycle:5000
       OSRM_AU_FOOT_URL: http://osrm-au-foot:5000
       GH_REST_URL: http://graphhopper-vic-bike:8989/route
-      MODEL: claude-haiku-4-5-20251001
+      MODEL: anthropic/claude-haiku-4.5
       LOG_LEVEL: info
     env_file:
       # .env is regenerated from .env.sops by ./scripts/decrypt-env.sh
@@ -35,21 +35,11 @@ services:
       # conversation logger can connect to the host postgres on :5433.
       # pg_hba allows 100.64/10 and 172.16/12.
       - "postgres.magpie-inconnu.ts.net:100.108.0.26"
-    volumes:
-      # Subscription auth: seeded from totoro host's ~/.claude (see web-chat/README.md).
-      # Mount is read-write so the Agent SDK can persist refreshed OAuth tokens —
-      # without rw access the access token expires after ~30 min and the next
-      # request fails with HTTP 401 "Invalid authentication credentials".
-      - claude-creds:/root/.claude
     networks:
       - default
       - nominatim_default
       - osrm-au_default
       - graphhopper_default
-
-volumes:
-  claude-creds:
-    external: true
 
 networks:
   # All three are external — created by the respective stacks they belong to.
