@@ -127,7 +127,12 @@ async function runPromptAcrossModels(input: RunGroupInput): Promise<FullTurn[]> 
       },
     );
 
-    const usd = usage ? computeCost(model, usage, input.prices) : null;
+    // OpenRouter pre-computes the exact USD in `usage.cost` per chunk (the
+    // upstream-reported number, which is more accurate than reconstructing
+    // tokens × per-token prices). Prefer it; fall back to local computeCost
+    // when absent (e.g. providers that omit cost, or older response shapes).
+    const upstreamCost = typeof usage?.cost === 'number' ? usage.cost : null;
+    const usd = upstreamCost ?? (usage ? computeCost(model, usage, input.prices) : null);
     const itineraries = extractItineraries(cap.side_events);
 
     return {
