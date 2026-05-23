@@ -85,7 +85,10 @@ interface RunGroupInput {
 }
 
 async function runPromptAcrossModels(input: RunGroupInput): Promise<FullTurn[]> {
-  return Promise.all(input.models.map(async (model) => {
+  // allSettled instead of all: a single fetch failure on one model (transient
+  // OpenRouter blip, geocoder hiccup, tool error) must not abort the other
+  // models. Rejected ones become rows with `error` populated.
+  const settled = await Promise.allSettled(input.models.map(async (model) => {
     const sideEvents: SseEvent[] = [];
     const ctx: ChatCtx = {
       emit: (ev) => sideEvents.push(ev),
@@ -143,6 +146,15 @@ async function runPromptAcrossModels(input: RunGroupInput): Promise<FullTurn[]> 
       itineraries,
     };
   }));
+  return settled.map((s, i): FullTurn => {
+    if (s.status === 'fulfilled') return s.value;
+    const reason = s.reason instanceof Error ? s.reason.message : String(s.reason);
+    return {
+      model: input.models[i],
+      final_text: '', total_ms: 0, tool_total_ms: 0, tool_calls: [],
+      error: reason, usd: null, usage: null, itineraries: [],
+    };
+  });
 }
 
 export function chatEvalCommand(): Command {

@@ -41,7 +41,10 @@ export async function* runAgentLoop(
       messages,
       ...(oaTools.length ? { tools: oaTools, tool_choice: 'auto' } : {}),
     };
-    const res = await fetchImpl(url, {
+    // One-shot retry: undici's `fetch` occasionally throws a bare TypeError
+    // ("fetch failed") under concurrency. Retry once after 500ms before
+    // giving up, so a multi-model eval doesn't lose a turn to a socket blip.
+    const doFetch = () => fetchImpl(url, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -51,6 +54,18 @@ export async function* runAgentLoop(
       },
       body: JSON.stringify(body),
     });
+    let res: Response;
+    try {
+      res = await doFetch();
+    } catch (err) {
+      await new Promise((r) => setTimeout(r, 500));
+      try {
+        res = await doFetch();
+      } catch (err2) {
+        yield { type: 'error', message: `openrouter fetch failed (after 1 retry): ${(err2 as Error).message}` };
+        break;
+      }
+    }
     if (!res.ok || !res.body) {
       const detail = await res.text().catch(() => '');
       yield { type: 'error', message: `openrouter http ${res.status}: ${detail.slice(0, 200)}` };
