@@ -22,13 +22,19 @@ services:
       OSRM_AU_BICYCLE_URL: http://osrm-au-bicycle:5000
       OSRM_AU_FOOT_URL: http://osrm-au-foot:5000
       GH_REST_URL: http://graphhopper-vic-bike:8989/route
-      MODEL: claude-sonnet-4-6
+      MODEL: claude-haiku-4-5-20251001
       LOG_LEVEL: info
     env_file:
       # .env is regenerated from .env.sops by ./scripts/decrypt-env.sh
       # before `docker compose up`. The plaintext .env is gitignored.
       # See web-chat/README.md → "Secrets — SOPS + age".
       - .env
+    extra_hosts:
+      # postgres.magpie-inconnu.ts.net is a tailscale MagicDNS name unreachable
+      # from docker's embedded resolver. Pin it to totoro's tailscale IP so the
+      # conversation logger can connect to the host postgres on :5433.
+      # pg_hba allows 100.64/10 and 172.16/12.
+      - "postgres.magpie-inconnu.ts.net:100.108.0.26"
     volumes:
       # Subscription auth: seeded from totoro host's ~/.claude (see web-chat/README.md).
       # Mount is read-write so the Agent SDK can persist refreshed OAuth tokens —

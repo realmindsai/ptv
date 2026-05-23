@@ -174,6 +174,8 @@ export async function* runTurn(
   opts: RunTurnOpts,
 ): AsyncGenerator<SseEvent> {
   yield { type: 'turn_start' };
+  const turnStartNs = process.hrtime.bigint();
+  const toolDurationsMs: Record<string, number[]> = {};
   try {
     // Build the in-process MCP server hosting our five tools.
     const sdkTools = TOOL_NAMES.map((name) => {
@@ -185,8 +187,23 @@ export async function* runTurn(
         description: t.description,
         inputSchema: t.schema,
         handler: async (args: unknown) => {
-          const out = await t.handler(args);
-          return { content: [{ type: 'text' as const, text: JSON.stringify(out) }] };
+          const startNs = process.hrtime.bigint();
+          let ok = true;
+          let errMsg: string | undefined;
+          try {
+            const out = await t.handler(args);
+            return { content: [{ type: 'text' as const, text: JSON.stringify(out) }] };
+          } catch (err) {
+            ok = false;
+            errMsg = (err as Error)?.message ?? String(err);
+            throw err;
+          } finally {
+            const durMs = Number((process.hrtime.bigint() - startNs) / 1_000_000n);
+            (toolDurationsMs[t.name] ??= []).push(durMs);
+            console.log(JSON.stringify({
+              level: 30, msg: 'ptv-chat:tool', tool: t.name, durationMs: durMs, ok, ...(errMsg ? { err: errMsg } : {}),
+            }));
+          }
         },
       };
     });
@@ -216,9 +233,33 @@ export async function* runTurn(
       },
     });
 
+    let sdkMsgCount = 0;
+    let lastMsgAtNs = process.hrtime.bigint();
     for await (const msg of stream) {
+      const nowNs = process.hrtime.bigint();
+      const gapMs = Number((nowNs - lastMsgAtNs) / 1_000_000n);
+      lastMsgAtNs = nowNs;
+      sdkMsgCount++;
+      if (gapMs >= 250) {
+        console.log(JSON.stringify({
+          level: 30, msg: 'ptv-chat:sdk_gap', sdkType: msg?.type ?? 'unknown', gapMs,
+        }));
+      }
       for (const ev of mapSdkMessage(msg)) yield ev;
     }
+    const totalMs = Number((process.hrtime.bigint() - turnStartNs) / 1_000_000n);
+    const toolSummary: Record<string, { count: number; totalMs: number; maxMs: number }> = {};
+    let toolTotal = 0;
+    for (const [name, ds] of Object.entries(toolDurationsMs)) {
+      const sum = ds.reduce((a, b) => a + b, 0);
+      toolTotal += sum;
+      toolSummary[name] = { count: ds.length, totalMs: sum, maxMs: Math.max(...ds) };
+    }
+    console.log(JSON.stringify({
+      level: 30, msg: 'ptv-chat:turn_summary',
+      totalMs, sdkMsgCount, toolTotalMs: toolTotal, nonToolMs: totalMs - toolTotal,
+      tools: toolSummary,
+    }));
   } catch (err: any) {
     yield { type: 'error', message: err?.message ?? String(err) };
   } finally {
