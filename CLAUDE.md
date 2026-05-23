@@ -97,6 +97,30 @@ Env for the chat/server stack (in addition to PTV/OSRM/GH vars above):
 
 All chat-stack peers (Nominatim, Photon, osrm-au bicycle/foot, GraphHopper) live on totoro and are reached by docker-DNS hostnames inside `nominatim_default`. See `docker-compose.chat.snippet.yml` for the canonical URLs.
 
+### Local dev — tailscale-routed peer URLs
+
+The docker-DNS names above only resolve **inside** totoro's docker network. From a laptop, hit the peers via totoro's tailscale MagicDNS:
+
+| Service | Tailscale URL |
+|---|---|
+| Nominatim | `http://totoro.magpie-inconnu.ts.net:8094` |
+| Photon | `http://totoro.magpie-inconnu.ts.net:2322` |
+| GraphHopper REST | `http://totoro.magpie-inconnu.ts.net:8989/route` |
+| OSRM-au (bicycle) | `http://totoro.magpie-inconnu.ts.net:5002` |
+| OSRM-au (foot) | `http://totoro.magpie-inconnu.ts.net:5003` |
+
+Quickstart from a laptop on the magpie-inconnu tailnet:
+
+```bash
+./scripts/decrypt-env.sh
+set -a && source .env && set +a
+source scripts/env-dev.sh             # override docker-DNS URLs with tailscale ones
+node dist/index.js chat-eval run "your prompt" --models anthropic/claude-haiku-4.5 --html /tmp/out.html
+open /tmp/out.html
+```
+
+Production ignores these overrides — the ptv-chat container's compose `environment:` block re-asserts the docker-DNS URLs at start.
+
 ## Secrets (SOPS + age)
 
 Runtime secrets are committed encrypted as `.env.sops`. The `.sops.yaml` and `scripts/decrypt-env.sh` handle the workflow:
