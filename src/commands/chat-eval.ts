@@ -183,7 +183,7 @@ export function chatEvalCommand(): Command {
           tool_total_ms: r.tool_total_ms,
           final_text: r.final_text,
           tool_calls: r.tool_calls.map((tc) => ({ tool: tc.tool, ok: tc.ok, duration_ms: tc.duration_ms })),
-          usage: r.usage, error: r.error,
+          usage: r.usage, usd: r.usd, error: r.error,
         }));
         process.stdout.write(renderJsonl(jsonl));
       } else {
@@ -241,7 +241,7 @@ export function chatEvalCommand(): Command {
             tool_total_ms: r.tool_total_ms,
             final_text: r.final_text,
             tool_calls: r.tool_calls.map((tc) => ({ tool: tc.tool, ok: tc.ok, duration_ms: tc.duration_ms })),
-            usage: r.usage, error: r.error,
+            usage: r.usage, usd: r.usd, error: r.error,
           });
         }
         htmlSections.push({

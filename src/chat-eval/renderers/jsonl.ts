@@ -7,6 +7,7 @@ export interface JsonlTurn {
   final_text: string;
   tool_calls: Array<{ tool: string; ok: boolean; duration_ms: number }>;
   usage: unknown;
+  usd: number | null;
   error: string | null;
 }
 
