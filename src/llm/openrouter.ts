@@ -65,7 +65,7 @@ export async function* runAgentLoop(
       const gap = nowMs - lastChunkMs;
       lastChunkMs = nowMs;
       if (gap >= 250) {
-        console.log(JSON.stringify({
+        console.error(JSON.stringify({
           level: 30, msg: 'ptv-chat:sdk_gap', sdkType: 'chunk', gapMs: gap,
         }));
       }
@@ -119,7 +119,7 @@ export async function* runAgentLoop(
       }
       const durMs = now() - t0;
       (toolDurationsMs[c.function.name] ??= []).push(durMs);
-      console.log(JSON.stringify({
+      console.error(JSON.stringify({
         level: 30, msg: 'ptv-chat:tool',
         tool: c.function.name, durationMs: durMs, ok: outcome.ok,
         ...(outcome.ok ? {} : { err: (outcome as { ok: false; error: string }).error }),
@@ -151,7 +151,7 @@ export async function* runAgentLoop(
     toolTotal += sum;
     toolSummary[name] = { count: ds.length, totalMs: sum, maxMs: Math.max(...ds) };
   }
-  console.log(JSON.stringify({
+  console.error(JSON.stringify({
     level: 30, msg: 'ptv-chat:turn_summary',
     totalMs, sdkMsgCount, toolTotalMs: toolTotal, nonToolMs: totalMs - toolTotal,
     tools: toolSummary,
