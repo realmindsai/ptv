@@ -1,7 +1,10 @@
 // src/chat-eval/renderers/terminal.ts
-import { marked } from 'marked';
+import { Marked } from 'marked';
 import TerminalRenderer from 'marked-terminal';
 
+// Use a private Marked instance so installing the TerminalRenderer here
+// doesn't taint the shared `marked` singleton that the HTML renderer uses.
+const marked = new Marked();
 (marked as any).setOptions({ renderer: new (TerminalRenderer as any)() });
 
 export interface TerminalRenderInput {
@@ -31,7 +34,7 @@ export function renderTerminal(input: TerminalRenderInput): string {
     if (r.error) {
       lines.push(`  ERROR: ${r.error}`);
     } else {
-      lines.push(String(marked(r.final_text)).trimEnd());
+      lines.push(String(marked.parse(r.final_text)).trimEnd());
     }
     lines.push('');
   }

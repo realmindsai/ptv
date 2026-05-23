@@ -1,6 +1,11 @@
 // src/chat-eval/renderers/html.ts
-import { marked } from 'marked';
+import { Marked } from 'marked';
 import type { ExtractedItinerary } from '../extract';
+
+// Private Marked instance: independent of any global setOptions another
+// renderer might have installed (the terminal renderer hooks in a different
+// output renderer; using `new Marked()` here keeps the two isolated).
+const marked = new Marked();
 
 export interface HtmlRenderTurn {
   model: string;
@@ -83,7 +88,7 @@ function renderCard(t: HtmlRenderTurn): string {
   const itineraries = t.itineraries ?? [];
   const body = t.error
     ? `<div class="err">ERROR: ${esc(t.error)}</div>`
-    : marked(t.final_text);
+    : marked.parse(t.final_text);
   const calls = t.tool_calls.map((c) => `
     <details><summary>${esc(c.tool)} — ${c.duration_ms} ms ${c.ok ? '' : '<span class="err">FAIL</span>'}</summary>
 <pre>args: ${esc(c.args_json)}
