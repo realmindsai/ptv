@@ -64,14 +64,49 @@ Optional environment overrides:
 ## Build & Test
 
 ```
-npm run build          # tsc → dist/
+npm run build          # tsc → dist/ + copies server/chat templates + bundles web-chat
 npm test               # all suites (unit + integration + e2e)
 npm run test:unit
 npm run test:integration
 npm run test:e2e
+npm run test:e2e:browser   # Playwright (real browser) — for web-chat
 ```
 
-E2e tests run against the compiled binary at `dist/index.js`. Build first.
+E2e tests run against the compiled binary at `dist/index.js`. Build first. `build` also runs `web-chat/esbuild.config.mjs` to bundle the chat frontend into `dist/chat/static-assets/`.
+
+## Programmatic access from other apps
+
+See [API.md](./API.md) — covers shell-out, TS imports, raw HTTP signing for non-Node consumers, and the chat/server HTTP routes. When asked "how do I call PTV / plan / geocode from elsewhere", point users there rather than re-explaining.
+
+## Chat + server apps
+
+This repo now hosts three deliverables, all sharing the CLI's modules:
+
+- **CLI** (`src/index.ts` → `dist/index.js`) — original subcommand surface.
+- **`src/server/`** — Fastify web UI ("Atlas") with a map, geocode route (Photon + Nominatim), and click-to-route. Templates in `src/server/templates/`, static assets in `src/server/static-assets/`.
+- **`src/chat/`** — OpenRouter-driven chat agent exposing PTV/plan/geocode as tools. The agent loop lives in `src/llm/openrouter.ts` (streaming chat-completions + parallel tool dispatch); `src/chat/agent.ts` is the thin adapter that preserves the `runTurn → AsyncGenerator<SseEvent>` contract used by the Fastify route. Frontend lives in `web-chat/` (esbuild-bundled into `dist/chat/static-assets/`). Conversation logging via batched fire-and-forget Postgres writer (`src/chat/log/`). Deployed at `bike-rail.realmindsai.com.au` as the `ptv-chat` container.
+- **`src/chat-eval/` + `ptv chat-eval`** — dev-side eval harness. Three subcommands: `run <prompt>` (single prompt across N models), `suite <file.yaml>` (golden regressions, fans out across models), `replay <conversation-id>` (re-run a logged production conversation against a different model). Writes a local SQLite file (`./eval.db` by default) and optionally a self-contained HTML report. See `docs/superpowers/specs/2026-05-23-chat-eval-openrouter-design.md` for the design and `docs/superpowers/plans/2026-05-23-chat-eval-openrouter.md` for the implementation plan.
+
+Env for the chat/server stack (in addition to PTV/OSRM/GH vars above):
+- `OPENROUTER_API_KEY` — OpenRouter auth (required; lives in `.env.sops`).
+- `OPENROUTER_BASE_URL` — override OpenRouter's `https://openrouter.ai/api/v1` (rarely needed).
+- `MODEL` — OpenRouter slug consumed by both the live service and the eval CLI. Production default is `anthropic/claude-haiku-4.5`. Other examples: `google/gemini-3-flash`, `openai/gpt-5`, `deepseek/deepseek-v3`. Run `curl -s 'https://openrouter.ai/api/v1/models?supported_parameters=tools' | jq -r '.data[].id'` to enumerate tool-capable slugs.
+- `NOMINATIM_URL` — Nominatim base. Default `http://localhost:8094` is dev-only; in the totoro docker stack it's `http://nominatim:8080` (docker DNS via the `nominatim_default` network).
+- `PHOTON_URL` — Photon base. Unset = Photon disabled, geocode tool falls back to Nominatim only. On totoro: `http://photon:2322` — same OSM data as Nominatim (Photon imports from the Nominatim Postgres), but does substring/typeahead matching, so "rosa" finds "Rosanna" where Nominatim won't (bead `ptv-987`). Beads `ptv-7wy` (weekly re-import) and `ptv-q97` (Photon over-ranks fuzzy name-match) are the live caveats.
+- `PTV_CHAT_PG_URL` — Postgres connection string for conversation logging (optional; logging is fire-and-forget and degrades silently). Production uses `postgres.magpie-inconnu.ts.net:5433` — the docker container reaches it via an `extra_hosts` pin to totoro's tailscale IP (`100.108.0.26`); pure-tailscale-DNS lookups don't resolve inside the docker bridge.
+
+All chat-stack peers (Nominatim, Photon, osrm-au bicycle/foot, GraphHopper) live on totoro and are reached by docker-DNS hostnames inside `nominatim_default`. See `docker-compose.chat.snippet.yml` for the canonical URLs.
+
+## Secrets (SOPS + age)
+
+Runtime secrets are committed encrypted as `.env.sops`. The `.sops.yaml` and `scripts/decrypt-env.sh` handle the workflow:
+
+```bash
+./scripts/decrypt-env.sh > .env       # produces a plaintext .env (gitignored)
+sops .env.sops                        # interactive edit of the encrypted file
+```
+
+The age key lives outside the repo. `.env` is gitignored; never commit it. The Dockerfiles/compose snippets load the decrypted env at deploy time.
 
 ## Architecture
 
@@ -91,6 +126,25 @@ src/
     score.ts            # labelAndSort: feasibility filter + label assignment + cost
     orchestrator.ts     # plan() entry: dispatch to bike-only / K=1 / K=2 hub fallback
     map.ts              # writeMapHtml: self-contained Leaflet HTML output
+  server/               # Fastify web UI ("Atlas"): map + geocode + click-to-route
+    photon.ts           # Photon geocoder client (Melbourne-biased, AU-filtered)
+    nominatim.ts        # Nominatim geocoder client (fallback)
+    routes/geocode.ts   # HTTP geocode endpoint
+  chat/                 # OpenRouter-driven chat agent
+    agent.ts            # runTurn(req, opts) → AsyncGenerator<SseEvent>; thin adapter over runAgentLoop
+    tools/geocode.ts    # geocode tool exposed to the agent
+    log/                # batched fire-and-forget Postgres conversation logger
+  llm/                  # provider-agnostic agent loop primitives
+    openrouter.ts       # streaming chat-completions + parallel tool dispatch; emits SseEvent
+    tool_bridge.ts      # Zod schema → OpenAI function-calling shape; arg-parse + dispatch
+    types.ts            # ToolFactory, OpenAIMessage, AgentLoopOptions
+  chat-eval/            # dev-side eval harness (used by `ptv chat-eval`)
+    runner.ts           # captures the SseEvent stream into structured turn records
+    db.ts               # better-sqlite3 schema + writer
+    suite.ts            # YAML suite loader with Zod validation
+    replay.ts           # postgres event reconstruction → history + new turn
+    renderers/          # terminal (marked-terminal) | jsonl | self-contained html
+web-chat/               # esbuild-bundled chat frontend (Leaflet + SSE + GPX)
 ```
 
 **Core flows:**
