@@ -72,3 +72,39 @@ describe('runOne', () => {
     expect(out.error).toBe('kaboom');
   });
 });
+
+describe('runOne side-channel capture', () => {
+  it('captures path_add events and turn_end.usage into the persisted turn row', async () => {
+    const db = openEvalDb(':memory:');
+    db.insertRun({ run_id: 'rC', started_at: 'now', cmd: 'run' });
+
+    const sideEvents: SseEvent[] = [
+      { type: 'path_add', pathId: 'p1', label: 'recommended', color: '#e6194b',
+        itinerary: { labels: ['recommended'], totalTimeMin: 45, bikeKm: 5, bikeMin: 20,
+                     trainKm: 10, trainMin: 15, waitMin: 5, transferDwellMin: 5, transfers: 1,
+                     legs: [] } as any },
+    ];
+
+    const events: SseEvent[] = [
+      { type: 'turn_start' },
+      { type: 'text_delta', delta: 'Here you go.' },
+      { type: 'turn_end', usage: { prompt_tokens: 50, completion_tokens: 30, total_tokens: 80 } },
+    ];
+
+    const deps: RunnerDeps = {
+      db,
+      runTurn: async () => { async function* g() { for (const e of events) yield e; } return g(); },
+      getSideEvents: () => sideEvents.splice(0),
+      nowMs: () => 0,
+    };
+
+    await runOne(deps, { run_id: 'rC', prompt_id: null, prompt: 'p', model: 'm/x', origin: null });
+
+    const turn = db.raw.prepare('SELECT path_adds_json, usage_json FROM turns WHERE run_id = ?').get('rC') as any;
+    const paths = JSON.parse(turn.path_adds_json);
+    expect(paths).toHaveLength(1);
+    expect(paths[0].label).toBe('recommended');
+    const usage = JSON.parse(turn.usage_json);
+    expect(usage.total_tokens).toBe(80);
+  });
+});

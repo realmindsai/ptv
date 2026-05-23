@@ -11,6 +11,8 @@ export interface RunnerDeps {
     origin?: { lat: number; lon: number } | null;
     history?: Array<{ role: 'user' | 'assistant'; content: string }>;
   }) => Promise<AsyncGenerator<SseEvent>>;
+  /** Returns + drains any path_add events that landed via ctx.emit during this turn. */
+  getSideEvents?: () => SseEvent[];
   nowMs?: () => number;
 }
 
@@ -38,6 +40,7 @@ export interface CapturedTurn {
   tool_calls: CapturedToolCall[];
   total_ms: number;
   error: string | null;
+  side_events: SseEvent[];   // path_add and other out-of-band events from ctx.emit
 }
 
 export async function runOne(deps: RunnerDeps, input: RunOneInput): Promise<CapturedTurn> {
@@ -52,6 +55,7 @@ export async function runOne(deps: RunnerDeps, input: RunOneInput): Promise<Capt
 
   let finalText = '';
   let error: string | null = null;
+  let usage: any = null;
   const calls = new Map<string, { call_t0: number; call: CapturedToolCall }>();
   const ordered: CapturedToolCall[] = [];
   let seq = 0;
@@ -79,6 +83,9 @@ export async function runOne(deps: RunnerDeps, input: RunOneInput): Promise<Capt
         }
         break;
       }
+      case 'turn_end':
+        if ((ev as any).usage) usage = (ev as any).usage;
+        break;
       case 'error':
         error = ev.message;
         break;
@@ -86,6 +93,9 @@ export async function runOne(deps: RunnerDeps, input: RunOneInput): Promise<Capt
         break;
     }
   }
+
+  const sideEvents = deps.getSideEvents?.() ?? [];
+  const pathAdds = sideEvents.filter((e): e is Extract<SseEvent, { type: 'path_add' }> => e.type === 'path_add');
 
   const total_ms = now() - start;
   const tool_total_ms = ordered.reduce((a, b) => a + b.duration_ms, 0);
@@ -103,8 +113,9 @@ export async function runOne(deps: RunnerDeps, input: RunOneInput): Promise<Capt
     non_tool_ms: total_ms - tool_total_ms,
     sdk_msg_count: null,
     final_text: finalText,
-    usage_json: null,
+    usage_json: usage ? JSON.stringify(usage) : null,
     error,
+    path_adds_json: pathAdds.length ? JSON.stringify(pathAdds) : null,
   });
 
   for (const c of ordered) {
@@ -117,5 +128,5 @@ export async function runOne(deps: RunnerDeps, input: RunOneInput): Promise<Capt
     });
   }
 
-  return { turn_id, final_text: finalText, tool_calls: ordered, total_ms, error };
+  return { turn_id, final_text: finalText, tool_calls: ordered, total_ms, error, side_events: sideEvents };
 }

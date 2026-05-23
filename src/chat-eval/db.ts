@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS turns (
   sdk_msg_count INTEGER,
   final_text    TEXT,
   usage_json    TEXT,
-  error         TEXT
+  error         TEXT,
+  path_adds_json TEXT
 );
 CREATE TABLE IF NOT EXISTS tool_calls (
   id          INTEGER PRIMARY KEY,
@@ -49,7 +50,8 @@ export interface TurnRow {
   started_at: string;
   total_ms: number | null; tool_total_ms: number | null;
   non_tool_ms: number | null; sdk_msg_count: number | null;
-  final_text: string | null; usage_json: string | null; error: string | null;
+  final_text: string | null; usage_json: string | null;
+  error: string | null; path_adds_json: string | null;
 }
 export interface ToolCallRow {
   turn_id: number; seq: number; tool: string;
@@ -69,6 +71,12 @@ export function openEvalDb(path: string): EvalDb {
   const raw = new Database(path);
   raw.pragma('journal_mode = WAL');
   raw.exec(SCHEMA);
+  try {
+    raw.exec(`ALTER TABLE turns ADD COLUMN path_adds_json TEXT`);
+  } catch (e) {
+    // ignore: column already exists from a previous run
+    if (!/duplicate column/i.test((e as Error).message)) throw e;
+  }
 
   const insRun = raw.prepare(
     `INSERT INTO runs (run_id, started_at, cmd, suite_name, notes)
@@ -77,10 +85,10 @@ export function openEvalDb(path: string): EvalDb {
   const insTurn = raw.prepare(
     `INSERT INTO turns
       (run_id, prompt_id, prompt, model, origin_lat, origin_lon, started_at,
-       total_ms, tool_total_ms, non_tool_ms, sdk_msg_count, final_text, usage_json, error)
+       total_ms, tool_total_ms, non_tool_ms, sdk_msg_count, final_text, usage_json, error, path_adds_json)
      VALUES
       (@run_id, @prompt_id, @prompt, @model, @origin_lat, @origin_lon, @started_at,
-       @total_ms, @tool_total_ms, @non_tool_ms, @sdk_msg_count, @final_text, @usage_json, @error)`,
+       @total_ms, @tool_total_ms, @non_tool_ms, @sdk_msg_count, @final_text, @usage_json, @error, @path_adds_json)`,
   );
   const insTool = raw.prepare(
     `INSERT INTO tool_calls

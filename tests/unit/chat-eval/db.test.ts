@@ -17,7 +17,7 @@ describe('openEvalDb', () => {
       run_id: 'r1', prompt_id: null, prompt: 'p', model: 'anthropic/claude-haiku-4.5',
       origin_lat: null, origin_lon: null, started_at: '2026-05-23T00:00:00Z',
       total_ms: 1000, tool_total_ms: 100, non_tool_ms: 900, sdk_msg_count: 5,
-      final_text: 'hi', usage_json: '{}', error: null,
+      final_text: 'hi', usage_json: '{}', error: null, path_adds_json: null,
     });
     db.insertToolCall({
       turn_id: turnId, seq: 0, tool: 'geocode',
@@ -25,5 +25,20 @@ describe('openEvalDb', () => {
     });
     const rows = db.raw.prepare('SELECT COUNT(*) AS n FROM tool_calls').get() as any;
     expect(rows.n).toBe(1);
+  });
+
+  it('round-trips path_adds_json blob', () => {
+    const db = openEvalDb(':memory:');
+    db.insertRun({ run_id: 'r2', started_at: 'x', cmd: 'run' });
+    db.insertTurn({
+      run_id: 'r2', prompt_id: null, prompt: 'p', model: 'm',
+      origin_lat: null, origin_lon: null, started_at: 'x',
+      total_ms: 1, tool_total_ms: 0, non_tool_ms: 1, sdk_msg_count: 0,
+      final_text: '', usage_json: '{"total_tokens":42}', error: null,
+      path_adds_json: '[{"label":"recommended"}]',
+    });
+    const row = db.raw.prepare('SELECT path_adds_json, usage_json FROM turns').get() as any;
+    expect(JSON.parse(row.path_adds_json)[0].label).toBe('recommended');
+    expect(JSON.parse(row.usage_json).total_tokens).toBe(42);
   });
 });
