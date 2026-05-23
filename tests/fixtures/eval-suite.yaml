@@ -1,0 +1,21 @@
+# tests/fixtures/eval-suite.yaml
+name: melbourne_bike_train_golden_v1
+prompts:
+  - id: short_bike
+    prompt: From Fitzroy to Hawthorn by bike
+    origin: {lat: -37.80, lon: 144.97}
+  - id: arrive_by_sun
+    prompt: "Get me to Box Hill by 7am Sunday using bike + train"
+    origin: {lat: -37.80, lon: 144.97}
+  - id: day_ride
+    prompt: "Plan a leisurely day ride from Lilydale to Hurstbridge with maximum cycleways"
+  - id: timetable
+    prompt: "When is the next train from Flinders Street to Frankston?"
+  - id: short_walk
+    prompt: "Walking directions from Federation Square to MCG"
+expect_keywords:
+  short_bike:    [Fitzroy, Hawthorn]
+  arrive_by_sun: [Box Hill]
+  day_ride:      [Lilydale, Hurstbridge]
+  timetable:     [Frankston]
+  short_walk:    [MCG]
