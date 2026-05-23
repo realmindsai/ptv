@@ -25,6 +25,15 @@ import { makeSearchStopsTool, makeNearbyStopsTool } from '../chat/tools/stops';
 import { makeScheduleTool } from '../chat/tools/schedule';
 import type { ChatCtx } from '../chat/types';
 
+function jaccard(a: string, b: string): number {
+  const wa = new Set(a.toLowerCase().split(/\W+/).filter(Boolean));
+  const wb = new Set(b.toLowerCase().split(/\W+/).filter(Boolean));
+  if (!wa.size && !wb.size) return 1;
+  let inter = 0;
+  for (const w of wa) if (wb.has(w)) inter++;
+  return inter / (wa.size + wb.size - inter);
+}
+
 function parseCoord(s: string | undefined): { lat: number; lon: number } | null {
   if (!s) return null;
   const [a, b] = s.split(',').map(Number);
@@ -110,8 +119,8 @@ export function chatEvalCommand(): Command {
       });
       const renderInput = {
         prompt,
-        results: results.map((r) => ({
-          model: r.tool_calls[0]?.tool ? '' : '',  // overwritten below
+        results: results.map((r, i) => ({
+          model: models[i],
           final_text: r.final_text,
           total_ms: r.total_ms,
           tool_total_ms: r.tool_calls.reduce((a, b) => a + b.duration_ms, 0),
@@ -119,8 +128,6 @@ export function chatEvalCommand(): Command {
           error: r.error,
         })),
       };
-      // Align model field with the input model list (results are in same order).
-      renderInput.results.forEach((rr, i) => { (rr as any).model = models[i]; });
       if (opts.json) {
         const jsonl: JsonlTurn[] = results.map((r, i) => ({
           run_id, model: models[i], prompt,
@@ -200,6 +207,19 @@ export function chatEvalCommand(): Command {
             error: r.error,
           })),
         });
+        // Fix 1: evaluate expect_keywords — warn to stderr on misses, never fail the run.
+        const keywords = suite.expect_keywords?.[p.id] ?? [];
+        if (keywords.length > 0) {
+          for (let i = 0; i < models.length; i++) {
+            const text = (results[i].final_text ?? '').toLowerCase();
+            const modelSlug = models[i].replace(/\//g, '_');
+            for (const kw of keywords) {
+              if (!text.includes(kw.toLowerCase())) {
+                process.stderr.write(`⚠ [${suite.name}/${p.id}/${modelSlug}] missing keyword: "${kw}"\n`);
+              }
+            }
+          }
+        }
         if (opts.json) {
           // Stream per-prompt for long suites; otherwise terminal renderer below is shown at end.
         } else {
@@ -235,10 +255,11 @@ export function chatEvalCommand(): Command {
         db, run_id, prompt_id: null, prompt: r.replayPrompt, models: [opts.model], origin: null,
         history: r.historyForReplay,
       });
+      const goldenText = r.turns[r.turns.length - 1].goldenAssistant;
       process.stdout.write(renderTerminal({
         prompt: `[replay ${conversationId.slice(0,8)}…] ${r.replayPrompt}`,
         results: [{
-          model: 'GOLDEN', final_text: r.turns[r.turns.length - 1].goldenAssistant,
+          model: 'GOLDEN', final_text: goldenText,
           total_ms: 0, tool_total_ms: 0, tool_calls: [], error: null,
         }, {
           model: opts.model, final_text: results[0].final_text, total_ms: results[0].total_ms,
@@ -247,6 +268,9 @@ export function chatEvalCommand(): Command {
           error: results[0].error,
         }],
       }));
+      // Fix 2: print Jaccard word-set similarity between golden and new response.
+      const score = jaccard(goldenText ?? '', results[0].final_text ?? '');
+      process.stdout.write(`Jaccard(words): ${score.toFixed(2)}\n`);
       db.close();
     });
 
