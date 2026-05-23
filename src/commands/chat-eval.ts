@@ -24,6 +24,8 @@ import { makeBikeRouteTool } from '../chat/tools/bike_route';
 import { makeSearchStopsTool, makeNearbyStopsTool } from '../chat/tools/stops';
 import { makeScheduleTool } from '../chat/tools/schedule';
 import type { ChatCtx } from '../chat/types';
+import { extractItineraries, type ExtractedItinerary } from '../chat-eval/extract';
+import { computeCost, fetchPrices, type PriceTable } from '../chat-eval/cost';
 
 function jaccard(a: string, b: string): number {
   const wa = new Set(a.toLowerCase().split(/\W+/).filter(Boolean));
@@ -59,13 +61,16 @@ function buildTools(ctx: ChatCtx) {
   };
 }
 
-async function* sseGen(prompt: string, model: string, origin: any, history: any) {
-  const messages = [
-    ...(history ?? []),
-    { role: 'user' as const, content: prompt },
-  ];
-  const tools = buildTools({ emit: () => {}, origin: origin ?? undefined });
-  yield* runTurn({ messages, origin: origin ?? undefined, model } as any, { tools, model } as any);
+interface FullTurn {
+  model: string;
+  final_text: string;
+  total_ms: number;
+  tool_total_ms: number;
+  tool_calls: Array<{ tool: string; ok: boolean; duration_ms: number; args_json: string; result_json: string | null }>;
+  error: string | null;
+  usd: number | null;
+  usage: any;
+  itineraries: ExtractedItinerary[];
 }
 
 interface RunGroupInput {
@@ -75,15 +80,39 @@ interface RunGroupInput {
   prompt: string;
   models: string[];
   origin: { lat: number; lon: number } | null;
+  prices: PriceTable;
   history?: Array<{ role: 'user' | 'assistant'; content: string }>;
 }
 
-async function runPromptAcrossModels(input: RunGroupInput) {
-  const results = await Promise.all(input.models.map(async (model) => {
-    return runOne(
+async function runPromptAcrossModels(input: RunGroupInput): Promise<FullTurn[]> {
+  return Promise.all(input.models.map(async (model) => {
+    const sideEvents: SseEvent[] = [];
+    const ctx: ChatCtx = {
+      emit: (ev) => sideEvents.push(ev),
+      origin: input.origin ?? undefined,
+    };
+    const tools = buildTools(ctx);
+
+    let usage: any = null;
+    async function* gen(): AsyncGenerator<SseEvent> {
+      const messages = [
+        ...(input.history ?? []),
+        { role: 'user' as const, content: input.prompt },
+      ];
+      for await (const ev of runTurn(
+        { messages, origin: input.origin ?? undefined, model } as any,
+        { tools, model } as any,
+      )) {
+        if (ev.type === 'turn_end' && (ev as any).usage) usage = (ev as any).usage;
+        yield ev;
+      }
+    }
+
+    const cap = await runOne(
       {
         db: input.db,
-        runTurn: async ({ prompt, model: m, origin, history }) => sseGen(prompt, m, origin, history) as unknown as AsyncGenerator<SseEvent>,
+        runTurn: async () => gen(),
+        getSideEvents: () => sideEvents.splice(0),
       },
       {
         run_id: input.run_id,
@@ -94,8 +123,26 @@ async function runPromptAcrossModels(input: RunGroupInput) {
         history: input.history,
       },
     );
+
+    const usd = usage ? computeCost(model, usage, input.prices) : null;
+    const itineraries = extractItineraries(cap.side_events);
+
+    return {
+      model,
+      final_text: cap.final_text,
+      total_ms: cap.total_ms,
+      tool_total_ms: cap.tool_calls.reduce((a, b) => a + b.duration_ms, 0),
+      tool_calls: cap.tool_calls.map((tc) => ({
+        tool: tc.tool, ok: tc.ok, duration_ms: tc.duration_ms,
+        args_json: JSON.stringify(tc.args),
+        result_json: tc.result_summary,
+      })),
+      error: cap.error,
+      usd,
+      usage,
+      itineraries,
+    };
   }));
-  return results;
 }
 
 export function chatEvalCommand(): Command {
@@ -114,28 +161,29 @@ export function chatEvalCommand(): Command {
       const run_id = randomUUID();
       const models = (opts.models as string[] | undefined) ?? [process.env.MODEL ?? 'anthropic/claude-haiku-4.5'];
       db.insertRun({ run_id, started_at: new Date().toISOString(), cmd: 'run' });
+      const prices = await fetchPrices(models);
       const results = await runPromptAcrossModels({
-        db, run_id, prompt_id: null, prompt, models, origin: parseCoord(opts.origin),
+        db, run_id, prompt_id: null, prompt, models, origin: parseCoord(opts.origin), prices,
       });
       const renderInput = {
         prompt,
-        results: results.map((r, i) => ({
-          model: models[i],
+        results: results.map((r) => ({
+          model: r.model,
           final_text: r.final_text,
           total_ms: r.total_ms,
-          tool_total_ms: r.tool_calls.reduce((a, b) => a + b.duration_ms, 0),
+          tool_total_ms: r.tool_total_ms,
           tool_calls: r.tool_calls.map((tc) => ({ tool: tc.tool, ok: tc.ok, duration_ms: tc.duration_ms })),
           error: r.error,
         })),
       };
       if (opts.json) {
-        const jsonl: JsonlTurn[] = results.map((r, i) => ({
-          run_id, model: models[i], prompt,
+        const jsonl: JsonlTurn[] = results.map((r) => ({
+          run_id, model: r.model, prompt,
           total_ms: r.total_ms,
-          tool_total_ms: r.tool_calls.reduce((a, b) => a + b.duration_ms, 0),
+          tool_total_ms: r.tool_total_ms,
           final_text: r.final_text,
           tool_calls: r.tool_calls.map((tc) => ({ tool: tc.tool, ok: tc.ok, duration_ms: tc.duration_ms })),
-          usage: null, error: r.error,
+          usage: r.usage, error: r.error,
         }));
         process.stdout.write(renderJsonl(jsonl));
       } else {
@@ -147,16 +195,16 @@ export function chatEvalCommand(): Command {
           title: 'ptv chat-eval — run',
           prompts: [{
             prompt,
-            turns: results.map((r, i) => ({
-              model: models[i],
+            turns: results.map((r) => ({
+              model: r.model,
               final_text: r.final_text,
               total_ms: r.total_ms,
-              tool_total_ms: r.tool_calls.reduce((a, b) => a + b.duration_ms, 0),
-              tool_calls: r.tool_calls.map((tc) => ({
-                tool: tc.tool, ok: tc.ok, duration_ms: tc.duration_ms,
-                args_json: JSON.stringify(tc.args), result_json: tc.result_summary,
-              })),
+              tool_total_ms: r.tool_total_ms,
+              tool_calls: r.tool_calls,
               error: r.error,
+              usd: r.usd,
+              usage: r.usage,
+              itineraries: r.itineraries,
             })),
           }],
         };
@@ -179,40 +227,43 @@ export function chatEvalCommand(): Command {
       const run_id = randomUUID();
       const models = (opts.models as string[] | undefined) ?? [process.env.MODEL ?? 'anthropic/claude-haiku-4.5'];
       db.insertRun({ run_id, started_at: new Date().toISOString(), cmd: 'suite', suite_name: suite.name });
+      const prices = await fetchPrices(models);
       const allTurns: JsonlTurn[] = [];
       const htmlSections: Array<{ prompt: string; turns: any[] }> = [];
       for (const p of suite.prompts) {
         const results = await runPromptAcrossModels({
-          db, run_id, prompt_id: p.id, prompt: p.prompt, models, origin: p.origin ?? null,
+          db, run_id, prompt_id: p.id, prompt: p.prompt, models, origin: p.origin ?? null, prices,
         });
-        for (let i = 0; i < models.length; i++) {
+        for (const r of results) {
           allTurns.push({
-            run_id, model: models[i], prompt: p.prompt,
-            total_ms: results[i].total_ms,
-            tool_total_ms: results[i].tool_calls.reduce((a, b) => a + b.duration_ms, 0),
-            final_text: results[i].final_text,
-            tool_calls: results[i].tool_calls.map((tc) => ({ tool: tc.tool, ok: tc.ok, duration_ms: tc.duration_ms })),
-            usage: null, error: results[i].error,
+            run_id, model: r.model, prompt: p.prompt,
+            total_ms: r.total_ms,
+            tool_total_ms: r.tool_total_ms,
+            final_text: r.final_text,
+            tool_calls: r.tool_calls.map((tc) => ({ tool: tc.tool, ok: tc.ok, duration_ms: tc.duration_ms })),
+            usage: r.usage, error: r.error,
           });
         }
         htmlSections.push({
           prompt: p.prompt,
-          turns: results.map((r, i) => ({
-            model: models[i], final_text: r.final_text, total_ms: r.total_ms,
-            tool_total_ms: r.tool_calls.reduce((a, b) => a + b.duration_ms, 0),
-            tool_calls: r.tool_calls.map((tc) => ({
-              tool: tc.tool, ok: tc.ok, duration_ms: tc.duration_ms,
-              args_json: JSON.stringify(tc.args), result_json: tc.result_summary,
-            })),
+          turns: results.map((r) => ({
+            model: r.model,
+            final_text: r.final_text,
+            total_ms: r.total_ms,
+            tool_total_ms: r.tool_total_ms,
+            tool_calls: r.tool_calls,
             error: r.error,
+            usd: r.usd,
+            usage: r.usage,
+            itineraries: r.itineraries,
           })),
         });
         // Fix 1: evaluate expect_keywords — warn to stderr on misses, never fail the run.
         const keywords = suite.expect_keywords?.[p.id] ?? [];
         if (keywords.length > 0) {
-          for (let i = 0; i < models.length; i++) {
-            const text = (results[i].final_text ?? '').toLowerCase();
-            const modelSlug = models[i].replace(/\//g, '_');
+          for (const r of results) {
+            const text = (r.final_text ?? '').toLowerCase();
+            const modelSlug = r.model.replace(/\//g, '_');
             for (const kw of keywords) {
               if (!text.includes(kw.toLowerCase())) {
                 process.stderr.write(`⚠ [${suite.name}/${p.id}/${modelSlug}] missing keyword: "${kw}"\n`);
@@ -251,9 +302,11 @@ export function chatEvalCommand(): Command {
         run_id, started_at: new Date().toISOString(), cmd: 'replay',
         notes: `source conversation_id=${conversationId}`,
       });
+      const replayModels = [opts.model];
+      const prices = await fetchPrices(replayModels);
       const results = await runPromptAcrossModels({
-        db, run_id, prompt_id: null, prompt: r.replayPrompt, models: [opts.model], origin: null,
-        history: r.historyForReplay,
+        db, run_id, prompt_id: null, prompt: r.replayPrompt, models: replayModels, origin: null,
+        history: r.historyForReplay, prices,
       });
       const goldenText = r.turns[r.turns.length - 1].goldenAssistant;
       process.stdout.write(renderTerminal({
