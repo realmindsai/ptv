@@ -135,7 +135,7 @@ export async function* runAgentLoop(
       const payload = d.outcome.ok
         ? (d.outcome as { ok: true; result: unknown }).result
         : { error: (d.outcome as { ok: false; error: string }).error };
-      const summary = JSON.stringify(payload).slice(0, 1000);
+      const summary = JSON.stringify(payload).slice(0, 200000);
       yield { type: 'tool_result', id: d.call.id, ok: d.outcome.ok, summary };
       messages.push({
         role: 'tool',
