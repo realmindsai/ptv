@@ -135,14 +135,29 @@ document.querySelectorAll('.map').forEach((el) => {
     attribution: '© OpenStreetMap',
     maxZoom: 19,
   }).addTo(map);
+  // Group identical polylines by latlng-fingerprint so the layer control shows
+  // every route, and so widths can vary — when N routes share the same geometry,
+  // later ones get progressively thinner so each underneath line peeks out.
+  const fingerprints = new Map();
+  const overlays = {};
   const all = [];
   data.forEach((route) => {
     if (!route.latlngs.length) return;
-    const opts = { color: route.color, weight: 4, opacity: 0.7, dashArray: route.mode === 'train' ? '6,6' : undefined };
+    const fp = route.latlngs[0].join(',') + '|' + route.latlngs[route.latlngs.length - 1].join(',') + '|' + route.latlngs.length;
+    const overlap = fingerprints.get(fp) || 0;
+    fingerprints.set(fp, overlap + 1);
+    const opts = {
+      color: route.color,
+      weight: Math.max(2, 6 - overlap * 2),
+      opacity: 0.65,
+      dashArray: route.mode === 'train' ? '6,6' : undefined,
+    };
     const line = L.polyline(route.latlngs, opts).addTo(map);
     line.bindTooltip(route.title);
+    overlays[route.title] = line;
     all.push(...route.latlngs);
   });
+  L.control.layers({}, overlays, { collapsed: false, position: 'topright' }).addTo(map);
   if (all.length) map.fitBounds(L.latLngBounds(all).pad(0.05));
 });
 `;
