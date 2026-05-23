@@ -31,11 +31,13 @@ export async function* runAgentLoop(
   const toolDurationsMs: Record<string, number[]> = {};
   let sdkMsgCount = 0;
   let lastChunkMs = turnStartMs;
+  let lastUsage: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number } | undefined;
 
   while (true) {
     const body = {
       model: opts.model,
       stream: true,
+      stream_options: { include_usage: true },
       messages,
       ...(oaTools.length ? { tools: oaTools, tool_choice: 'auto' } : {}),
     };
@@ -69,6 +71,7 @@ export async function* runAgentLoop(
           level: 30, msg: 'ptv-chat:sdk_gap', sdkType: 'chunk', gapMs: gap,
         }));
       }
+      if (chunk.usage) lastUsage = chunk.usage;
       const ch = chunk.choices?.[0];
       if (!ch) continue;
       const delta = ch.delta ?? {};
@@ -156,7 +159,7 @@ export async function* runAgentLoop(
     totalMs, sdkMsgCount, toolTotalMs: toolTotal, nonToolMs: totalMs - toolTotal,
     tools: toolSummary,
   }));
-  yield { type: 'turn_end' };
+  yield { type: 'turn_end', ...(lastUsage ? { usage: lastUsage } : {}) };
 }
 
 export async function* parseSseChunks(

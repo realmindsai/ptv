@@ -1,4 +1,5 @@
 import type { Itinerary } from '../plan/types';
+import type { UsageBlock } from '../llm/types';
 export type { Itinerary };
 
 export type SseEvent =
@@ -7,7 +8,7 @@ export type SseEvent =
   | { type: 'tool_call'; id: string; name: string; args: unknown }
   | { type: 'tool_result'; id: string; ok: boolean; summary: string }
   | { type: 'path_add'; pathId: string; label: string; color: string; itinerary: Itinerary }
-  | { type: 'turn_end' }
+  | { type: 'turn_end'; usage?: UsageBlock }
   | { type: 'error'; message: string };
 
 export type ChatRequest = {

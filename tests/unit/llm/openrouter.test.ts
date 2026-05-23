@@ -145,3 +145,21 @@ describe('runAgentLoop', () => {
     expect(result).toMatchObject({ type: 'tool_result', ok: false });
   });
 });
+
+describe('runAgentLoop usage capture', () => {
+  it('attaches the final chunk usage block to turn_end', async () => {
+    const opts: AgentLoopOptions = {
+      model: 'test/model', systemPrompt: 's', history: [], tools: [], apiKey: 'k',
+      fetchImpl: fakeFetch([
+        streamFrom([
+          { choices: [{ delta: { content: 'hi' }, finish_reason: 'stop' }] },
+          { choices: [], usage: { prompt_tokens: 100, completion_tokens: 20, total_tokens: 120 } },
+        ]),
+      ]),
+    };
+    const events: SseEvent[] = [];
+    for await (const ev of runAgentLoop('hi', opts)) events.push(ev);
+    const end = events.find((e) => e.type === 'turn_end') as any;
+    expect(end.usage).toEqual({ prompt_tokens: 100, completion_tokens: 20, total_tokens: 120 });
+  });
+});
