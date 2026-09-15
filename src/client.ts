@@ -34,6 +34,27 @@ export function sign(pathWithDevId: string, apiKey: string): string {
   return createHmac('sha1', apiKey).update(pathWithDevId).digest('hex').toUpperCase();
 }
 
+// One retry, not a retry loop. The failure this covers is /v3/stops/location
+// dropping a connection: it happens before any candidate stops exist, so there
+// is nothing to degrade to and the whole plan dies. There are only two such
+// calls per plan, so the extra cost when it fires is negligible.
+const NETWORK_RETRY_DELAY_MS = 250;
+
+/**
+ * Retries ONLY a lost call — one where fetch itself rejects and no response
+ * ever arrived. An HTTP status is an answer, and retrying answers is precisely
+ * how a throttle (403) turns a slowdown into an outage, so a response of any
+ * status is returned untouched for the caller to deal with.
+ */
+async function fetchOnceRetried(url: string): Promise<Response> {
+  try {
+    return await fetch(url);
+  } catch {
+    await new Promise((resolve) => setTimeout(resolve, NETWORK_RETRY_DELAY_MS));
+    return fetch(url);
+  }
+}
+
 /**
  * PTV explains its refusals in the response body, e.g.
  *   {"message":"Forbidden (403): Throttling limit reached for this service."}
@@ -72,7 +93,7 @@ export async function ptv(
   const signature = sign(pathWithDevId, apiKey);
   const url = `${BASE_URL}${pathWithDevId}&signature=${signature}`;
 
-  const response = await fetch(url);
+  const response = await fetchOnceRetried(url);
   if (!response.ok) {
     const detail = await readErrorMessage(response);
     throw new Error(JSON.stringify({

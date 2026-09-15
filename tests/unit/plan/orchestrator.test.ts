@@ -493,6 +493,26 @@ describe('pattern failures degrade instead of killing the plan', () => {
     expect(Array.isArray(out.itineraries)).toBe(true);
   });
 
+  it('says so in warnings, so a thin result is explainable', async () => {
+    const { ptv } = fakePtvFactory();
+    const throttled = vi.fn(async (path: string, params?: Record<string, unknown>) => {
+      if (path.startsWith('/v3/pattern/')) throw new Error('Throttling limit reached');
+      return ptv(path, params);
+    });
+
+    // Degrading quietly is how you turn "PTV is throttling us" into "the
+    // planner found nothing", which is the harder bug to diagnose — and the
+    // same trap as a geocoder confidently returning the wrong suburb.
+    const out = await plan(makeReq(), { ptv: throttled, external: fakeExternal as never });
+    expect(out.warnings?.join(' ')).toMatch(/pattern/i);
+  });
+
+  it('does not warn when nothing was dropped', async () => {
+    const { ptv } = fakePtvFactory();
+    const out = await plan(makeReq(), { ptv, external: fakeExternal as never });
+    expect(out.warnings?.join(' ') ?? '').not.toMatch(/pattern/i);
+  });
+
   it('a pattern failure does not prevent other candidates from being used', async () => {
     const { ptv } = fakePtvFactory();
     let seen = 0;

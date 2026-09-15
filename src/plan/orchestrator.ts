@@ -102,6 +102,10 @@ function egressEnrich(s: SearchState, e: AccessCandidate): Promise<EnrichResult>
   return p;
 }
 
+// Named so the dedupe check and the test agree on one spelling.
+const PATTERN_DEGRADED_WARNING =
+  'some run patterns could not be fetched (PTV throttling); itineraries may be incomplete';
+
 async function getPattern(
   s: SearchState,
   runRef: string,
@@ -123,6 +127,13 @@ async function getPattern(
     // trip. Callers already skip a pattern that doesn't contain their stop
     // (`aIdx < 0`), so an empty list degrades on the existing path. Deliberately
     // not cached: this is a transient failure, not an answer.
+    //
+    // Say so. Degrading silently turns "PTV is throttling us" into "the planner
+    // found nothing", which is far harder to diagnose than the crash this
+    // replaced. Deduped the same way the gh-route warning below is.
+    if (!s.warnings.includes(PATTERN_DEGRADED_WARNING)) {
+      s.warnings.push(PATTERN_DEGRADED_WARNING);
+    }
     return [];
   }
 }
