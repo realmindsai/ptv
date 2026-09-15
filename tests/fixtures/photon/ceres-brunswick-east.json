@@ -1,0 +1,35 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 26152601,
+        "osm_key": "landuse",
+        "osm_value": "allotments",
+        "type": "locality",
+        "name": "CERES Community Gardens",
+        "district": "Brunswick East",
+        "city": "City of Merri-bek",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3057",
+        "countrycode": "AU",
+        "extent": [
+          144.9836004,
+          -37.766163,
+          144.9841424,
+          -37.7664437
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.9838750475094,
+          -37.7663065
+        ]
+      }
+    }
+  ]
+}

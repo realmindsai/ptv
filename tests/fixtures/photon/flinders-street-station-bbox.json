@@ -1,0 +1,97 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 724454901,
+        "osm_key": "highway",
+        "osm_value": "secondary",
+        "type": "street",
+        "name": "Flinders Street",
+        "locality": "East End Theatre District",
+        "district": "Melbourne",
+        "city": "Melbourne",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3000",
+        "countrycode": "AU",
+        "extent": [
+          144.9648646,
+          -37.8179782,
+          144.9654136,
+          -37.8181351
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.9650822,
+          -37.8180778
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 399136064,
+        "osm_key": "highway",
+        "osm_value": "primary",
+        "type": "street",
+        "name": "Flinders Street",
+        "locality": "Yarra’s Edge",
+        "district": "Docklands",
+        "city": "Melbourne",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3008",
+        "countrycode": "AU",
+        "extent": [
+          144.9549889,
+          -37.8211396,
+          144.9552063,
+          -37.8211984
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.9550706,
+          -37.8211771
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 25546125,
+        "osm_key": "highway",
+        "osm_value": "residential",
+        "type": "street",
+        "name": "Flinders Street",
+        "district": "Coburg",
+        "city": "City of Merri-bek",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3058",
+        "countrycode": "AU",
+        "extent": [
+          144.9533645,
+          -37.736427,
+          144.9536309,
+          -37.7381083
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.9535655,
+          -37.7368617
+        ]
+      }
+    }
+  ]
+}
