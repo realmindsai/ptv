@@ -1,0 +1,65 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 1422983753,
+        "osm_key": "highway",
+        "osm_value": "tertiary",
+        "type": "street",
+        "name": "Carlisle Street",
+        "district": "St Kilda",
+        "city": "City of Port Phillip",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3182",
+        "countrycode": "AU",
+        "extent": [
+          144.977836,
+          -37.8669789,
+          144.9779481,
+          -37.8670002
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.9778908,
+          -37.8669949
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 1202451911,
+        "osm_key": "highway",
+        "osm_value": "secondary",
+        "type": "street",
+        "name": "Carlisle Street",
+        "district": "St Kilda",
+        "city": "City of Port Phillip",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3182",
+        "countrycode": "AU",
+        "extent": [
+          144.9812232,
+          -37.8671647,
+          144.9813367,
+          -37.8671798
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.9812232,
+          -37.8671647
+        ]
+      }
+    }
+  ]
+}

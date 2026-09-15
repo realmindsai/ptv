@@ -92,7 +92,7 @@ Env for the chat/server stack (in addition to PTV/OSRM/GH vars above):
 - `OPENROUTER_BASE_URL` — override OpenRouter's `https://openrouter.ai/api/v1` (rarely needed).
 - `MODEL` — OpenRouter slug consumed by both the live service and the eval CLI. Production default is `anthropic/claude-haiku-4.5`. Other verified tool-capable slugs: `google/gemini-3.5-flash`, `google/gemini-2.5-flash` (cheaper iteration model), `openai/gpt-5`, `deepseek/deepseek-v3.2`. Slugs drift as providers ship new revisions — run `curl -s 'https://openrouter.ai/api/v1/models?supported_parameters=tools' | jq -r '.data[].id'` to enumerate what's currently live before pasting a slug into config.
 - `NOMINATIM_URL` — Nominatim base. Default `http://localhost:8094` is dev-only; in the totoro docker stack it's `http://nominatim:8080` (docker DNS via the `nominatim_default` network).
-- `PHOTON_URL` — Photon base. Unset = Photon disabled, geocode tool falls back to Nominatim only. On totoro: `http://photon:2322` — same OSM data as Nominatim (Photon imports from the Nominatim Postgres), but does substring/typeahead matching, so "rosa" finds "Rosanna" where Nominatim won't (bead `ptv-987`). Beads `ptv-7wy` (weekly re-import) and `ptv-q97` (Photon over-ranks fuzzy name-match) are the live caveats.
+- `PHOTON_URL` — Photon base. Unset = Photon disabled, geocode tool falls back to Nominatim only. On totoro: `http://photon:2322` — same OSM data as Nominatim (Photon imports from the Nominatim Postgres), but does substring/typeahead matching, so "rosa" finds "Rosanna" where Nominatim won't (bead `ptv-987`). Bead `ptv-7wy` (weekly re-import) is the live caveat. Photon's raw ranking is fuzzy-name-only, so `src/server/photon_rank.ts` post-ranks its results by suburb and feature-kind before the geocode tool answers — see the beads `ptv-qjz`/`ptv-q97` notes there. **The totoro OSM import carries no POIs**: only `highway`, `place` and `landuse` keys exist, so there is no `amenity=library` or `railway=station` to match. Station and venue names must go through `search_stops`, not `geocode`.
 - `PTV_CHAT_PG_URL` — Postgres connection string for conversation logging (optional; logging is fire-and-forget and degrades silently). Production uses `postgres.magpie-inconnu.ts.net:5433` — the docker container reaches it via an `extra_hosts` pin to totoro's tailscale IP (`100.108.0.26`); pure-tailscale-DNS lookups don't resolve inside the docker bridge.
 
 All chat-stack peers (Nominatim, Photon, osrm-au bicycle/foot, GraphHopper) live on totoro and are reached by docker-DNS hostnames inside `nominatim_default`. See `docker-compose.chat.snippet.yml` for the canonical URLs.
@@ -151,7 +151,8 @@ src/
     orchestrator.ts     # plan() entry: dispatch to bike-only / K=1 / K=2 hub fallback
     map.ts              # writeMapHtml: self-contained Leaflet HTML output
   server/               # Fastify web UI ("Atlas"): map + geocode + click-to-route
-    photon.ts           # Photon geocoder client (Melbourne-biased, AU-filtered)
+    photon.ts           # Photon geocoder client (Victoria-bbox'd, AU-filtered)
+    photon_rank.ts      # post-ranks Photon hits by suburb + feature kind; confidence flag
     nominatim.ts        # Nominatim geocoder client (fallback)
     routes/geocode.ts   # HTTP geocode endpoint
   chat/                 # OpenRouter-driven chat agent

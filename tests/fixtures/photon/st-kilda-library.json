@@ -1,0 +1,240 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 9803078577,
+        "osm_key": "place",
+        "osm_value": "house",
+        "type": "house",
+        "housenumber": "40",
+        "name": "Little LIbrary 40 Clarence St",
+        "street": "Clarence Street",
+        "district": "Brunswick East",
+        "city": "City of Merri-bek",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3057",
+        "countrycode": "AU"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.9774667,
+          -37.7638282
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 4770668475,
+        "osm_key": "place",
+        "osm_value": "house",
+        "type": "house",
+        "housenumber": "182-186",
+        "name": "Bargoonga Nganjin, North Fitzroy Library",
+        "street": "St Georges Road",
+        "district": "Fitzroy North",
+        "city": "City of Yarra",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3068",
+        "countrycode": "AU"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.9828628,
+          -37.7847456
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 634766915,
+        "osm_key": "place",
+        "osm_value": "house",
+        "type": "house",
+        "housenumber": "71A",
+        "name": "St Albans Library",
+        "street": "Alfrieda Street",
+        "locality": "St Albans East",
+        "district": "St Albans",
+        "city": "City of Brimbank",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3021",
+        "countrycode": "AU",
+        "extent": [
+          144.8003988,
+          -37.7415746,
+          144.8008318,
+          -37.7417674
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.80061529685838,
+          -37.74167105
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "R",
+        "osm_id": 2397474,
+        "osm_key": "place",
+        "osm_value": "suburb",
+        "type": "district",
+        "name": "St Kilda",
+        "city": "City of Port Phillip",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3182",
+        "countrycode": "AU",
+        "extent": [
+          144.970653,
+          -37.852189,
+          144.993262,
+          -37.876291
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.981637,
+          -37.8638261
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 848742941,
+        "osm_key": "landuse",
+        "osm_value": "railway",
+        "type": "other",
+        "housenumber": "188-222",
+        "name": "State Library Station",
+        "street": "La Trobe Street",
+        "locality": "Greek Precinct",
+        "district": "Melbourne",
+        "city": "Melbourne",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3000",
+        "countrycode": "AU",
+        "extent": [
+          144.962641,
+          -37.8092417,
+          144.9636251,
+          -37.809756
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.96314914540872,
+          -37.80946645
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "R",
+        "osm_id": 2398037,
+        "osm_key": "place",
+        "osm_value": "suburb",
+        "type": "district",
+        "name": "St Kilda West",
+        "city": "City of Port Phillip",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3182",
+        "countrycode": "AU",
+        "extent": [
+          144.965694,
+          -37.853553,
+          144.976691,
+          -37.8634
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.9712452,
+          -37.8579958
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "R",
+        "osm_id": 2396271,
+        "osm_key": "place",
+        "osm_value": "suburb",
+        "type": "district",
+        "name": "St Kilda East",
+        "city": "City of Glen Eira",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3183",
+        "countrycode": "AU",
+        "extent": [
+          144.991215,
+          -37.857906,
+          145.0105292,
+          -37.8780367
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          145.0021657,
+          -37.8668218
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 1350825732,
+        "osm_key": "landuse",
+        "osm_value": "grass",
+        "type": "other",
+        "name": "Southabnk Lawn Frontage To St Kilda Rd & Southbank Boulevard",
+        "district": "Southbank",
+        "city": "Melbourne",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3006",
+        "countrycode": "AU",
+        "extent": [
+          144.969259,
+          -37.8235395,
+          144.9699323,
+          -37.8237815
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.96945035412926,
+          -37.82366785
+        ]
+      }
+    }
+  ]
+}

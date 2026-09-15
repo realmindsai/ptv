@@ -1,0 +1,229 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 778546614,
+        "osm_key": "place",
+        "osm_value": "house",
+        "type": "house",
+        "housenumber": "209",
+        "name": "Footscray Mechanics' Institute Library",
+        "street": "Nicholson Street",
+        "district": "Footscray",
+        "city": "City of Maribyrnong",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3011",
+        "countrycode": "AU",
+        "extent": [
+          144.8990311,
+          -37.8033908,
+          144.8993454,
+          -37.8035981
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          144.89918677381115,
+          -37.80350295
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 52960741,
+        "osm_key": "highway",
+        "osm_value": "unclassified",
+        "type": "street",
+        "name": "Library Road",
+        "city": "Beechworth",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3747",
+        "countrycode": "AU",
+        "extent": [
+          146.6670728,
+          -36.3949208,
+          146.6743792,
+          -36.3976498
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          146.6699053,
+          -36.3966998
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 8459988300,
+        "osm_key": "place",
+        "osm_value": "house",
+        "type": "house",
+        "housenumber": "1-3",
+        "name": "Federal Court of Australia Library & Information Services, Parramatta",
+        "street": "George Street",
+        "district": "Parramatta",
+        "city": "Parramatta",
+        "state": "New South Wales",
+        "country": "Australia",
+        "postcode": "2150",
+        "countrycode": "AU"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          151.0026835,
+          -33.8130132
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 1324398922,
+        "osm_key": "place",
+        "osm_value": "house",
+        "type": "house",
+        "housenumber": "18",
+        "name": "Inglewood Library",
+        "street": "Elizabeth Street",
+        "district": "Inglewood",
+        "city": "Inglewood",
+        "state": "Queensland",
+        "country": "Australia",
+        "postcode": "4387",
+        "countrycode": "AU"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          151.0818962,
+          -28.4142304
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 17853085,
+        "osm_key": "place",
+        "osm_value": "house",
+        "type": "house",
+        "housenumber": "39",
+        "name": "St Peters Library",
+        "street": "Unwins Bridge Road",
+        "district": "Sydenham",
+        "city": "Inner West Council",
+        "state": "New South Wales",
+        "country": "Australia",
+        "postcode": "2044",
+        "countrycode": "AU"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          151.1674804,
+          -33.9155289
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 544282454,
+        "osm_key": "place",
+        "osm_value": "house",
+        "type": "house",
+        "housenumber": "71",
+        "name": "Agnes Water Public Library and Visitor Information Centre",
+        "street": "Springs Road",
+        "district": "Agnes Water",
+        "city": "Agnes Water",
+        "state": "Queensland",
+        "country": "Australia",
+        "postcode": "4677",
+        "countrycode": "AU",
+        "extent": [
+          151.9103614,
+          -24.2118123,
+          151.9107703,
+          -24.2124013
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          151.91059244692258,
+          -24.212113700000003
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 1324398503,
+        "osm_key": "place",
+        "osm_value": "house",
+        "type": "house",
+        "housenumber": "49",
+        "name": "Innisfail Library",
+        "street": "Rankin Street",
+        "locality": "Innisfail Retail Zone",
+        "district": "Innisfail",
+        "city": "Innisfail",
+        "state": "Queensland",
+        "country": "Australia",
+        "postcode": "4860",
+        "countrycode": "AU"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          146.0306383,
+          -17.5228022
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 9559234543,
+        "osm_key": "place",
+        "osm_value": "house",
+        "type": "house",
+        "housenumber": "186",
+        "name": "Glebe Library",
+        "street": "Glebe Point Road",
+        "district": "Glebe",
+        "city": "Sydney",
+        "state": "New South Wales",
+        "country": "Australia",
+        "postcode": "2037",
+        "countrycode": "AU"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          151.1849767,
+          -33.8780123
+        ]
+      }
+    }
+  ]
+}

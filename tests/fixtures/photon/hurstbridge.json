@@ -1,0 +1,156 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "R",
+        "osm_id": 2398093,
+        "osm_key": "place",
+        "osm_value": "suburb",
+        "type": "district",
+        "name": "Hurstbridge",
+        "city": "Shire of Nillumbik",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3099",
+        "countrycode": "AU",
+        "extent": [
+          145.1660299,
+          -37.615708,
+          145.227324,
+          -37.658254
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          145.1943394,
+          -37.6375848
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 1181392154,
+        "osm_key": "landuse",
+        "osm_value": "retail",
+        "type": "locality",
+        "name": "Hurstbridge Centre",
+        "district": "Hurstbridge",
+        "city": "Shire of Nillumbik",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3099",
+        "countrycode": "AU",
+        "extent": [
+          145.1950676,
+          -37.6370534,
+          145.1961059,
+          -37.6376985
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          145.19560290877433,
+          -37.6374529
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 27880744,
+        "osm_key": "highway",
+        "osm_value": "tertiary",
+        "type": "street",
+        "name": "Hurstbridge - Arthurs Creek Road",
+        "district": "Nutfield",
+        "city": "Shire of Nillumbik",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3099",
+        "countrycode": "AU",
+        "extent": [
+          145.1815876,
+          -37.5857014,
+          145.206889,
+          -37.6224635
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          145.1916159,
+          -37.5985039
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 161947533,
+        "osm_key": "place",
+        "osm_value": "house",
+        "type": "house",
+        "housenumber": "961-989",
+        "name": "Hurstbridge Primary School",
+        "street": "Heidelberg – Kinglake Road",
+        "district": "Hurstbridge",
+        "city": "Shire of Nillumbik",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3099",
+        "countrycode": "AU",
+        "extent": [
+          145.1969899,
+          -37.6344906,
+          145.200135,
+          -37.6365103
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          145.1984715016137,
+          -37.635484250000005
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 95781027,
+        "osm_key": "highway",
+        "osm_value": "tertiary",
+        "type": "street",
+        "name": "Arthurs Creek Road",
+        "district": "Hurstbridge",
+        "city": "Shire of Nillumbik",
+        "state": "Victoria",
+        "country": "Australia",
+        "postcode": "3099",
+        "countrycode": "AU",
+        "extent": [
+          145.1938854,
+          -37.6374771,
+          145.1943683,
+          -37.6375705
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          145.1941401,
+          -37.6375255
+        ]
+      }
+    }
+  ]
+}

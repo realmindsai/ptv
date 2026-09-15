@@ -1,0 +1,127 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "R",
+        "osm_id": 17415444,
+        "osm_key": "place",
+        "osm_value": "house",
+        "type": "house",
+        "housenumber": "502-520",
+        "name": "Old Townsville Station (QR North Control Centre)",
+        "street": "Flinders Street",
+        "district": "Townsville City",
+        "city": "Townsville",
+        "state": "Queensland",
+        "country": "Australia",
+        "postcode": "4810",
+        "countrycode": "AU",
+        "extent": [
+          146.8134196,
+          -19.263433,
+          146.8153052,
+          -19.2643524
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          146.8140307366964,
+          -19.2639164
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "N",
+        "osm_id": 5219123949,
+        "osm_key": "place",
+        "osm_value": "house",
+        "type": "house",
+        "housenumber": "86",
+        "name": "Caltex Petrol Station",
+        "street": "Flinders Street",
+        "district": "Yokine",
+        "city": "City of Stirling",
+        "state": "Western Australia",
+        "country": "Australia",
+        "postcode": "6060",
+        "countrycode": "AU"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          115.8496804,
+          -31.9045951
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 1102838962,
+        "osm_key": "place",
+        "osm_value": "house",
+        "type": "house",
+        "housenumber": "21",
+        "name": "Whitemark Fire Station",
+        "street": "Patrick Street",
+        "district": "Whitemark",
+        "city": "Whitemark",
+        "state": "Tasmania",
+        "country": "Australia",
+        "postcode": "7255",
+        "countrycode": "AU",
+        "extent": [
+          148.0176322,
+          -40.125151,
+          148.0186243,
+          -40.1256699
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          148.01814037469467,
+          -40.12533205
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "osm_type": "W",
+        "osm_id": 1102838964,
+        "osm_key": "place",
+        "osm_value": "house",
+        "type": "house",
+        "housenumber": "3",
+        "name": "Lady Barron Fire Station",
+        "street": "Main Street",
+        "district": "Lady Barron",
+        "city": "Lady Barron",
+        "state": "Tasmania",
+        "country": "Australia",
+        "postcode": "7255",
+        "countrycode": "AU",
+        "extent": [
+          148.2389431,
+          -40.2075383,
+          148.2398549,
+          -40.2081642
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          148.23941844364464,
+          -40.20786235
+        ]
+      }
+    }
+  ]
+}
