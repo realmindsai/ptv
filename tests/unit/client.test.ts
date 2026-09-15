@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { sign, buildQueryString, MissingCredentialsError, ptv } from '../../src/client';
 
 // Test vector derived from PTV API documentation key/input pair.
@@ -59,5 +59,58 @@ describe('MissingCredentialsError', () => {
       if (savedKey !== undefined) process.env.PTV_API_KEY = savedKey;
       else delete process.env.PTV_API_KEY;
     }
+  });
+});
+
+describe('ptv() error reporting', () => {
+  const withCreds = async (fn: () => Promise<void>) => {
+    const savedId = process.env.PTV_DEV_ID;
+    const savedKey = process.env.PTV_API_KEY;
+    process.env.PTV_DEV_ID = '2';
+    process.env.PTV_API_KEY = CANONICAL_KEY;
+    try { await fn(); } finally {
+      if (savedId !== undefined) process.env.PTV_DEV_ID = savedId; else delete process.env.PTV_DEV_ID;
+      if (savedKey !== undefined) process.env.PTV_API_KEY = savedKey; else delete process.env.PTV_API_KEY;
+      vi.unstubAllGlobals();
+    }
+  };
+
+  // PTV explains itself in the response body and we were throwing it away, so
+  // "403" looked like a permissions or deprecation problem for as long as
+  // nobody read the body. It is throttling, and it is per-endpoint.
+  it('includes PTV’s own message when the request is throttled', async () => {
+    await withCreds(async () => {
+      vi.stubGlobal('fetch', vi.fn(async () => new Response(
+        JSON.stringify({
+          message: 'Forbidden (403): Throttling limit reached for this service.',
+          status: { version: '3.0', health: 1 },
+        }),
+        { status: 403 },
+      )));
+      await expect(ptv('/v3/pattern/run/950027/route_type/0'))
+        .rejects.toThrow(/Throttling limit reached/);
+    });
+  });
+
+  it('still reports the status code and path', async () => {
+    await withCreds(async () => {
+      vi.stubGlobal('fetch', vi.fn(async () => new Response('{"message":"nope"}', { status: 403 })));
+      await expect(ptv('/v3/pattern/run/950027/route_type/0'))
+        .rejects.toThrow(/403.*\/v3\/pattern\/run\/950027\/route_type\/0/);
+    });
+  });
+
+  it('does not fall over when the error body is not JSON', async () => {
+    await withCreds(async () => {
+      vi.stubGlobal('fetch', vi.fn(async () => new Response('<html>502 Bad Gateway</html>', { status: 502 })));
+      await expect(ptv('/v3/route_types')).rejects.toThrow(/502/);
+    });
+  });
+
+  it('does not fall over when the error body is empty', async () => {
+    await withCreds(async () => {
+      vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 500 })));
+      await expect(ptv('/v3/route_types')).rejects.toThrow(/500/);
+    });
   });
 });

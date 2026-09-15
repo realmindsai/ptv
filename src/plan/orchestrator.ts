@@ -8,6 +8,10 @@ import {
 } from './types';
 import { accessCandidates } from './candidates';
 import { departuresFrom, runPattern } from './transit';
+import {
+  type PatternStop,
+  patternCacheKey, getCachedPattern, setCachedPattern,
+} from './pattern_cache';
 import { labelAndSort } from './score';
 import { isHub, hubName, hubCoord } from './hubs';
 
@@ -35,7 +39,6 @@ function haversineKm(a: { lat: number; lon: number }, b: { lat: number; lon: num
 
 type RouteResult = { km: number; min: number; geometry: GeoJsonLineString | null };
 type EnrichResult = import('./external').ParsedGhRoute | null;
-type PatternStop = { stopId: number; arriveUtc: string };
 
 type SearchState = {
   req: PlanRequest;
@@ -44,7 +47,6 @@ type SearchState = {
   access: AccessCandidate[];
   egress: AccessCandidate[];
   egressByStopId: Map<number, AccessCandidate>;
-  patternCache: Map<string, PatternStop[]>;
   accessRouteCache: Map<number, Promise<RouteResult>>;
   egressRouteCache: Map<number, Promise<RouteResult>>;
   accessEnrichCache: Map<number, Promise<EnrichResult>>;
@@ -106,17 +108,23 @@ async function getPattern(
   routeType: 0 | 3,
   dateUtc?: Date,
 ): Promise<PatternStop[]> {
-  // Cache key must include the calendar day — the same runRef yields a
-  // different schedule on different days. Without this, a request on Tuesday
-  // would reuse Monday's cached pattern.
-  const dayKey = dateUtc ? dateUtc.toISOString().slice(0, 10) : 'today';
-  const cacheKey = `${runRef}@${dayKey}`;
-  let p = s.patternCache.get(cacheKey);
-  if (!p) {
-    p = await runPattern(runRef, routeType, dateUtc, s.deps);
-    s.patternCache.set(cacheKey, p);
+  // Shared across requests, not just within one plan: see pattern_cache.ts for
+  // why (a single plan makes ~167 of these calls and PTV throttles per endpoint).
+  const cacheKey = patternCacheKey(runRef, dateUtc);
+  const cached = getCachedPattern(cacheKey);
+  if (cached) return cached;
+  try {
+    const p = await runPattern(runRef, routeType, dateUtc, s.deps);
+    setCachedPattern(cacheKey, p);
+    return p;
+  } catch {
+    // A stopping pattern is leg DETAIL. Losing one — typically to PTV's
+    // per-endpoint throttle — should cost us this one candidate, not the whole
+    // trip. Callers already skip a pattern that doesn't contain their stop
+    // (`aIdx < 0`), so an empty list degrades on the existing path. Deliberately
+    // not cached: this is a transient failure, not an answer.
+    return [];
   }
-  return p;
 }
 
 // ---------------------------------------------------------------------------
@@ -542,7 +550,6 @@ export async function plan(req: PlanRequest, deps?: Partial<Deps>): Promise<Plan
   const state: SearchState = {
     req, deps: resolved, seedTime, access, egress,
     egressByStopId: new Map(egress.map((e) => [e.stopId, e])),
-    patternCache: new Map(),
     accessRouteCache: new Map(),
     egressRouteCache: new Map(),
     accessEnrichCache: new Map(),
