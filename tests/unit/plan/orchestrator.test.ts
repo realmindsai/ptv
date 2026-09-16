@@ -1,5 +1,11 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { plan } from '../../../src/plan/orchestrator';
+import { clearPatternCache } from '../../../src/plan/pattern_cache';
+
+// The pattern cache is process-level by design (see pattern_cache.ts), so it
+// outlives a single test. Without this reset, whichever test ran first would
+// silently serve every later one.
+beforeEach(() => clearPatternCache());
 import type { PlanRequest } from '../../../src/plan/types';
 
 function makeReq(over: Partial<PlanRequest> = {}): PlanRequest {
@@ -459,5 +465,79 @@ describe('plan() — happy path', () => {
     const out = await plan(makeReq({ goal: 'max-path' }), { ptv, external: ext as never });
     expect(out.itineraries.length).toBeGreaterThan(0);
     expect(osrmSpy).toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ptv-kra: one plan() fires ~167 calls at /v3/pattern, which trips PTV's
+// per-endpoint throttle. Two defences: survive a pattern failure, and stop
+// re-fetching the same run on every request.
+// ---------------------------------------------------------------------------
+
+describe('pattern failures degrade instead of killing the plan', () => {
+  it('still returns itineraries when every /v3/pattern call is throttled', async () => {
+    const { ptv } = fakePtvFactory();
+    const throttled = vi.fn(async (path: string, params?: Record<string, unknown>) => {
+      if (path.startsWith('/v3/pattern/')) {
+        throw new Error(JSON.stringify({
+          error: `403 ${path}`,
+          message: 'Forbidden (403): Throttling limit reached for this service.',
+        }));
+      }
+      return ptv(path, params);
+    });
+
+    // Must resolve, not reject. A throttled detail call is not a reason to
+    // fail the whole trip — the bike legs and the search are still valid.
+    const out = await plan(makeReq(), { ptv: throttled, external: fakeExternal as never });
+    expect(Array.isArray(out.itineraries)).toBe(true);
+  });
+
+  it('says so in warnings, so a thin result is explainable', async () => {
+    const { ptv } = fakePtvFactory();
+    const throttled = vi.fn(async (path: string, params?: Record<string, unknown>) => {
+      if (path.startsWith('/v3/pattern/')) throw new Error('Throttling limit reached');
+      return ptv(path, params);
+    });
+
+    // Degrading quietly is how you turn "PTV is throttling us" into "the
+    // planner found nothing", which is the harder bug to diagnose — and the
+    // same trap as a geocoder confidently returning the wrong suburb.
+    const out = await plan(makeReq(), { ptv: throttled, external: fakeExternal as never });
+    expect(out.warnings?.join(' ')).toMatch(/pattern/i);
+  });
+
+  it('does not warn when nothing was dropped', async () => {
+    const { ptv } = fakePtvFactory();
+    const out = await plan(makeReq(), { ptv, external: fakeExternal as never });
+    expect(out.warnings?.join(' ') ?? '').not.toMatch(/pattern/i);
+  });
+
+  it('a pattern failure does not prevent other candidates from being used', async () => {
+    const { ptv } = fakePtvFactory();
+    let seen = 0;
+    const flaky = vi.fn(async (path: string, params?: Record<string, unknown>) => {
+      if (path.startsWith('/v3/pattern/')) {
+        seen += 1;
+        if (seen === 1) throw new Error(JSON.stringify({ error: '403', message: 'Throttling limit reached' }));
+      }
+      return ptv(path, params);
+    });
+    const out = await plan(makeReq(), { ptv: flaky, external: fakeExternal as never });
+    expect(Array.isArray(out.itineraries)).toBe(true);
+  });
+});
+
+describe('pattern results are cached across plan() calls', () => {
+  it('does not re-fetch the same run+day on a second plan', async () => {
+    const { ptv } = fakePtvFactory();
+    const count = () => ptv.mock.calls.filter((c) => String(c[0]).startsWith('/v3/pattern/')).length;
+
+    await plan(makeReq(), { ptv, external: fakeExternal as never });
+    const afterFirst = count();
+    expect(afterFirst).toBeGreaterThan(0);
+
+    await plan(makeReq(), { ptv, external: fakeExternal as never });
+    expect(count()).toBe(afterFirst); // second run served entirely from cache
   });
 });

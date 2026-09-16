@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { sign, buildQueryString, MissingCredentialsError, ptv } from '../../src/client';
 
 // Test vector derived from PTV API documentation key/input pair.
@@ -58,6 +58,133 @@ describe('MissingCredentialsError', () => {
       else delete process.env.PTV_DEV_ID;
       if (savedKey !== undefined) process.env.PTV_API_KEY = savedKey;
       else delete process.env.PTV_API_KEY;
+    }
+  });
+});
+
+describe('ptv() error reporting', () => {
+  const withCreds = async (fn: () => Promise<void>) => {
+    const savedId = process.env.PTV_DEV_ID;
+    const savedKey = process.env.PTV_API_KEY;
+    process.env.PTV_DEV_ID = '2';
+    process.env.PTV_API_KEY = CANONICAL_KEY;
+    try { await fn(); } finally {
+      if (savedId !== undefined) process.env.PTV_DEV_ID = savedId; else delete process.env.PTV_DEV_ID;
+      if (savedKey !== undefined) process.env.PTV_API_KEY = savedKey; else delete process.env.PTV_API_KEY;
+      vi.unstubAllGlobals();
+    }
+  };
+
+  // PTV explains itself in the response body and we were throwing it away, so
+  // "403" looked like a permissions or deprecation problem for as long as
+  // nobody read the body. It is throttling, and it is per-endpoint.
+  it('includes PTV’s own message when the request is throttled', async () => {
+    await withCreds(async () => {
+      vi.stubGlobal('fetch', vi.fn(async () => new Response(
+        JSON.stringify({
+          message: 'Forbidden (403): Throttling limit reached for this service.',
+          status: { version: '3.0', health: 1 },
+        }),
+        { status: 403 },
+      )));
+      await expect(ptv('/v3/pattern/run/950027/route_type/0'))
+        .rejects.toThrow(/Throttling limit reached/);
+    });
+  });
+
+  it('still reports the status code and path', async () => {
+    await withCreds(async () => {
+      vi.stubGlobal('fetch', vi.fn(async () => new Response('{"message":"nope"}', { status: 403 })));
+      await expect(ptv('/v3/pattern/run/950027/route_type/0'))
+        .rejects.toThrow(/403.*\/v3\/pattern\/run\/950027\/route_type\/0/);
+    });
+  });
+
+  it('does not fall over when the error body is not JSON', async () => {
+    await withCreds(async () => {
+      vi.stubGlobal('fetch', vi.fn(async () => new Response('<html>502 Bad Gateway</html>', { status: 502 })));
+      await expect(ptv('/v3/route_types')).rejects.toThrow(/502/);
+    });
+  });
+
+  it('does not fall over when the error body is empty', async () => {
+    await withCreds(async () => {
+      vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 500 })));
+      await expect(ptv('/v3/route_types')).rejects.toThrow(/500/);
+    });
+  });
+});
+
+describe('ptv() retries transient network failures', () => {
+  const withCreds = async (fn: () => Promise<void>) => {
+    const savedId = process.env.PTV_DEV_ID;
+    const savedKey = process.env.PTV_API_KEY;
+    process.env.PTV_DEV_ID = '2';
+    process.env.PTV_API_KEY = CANONICAL_KEY;
+    try { await fn(); } finally {
+      if (savedId !== undefined) process.env.PTV_DEV_ID = savedId; else delete process.env.PTV_DEV_ID;
+      if (savedKey !== undefined) process.env.PTV_API_KEY = savedKey; else delete process.env.PTV_API_KEY;
+      vi.unstubAllGlobals();
+    }
+  };
+  const ok = () => new Response('{"route_types":[]}', { status: 200 });
+
+  // /v3/stops/location fails this way — no HTTP status at all — and it happens
+  // before any pattern call, so there is no candidate set left to degrade to.
+  it('retries once after a network-level failure and succeeds', async () => {
+    await withCreds(async () => {
+      const fetchMock = vi.fn()
+        .mockRejectedValueOnce(new TypeError('fetch failed'))
+        .mockResolvedValueOnce(ok());
+      vi.stubGlobal('fetch', fetchMock);
+      await expect(ptv('/v3/route_types')).resolves.toEqual({ route_types: [] });
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it('gives up after one retry and reports the original failure', async () => {
+    await withCreds(async () => {
+      const fetchMock = vi.fn().mockRejectedValue(new TypeError('fetch failed'));
+      vi.stubGlobal('fetch', fetchMock);
+      await expect(ptv('/v3/route_types')).rejects.toThrow(/fetch failed/);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  // The whole point of this session: retrying a throttle is how you turn a
+  // slowdown into an outage. An HTTP status is an answer, not a lost call.
+  it('never retries a throttled response', async () => {
+    await withCreds(async () => {
+      const fetchMock = vi.fn(async () => new Response(
+        JSON.stringify({ message: 'Forbidden (403): Throttling limit reached for this service.' }),
+        { status: 403 },
+      ));
+      vi.stubGlobal('fetch', fetchMock);
+      await expect(ptv('/v3/pattern/run/1/route_type/0')).rejects.toThrow(/Throttling/);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('never retries a server error either', async () => {
+    await withCreds(async () => {
+      const fetchMock = vi.fn(async () => new Response('boom', { status: 500 }));
+      vi.stubGlobal('fetch', fetchMock);
+      await expect(ptv('/v3/route_types')).rejects.toThrow(/500/);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it('does not retry when credentials are missing', async () => {
+    const savedId = process.env.PTV_DEV_ID;
+    try {
+      delete process.env.PTV_DEV_ID;
+      const fetchMock = vi.fn();
+      vi.stubGlobal('fetch', fetchMock);
+      await expect(ptv('/v3/route_types')).rejects.toThrow(MissingCredentialsError);
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      if (savedId !== undefined) process.env.PTV_DEV_ID = savedId;
+      vi.unstubAllGlobals();
     }
   });
 });
