@@ -63,7 +63,8 @@ The OSRM services use per-profile URL overrides (`OSRM_AU_BICYCLE_URL`, `OSRM_AU
 - `POST /api/plan` — wraps `orchestrator.plan()`; JSON or HTML fragment via Accept header
 - `GET /api/geocode` — Nominatim proxy
 - `GET /static/*` — vendored htmx, leaflet, fonts, app.css
-- `GET /healthz` — Docker healthcheck endpoint
+- `GET /healthz` — liveness; the Docker healthcheck endpoint
+- `GET /readyz` — readiness; 503 unless Nominatim `/status` answers
 
 Not deployed (Phase 2 scope):
 - Map click-to-route, geolocation, URL-hash state, PWA install, service worker.

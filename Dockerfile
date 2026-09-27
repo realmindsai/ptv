@@ -31,6 +31,8 @@ ENV NODE_ENV=production \
 EXPOSE 8080
 
 # wget is in the base image; use it to ping the local healthz.
+# Liveness (/healthz), not readiness (/readyz): an unreachable Nominatim is
+# not fixed by restarting this container. Monitor /readyz externally (ptv-t7q).
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD wget -qO- "http://127.0.0.1:${PORT}/healthz" >/dev/null || exit 1
 

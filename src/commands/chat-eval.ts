@@ -6,7 +6,7 @@ import { resolve } from 'node:path';
 import { openEvalDb, type EvalDb } from '../chat-eval/db';
 import { parseSuite } from '../chat-eval/suite';
 import { runOne } from '../chat-eval/runner';
-import { fetchConversationEvents, reconstructFromEvents } from '../chat-eval/replay';
+import { fetchConversationEvents, reconstructFromEvents, replayPgUrl } from '../chat-eval/replay';
 import { renderTerminal } from '../chat-eval/renderers/terminal';
 import { renderJsonl, type JsonlTurn } from '../chat-eval/renderers/jsonl';
 import { renderHtml } from '../chat-eval/renderers/html';
@@ -306,11 +306,12 @@ export function chatEvalCommand(): Command {
     .option('--from-turn <n>', 'start replay at this turn_seq', (v) => parseInt(v, 10))
     .option('--db <path>', 'SQLite eval store path', './eval.db')
     .action(async (conversationId: string, opts) => {
-      if (!process.env.PTV_CHAT_PG_URL) {
-        console.error('PTV_CHAT_PG_URL is not set — replay requires postgres access.');
+      const pgUrl = replayPgUrl(process.env);
+      if (!pgUrl) {
+        console.error('PTV_CHAT_PG_READ_URL (or PTV_CHAT_PG_URL) is not set — replay requires postgres access.');
         process.exit(2);
       }
-      const evs = await fetchConversationEvents(process.env.PTV_CHAT_PG_URL, conversationId);
+      const evs = await fetchConversationEvents(pgUrl, conversationId);
       const r = reconstructFromEvents(evs, { fromTurn: opts.fromTurn });
       if (!r.replayPrompt) { console.error('No user prompt found for replay.'); process.exit(2); }
       const db = openEvalDb(opts.db);

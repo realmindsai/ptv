@@ -46,6 +46,25 @@ export function reconstructFromEvents(
   return { turns, historyForReplay: history, replayPrompt: last?.user ?? '' };
 }
 
+/**
+ * Replay reads conversation logs, which the insert-only ptv_chat_writer role
+ * cannot (ptv-cjd). PTV_CHAT_PG_READ_URL names the ptv_chat_reader role; the
+ * fallback covers setups (e.g. a local dev database) where one role does both.
+ */
+export function replayPgUrl(env: NodeJS.ProcessEnv): string | undefined {
+  return env.PTV_CHAT_PG_READ_URL || env.PTV_CHAT_PG_URL || undefined;
+}
+
+export function explainReadError(err: unknown): unknown {
+  const e = err as { message?: string; code?: unknown };
+  if (e?.code !== '42501') return err;
+  return Object.assign(new Error(
+    `${e.message} (SQLSTATE 42501). Replay needs SELECT on events: `
+    + 'set PTV_CHAT_PG_READ_URL to the ptv_chat_reader role (src/chat/log/reader_role.sql). '
+    + 'The ptv_chat_writer role is insert-only by design.',
+  ), { code: '42501' });
+}
+
 export async function fetchConversationEvents(
   pgUrl: string,
   conversationId: string,
@@ -61,6 +80,8 @@ export async function fetchConversationEvents(
       [conversationId],
     );
     return res.rows;
+  } catch (err) {
+    throw explainReadError(err);
   } finally {
     await c.end();
   }

@@ -107,9 +107,13 @@ tool falls back to Nominatim if Photon is unset or returns nothing.
 docker build -f Dockerfile.chat -t ptv-chat:latest .
 docker compose -f docker-compose.chat.snippet.yml up -d
 curl http://localhost:8086/healthz
+curl http://localhost:8086/readyz
 ```
 
-Expected: `{"status":"ok","uptime":...}`.
+Expected: `/healthz` → `{"status":"ok","uptime":...}` (liveness: the process is
+up). `/readyz` → 200 `{"status":"ready","checks":{...}}` only when the
+OpenRouter key authenticates, the logging role can write, and GraphHopper is
+reachable from this container; otherwise 503 with a `reason` per failing check.
 
 ### 3. Tailnet exposure
 
@@ -164,9 +168,14 @@ CREATE ROLE ptv_chat_writer LOGIN PASSWORD '<writer-pw>';
 CREATE DATABASE ptv_chat OWNER ptv_chat_svc;
 SQL
 sudo -u postgres psql -p 5433 -d ptv_chat -f src/chat/log/schema.sql
+sudo -u postgres psql -p 5433 -d ptv_chat -v ON_ERROR_STOP=1 -f src/chat/log/reader_role.sql
+sudo -u postgres psql -p 5433 -d ptv_chat -c "\password ptv_chat_reader"
 ```
 
-Place `<writer-pw>` into `.env.sops` (see "Secrets" below).
+Place `<writer-pw>` into `.env.sops` as `PTV_CHAT_PG_URL`, and the reader
+password as `PTV_CHAT_PG_READ_URL` (see "Secrets" below). The writer is
+insert-only on purpose: the internet-facing container holds it. Reading logs
+back (`ptv chat-eval replay`, the logging integration test) uses the reader.
 
 ### Secrets — SOPS + age
 

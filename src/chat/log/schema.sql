@@ -29,7 +29,8 @@ CREATE INDEX IF NOT EXISTS events_conversation_seq ON events (conversation_id, e
 CREATE INDEX IF NOT EXISTS events_type_created     ON events (type, created_at DESC);
 CREATE INDEX IF NOT EXISTS events_payload_gin      ON events USING GIN (payload jsonb_path_ops);
 
--- Writer role (idempotent).
+-- Writer role (idempotent). Insert-only by design; reading logs back is the
+-- job of ptv_chat_reader, in reader_role.sql.
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'ptv_chat_writer') THEN

@@ -1,5 +1,5 @@
 import Fastify, { FastifyBaseLogger, FastifyInstance } from 'fastify';
-import { registerHealth } from './routes/health';
+import { registerHealth, openRouterCheck, loggingCheck, graphHopperCheck } from './routes/health';
 import { registerChat, type RunTurnFn, type BuildToolsFn } from './routes/chat';
 import { registerPage } from './routes/page';
 import { registerStatic } from './routes/static';
@@ -15,7 +15,7 @@ import { makeScheduleTool } from './tools/schedule';
 import { Nominatim } from '../server/nominatim';
 import { Photon } from '../server/photon';
 import { plan as planOrchestrator } from '../plan/orchestrator';
-import { ghRouteBike, ghRouteCustom } from '../plan/external';
+import { ghRouteBike, ghRouteCustom, GH_REST_URL } from '../plan/external';
 import { ptv } from '../client';
 import { getPool } from './log/pool';
 import { createWriter, type Writer } from './log/writer';
@@ -57,7 +57,11 @@ export function createChatApp(opts: ChatAppOptions = {}): FastifyInstance {
   const app = Fastify({
     logger: opts.logger ?? { level: process.env.LOG_LEVEL ?? 'info' },
   });
-  registerHealth(app);
+  registerHealth(app, [
+    openRouterCheck({ apiKey: process.env.OPENROUTER_API_KEY, baseUrl: process.env.OPENROUTER_BASE_URL }),
+    loggingCheck(getPool()),
+    graphHopperCheck(GH_REST_URL),
+  ]);
 
   let chatLogger: Logger | undefined = opts.chatLogger;
   let writerForShutdown: Writer | undefined;
