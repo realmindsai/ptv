@@ -1,5 +1,6 @@
 import type { Pool, PoolClient } from 'pg';
 import type { ConversationMeta, LoggedEvent, LoggedEventType } from './types';
+import { describeError } from '../../server/routes/health';
 
 export interface WriterOptions {
   intervalMs?: number;
@@ -29,6 +30,24 @@ export function createWriter(pool: Pool, opts: WriterOptions = {}): Writer {
   let timer: NodeJS.Timeout | null = null;
   let draining: Promise<void> = Promise.resolve();
   let stopped = false;
+  let warned = false;
+
+  // Fire-and-forget is right for the request path and wrong for the operator:
+  // a dropped batch must never fail a chat turn, but the operator has to be
+  // able to see that logging is dead (ptv-t7q). This used to print one line
+  // per failed batch, without the SQLSTATE: noise when the database is down,
+  // and nothing that says which grant is missing. Now the first failure in the
+  // process gets one loud WARN naming the SQLSTATE, and later ones are
+  // suppressed. Readiness (/readyz) is what shows it is still failing.
+  function reportFailure(stage: string, err: unknown): void {
+    if (warned) return;
+    warned = true;
+    console.warn(
+      '[ptv-chat:log] WARN conversation logging is failing; events are being dropped. '
+      + `First failure: ${stage}: ${describeError(err)}. `
+      + 'Further failures in this process are suppressed.',
+    );
+  }
 
   function scheduleTimer() {
     if (timer || stopped) return;
@@ -58,7 +77,7 @@ export function createWriter(pool: Pool, opts: WriterOptions = {}): Writer {
     try {
       client = await pool.connect();
     } catch (err) {
-      console.warn('[ptv-chat:log] pool.connect failed:', (err as Error).message);
+      reportFailure('pool.connect failed', err);
       return;
     }
 
@@ -108,7 +127,7 @@ export function createWriter(pool: Pool, opts: WriterOptions = {}): Writer {
       await client.query('COMMIT');
     } catch (err) {
       try { await client.query('ROLLBACK'); } catch {}
-      console.warn('[ptv-chat:log] insert failed, dropping batch:', (err as Error).message);
+      reportFailure('insert failed', err);
     } finally {
       client.release();
     }

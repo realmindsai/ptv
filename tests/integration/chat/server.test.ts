@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import Fastify from 'fastify';
-import { registerHealth } from '../../../src/chat/routes/health';
+import { registerHealth, openRouterCheck } from '../../../src/chat/routes/health';
+import { endPool } from '../../../src/chat/log/pool';
 import { createChatApp } from '../../../src/chat/server';
 
 describe('GET /healthz', () => {
@@ -115,5 +116,26 @@ describe('GET /', () => {
     const res = await app.inject({ method: 'GET', url: '/static/app.js' });
     expect(res.statusCode).toBe(200);
     await app.close();
+  });
+});
+
+// Real dependencies, no stubs: proves the /key call and the privilege query
+// actually work against OpenRouter and the ptv_chat database.
+describe.skipIf(!process.env.OPENROUTER_API_KEY || !process.env.PTV_CHAT_PG_URL)('GET /readyz (live deps)', () => {
+  it('is 200 with the configured OpenRouter key and logging role', async () => {
+    const app = createChatApp({ logger: false });
+    const res = await app.inject({ method: 'GET', url: '/readyz' });
+    expect(res.json()).toEqual({
+      status: 'ready',
+      checks: { openrouter: { ok: true }, logging: { ok: true }, graphhopper: { ok: true } },
+    });
+    expect(res.statusCode).toBe(200);
+    await app.close();
+    await endPool();
+  });
+
+  it('openRouterCheck reports 401 for a key OpenRouter does not know', async () => {
+    const res = await openRouterCheck({ apiKey: 'sk-or-v1-not-a-real-key' }).run();
+    expect(res).toEqual({ ok: false, reason: 'openrouter /key returned 401' });
   });
 });

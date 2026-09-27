@@ -59,7 +59,7 @@ function osrmCoordPath(points: LatLon[]): string {
 const GH_BIN = process.env.GH_ROUTE_BIN
   ?? resolve(__dirname, '../../../grasshopper-bike-routing/bin/gh-route');
 
-const GH_REST_URL = process.env.GH_REST_URL
+export const GH_REST_URL = process.env.GH_REST_URL
   ?? 'http://graphhopper.magpie-inconnu.ts.net:8989/route';
 
 function runJson(cmd: string, args: string[]): unknown {

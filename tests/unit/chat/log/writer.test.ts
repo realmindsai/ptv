@@ -87,4 +87,58 @@ describe('writer', () => {
     await w.flush();
     expect(pool.client.query).toHaveBeenCalled();
   });
+
+  it('warns exactly once, naming the SQLSTATE, over N failed inserts', async () => {
+    const denied = Object.assign(new Error('permission denied for table events'), { code: '42501' });
+    const client = {
+      query: vi.fn(async (sql: string) => {
+        if (/^INSERT INTO events/.test(sql.trim())) throw denied;
+        return { rows: [], rowCount: 0 };
+      }),
+      release: vi.fn(),
+    };
+    const pool = { connect: vi.fn(async () => client), end: vi.fn(), on: vi.fn() };
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const w = createWriter(pool as any, { intervalMs: 200, batchSize: 50 });
+
+    for (let n = 0; n < 5; n++) {
+      w.enqueue({ meta: META, turnSeq: n, type: 'user_msg', payload: { content: String(n) } });
+      await w.flush();
+    }
+
+    expect(client.release).toHaveBeenCalledTimes(5);
+    expect(warn).toHaveBeenCalledOnce();
+    expect(warn.mock.calls[0][0]).toBe(
+      '[ptv-chat:log] WARN conversation logging is failing; events are being dropped. '
+      + 'First failure: insert failed: permission denied for table events (SQLSTATE 42501). '
+      + 'Further failures in this process are suppressed.',
+    );
+    warn.mockRestore();
+  });
+
+  it('counts a pool.connect failure toward the same single warning', async () => {
+    const refused = Object.assign(new Error('connect ECONNREFUSED 10.0.0.9:5433'), { code: 'ECONNREFUSED' });
+    const pool = { connect: vi.fn(async () => { throw refused; }), end: vi.fn(), on: vi.fn() };
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const w = createWriter(pool as any, { intervalMs: 200, batchSize: 50 });
+
+    for (let n = 0; n < 3; n++) {
+      w.enqueue({ meta: META, turnSeq: n, type: 'user_msg', payload: { content: String(n) } });
+      await w.flush();
+    }
+
+    expect(warn).toHaveBeenCalledOnce();
+    expect(warn.mock.calls[0][0]).toContain('First failure: pool.connect failed: connect ECONNREFUSED 10.0.0.9:5433 (ECONNREFUSED).');
+    warn.mockRestore();
+  });
+
+  it('stays silent when every write succeeds', async () => {
+    const pool = fakePool();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const w = createWriter(pool as any, { intervalMs: 200, batchSize: 50 });
+    w.enqueue({ meta: META, turnSeq: 0, type: 'user_msg', payload: { content: 'ok' } });
+    await w.flush();
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
 });

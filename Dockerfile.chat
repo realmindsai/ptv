@@ -42,6 +42,9 @@ EXPOSE 8086
 
 # Use 127.0.0.1 rather than localhost — Alpine resolves localhost via IPv6
 # first, which fails when only IPv4 is bound (lesson from ptv-dsz).
+# Deliberately liveness (/healthz), not readiness (/readyz): a revoked
+# OpenRouter key or an unreachable peer is not fixed by restarting this
+# container. Point external monitoring at /readyz instead (ptv-t7q).
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD wget -qO- "http://127.0.0.1:${PORT}/healthz" >/dev/null || exit 1
 

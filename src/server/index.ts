@@ -2,7 +2,7 @@ import Fastify, { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import fastifyFormbody from '@fastify/formbody';
 import qs from 'qs';
 import { registerStatic } from './routes/static';
-import { registerHealth } from './routes/health';
+import { registerHealth, nominatimCheck } from './routes/health';
 import { registerGeocode } from './routes/geocode';
 import { registerPlan, type PlanFn } from './routes/plan';
 import { registerPage } from './routes/page';
@@ -32,7 +32,7 @@ export function createApp(opts: AppOptions = {}): FastifyInstance {
       })();
 
   registerStatic(app);
-  registerHealth(app);
+  registerHealth(app, [nominatimCheck(nominatimUrl)]);
   registerGeocode(app, { nominatim, cache });
   registerPlan(app, { planFn: opts.planFn, nominatim, cache });
   registerPage(app);
