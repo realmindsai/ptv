@@ -1,6 +1,7 @@
 # Encryption rules for SOPS+age. Recipients mirror
 # /tank/services/active_services/.sops.yaml on totoro: totoro host key,
-# catbus host key, and the shared team key (stored in 1Password).
+# catbus host key, and per-person keys dennis-dewlap4 and tracy-mac4 (the shared
+# team key was retired 2026-10-26, security-un7).
 # Age public keys are not secret.
 creation_rules:
   - path_regex: \.env\.sops$
