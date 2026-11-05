@@ -3,6 +3,7 @@ import { registerHealth, openRouterCheck, loggingCheck, graphHopperCheck } from 
 import { registerChat, type RunTurnFn, type BuildToolsFn } from './routes/chat';
 import { registerPage } from './routes/page';
 import { registerStatic } from './routes/static';
+import { registerCsp } from './csp';
 import { runTurn as defaultRunTurn } from './agent';
 import type { ChatCtx } from './types';
 import type { LatLon } from '../plan/types';
@@ -57,6 +58,7 @@ export function createChatApp(opts: ChatAppOptions = {}): FastifyInstance {
   const app = Fastify({
     logger: opts.logger ?? { level: process.env.LOG_LEVEL ?? 'info' },
   });
+  registerCsp(app);
   registerHealth(app, [
     openRouterCheck({ apiKey: process.env.OPENROUTER_API_KEY, baseUrl: process.env.OPENROUTER_BASE_URL }),
     loggingCheck(getPool()),
